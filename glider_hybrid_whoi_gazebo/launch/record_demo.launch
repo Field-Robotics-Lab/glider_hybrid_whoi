@@ -1,0 +1,41 @@
+<launch>
+  <arg name="record" default="false"/>
+  <arg name="bag_filename" default="recording.bag"/>
+  <arg name="use_ned_frame" default="false"/>
+
+  <group if="$(arg record)">
+    <node pkg="rosbag" type="record" name="recording"
+      args="record -O $(arg bag_filename)
+        /glider_hybrid_whoi/dp_controller/trajectory
+        /glider_hybrid_whoi/dp_controller/reference
+        /glider_hybrid_whoi/pose_gt_ned
+        /glider_hybrid_whoi/dp_controller/error
+        /hydrodynamics/current_velocity        
+        /glider_hybrid_whoi/wrench_perturbation
+        /glider_hybrid_whoi/control_allocation/control_input
+        /glider_hybrid_whoi/thrusters/0/thrust
+        /glider_hybrid_whoi/thrusters/0/input
+        /glider_hybrid_whoi/fins/0/input
+        /glider_hybrid_whoi/fins/1/input
+        /glider_hybrid_whoi/fins/0/output
+        /glider_hybrid_whoi/fins/1/output"
+      if="$(arg use_ned_frame)"/>
+
+      <node pkg="rosbag" type="record" name="recording"
+        args="record -O $(arg bag_filename)
+          /glider_hybrid_whoi/dp_controller/trajectory
+          /glider_hybrid_whoi/dp_controller/reference
+          /glider_hybrid_whoi/pose_gt
+          /glider_hybrid_whoi/dp_controller/error
+          /hydrodynamics/current_velocity
+          /glider_hybrid_whoi/wrench_perturbation
+          /glider_hybrid_whoi/control_allocation/control_input
+          /glider_hybrid_whoi/thrusters/0/thrust
+          /glider_hybrid_whoi/thrusters/0/input
+          /glider_hybrid_whoi/fins/0/input
+          /glider_hybrid_whoi/fins/1/input
+          /glider_hybrid_whoi/fins/0/output
+          /glider_hybrid_whoi/fins/1/output"
+        unless="$(arg use_ned_frame)"/>
+  </group>
+</launch>
