@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>glider_hybrid_whoi_control</name>
-  <version>0.1.6</version>
+  <version>0.0.1</version>
   <description>Configuration and launch files to control the Hybrid glider WHOI</description>
 
   <maintainer email="woensug.choi.ks@nps.edu">Woensug Choi</maintainer>

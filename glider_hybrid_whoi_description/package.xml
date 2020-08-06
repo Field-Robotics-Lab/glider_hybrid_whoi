@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>glider_hybrid_whoi_description</name>
-  <version>0.1.6</version>
+  <version>0.0.1</version>
   <description>Robot description for the hybrid glider WHOI</description>
 
   <maintainer email="woensug.choi.ks@nps.edu">Woensug Choi</maintainer>
@@ -14,7 +14,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>uuv_descriptions</exec_depend>
-  <exec_depend>uuv_gazebo_ros_plugins</exec_depend>
+  <exec_depend>hybrid_glider_gazebo_ros_plugins</exec_depend>
   <exec_depend>uuv_sensor_ros_plugins</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>uuv_assistants</exec_depend>
