@@ -41,6 +41,8 @@ catkin_package(
     ${CMAKE_CURRENT_BINARY_DIR} # for generated messages
     ${GAZEBO_MSG_INCLUDE_DIRS}
   LIBRARIES
+    hybrid_glider_buoyancypump_plugin
+    hybrid_glider_slidingmass_plugin
     hybrid_glider_underwater_object_plugin
     hybrid_glider_thruster_plugin
     hybrid_glider_fin_plugin
@@ -118,6 +120,32 @@ add_library(hybrid_glider_umbilical_plugin
 target_link_libraries(hybrid_glider_umbilical_plugin
   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 list(APPEND hybrid_glider_GAZEBO_PLUGINS_LIST hybrid_glider_umbilical_plugin)
+
+add_library(hybrid_glider_slidingmass_plugin
+    src/SlidingMassPlugin.cc
+)
+target_link_libraries(hybrid_glider_slidingmass_plugin
+    hybrid_glider_dynamics
+    hybrid_glider_gazebo_plugins_msgs
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES})
+add_dependencies(hybrid_glider_slidingmass_plugin
+    hybrid_glider_gazebo_plugins_msgs
+    ${catkin_EXPORTED_TARGETS})
+list(APPEND hybrid_glider_GAZEBO_PLUGINS_LIST hybrid_glider_slidingmass_plugin)
+
+add_library(hybrid_glider_buoyancypump_plugin
+    src/BuoyancyPumpPlugin.cc
+)
+target_link_libraries(hybrid_glider_buoyancypump_plugin
+    hybrid_glider_dynamics
+    hybrid_glider_gazebo_plugins_msgs
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES})
+add_dependencies(hybrid_glider_buoyancypump_plugin
+    hybrid_glider_gazebo_plugins_msgs
+    ${catkin_EXPORTED_TARGETS})
+list(APPEND hybrid_glider_GAZEBO_PLUGINS_LIST hybrid_glider_buoyancypump_plugin)
 
 #############
 ## Install ##

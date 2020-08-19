@@ -32,10 +32,15 @@
   <xacro:property name="area" value="0.04155"/>
   <xacro:property name="length" value="1.98"/>
 
-  <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi.dae"/>
+  <!-- <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi.dae"/>
   <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_collision.dae"/>
   <xacro:property name="prop_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_propeller.dae"/>
-  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_fin.dae"/>
+  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_fin.dae"/> -->
+  <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9.dae"/>
+  <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9.stl"/>
+  <xacro:property name="prop_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9_propeller.dae"/>
+  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9_fin.dae"/>
+
 
   <xacro:macro name="glider_hybrid_whoi_base" params="namespace debug inertial_reference_frame">
     <link name="${namespace}/base_link">
