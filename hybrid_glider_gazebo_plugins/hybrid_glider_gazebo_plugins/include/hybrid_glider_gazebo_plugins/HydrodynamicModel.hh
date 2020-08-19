@@ -125,8 +125,20 @@ class HydrodynamicModel : public BuoyantObject
   /// \brief Reads massPos topic
   protected: void UpdateMassPos(ConstVector3dPtr &_msg);
 
+  /// \brief total_mass
+  protected: double m;
+
+  /// \brief center of gravity
+  protected: double x_cg;
+
   /// \brief ballast_radius
   protected: double r_w;
+
+  /// \brief hull_length
+  protected: double l_h;
+
+  /// \brief hull_radius
+  protected: double r_h;
 
   /// \brief hull_mass
   protected: double m_h;
@@ -226,7 +238,7 @@ class HMFossen : public HydrodynamicModel
 
   /// \brief Computes the added-mass Coriolis matrix Ca.
   protected: void ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
-                                             const Eigen::Matrix6d& _Ma,
+                                             Eigen::Matrix6d &_Ma,
                                              Eigen::Matrix6d &_Ca) const;
 
   /// \brief Updates the damping matrix for the current velocity
