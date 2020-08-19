@@ -98,6 +98,51 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
 
   // Initialize temperature (not used by all models)
   this->temperature = 0;
+
+
+  // Get other parameters
+  double r_w = _sdf->Get<double>("ballast_radius");
+  double m_h = _sdf->Get<double>("hull_mass");
+  double m_s = _sdf->Get<double>("shifter_mass");
+  double x_s_o = _sdf->Get<double>("initial_mass_position");
+
+  // subscribe to pumpPos topic
+  std::string pumpPosTopic = "/buoyancypump/output";
+  GZ_ASSERT(!pumpPosTopic.empty(),
+            "Pump position(pumpPos) topic tag cannot be empty");
+
+  gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
+      << std::endl;
+  this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
+    &HydrodynamicModel::UpdatePumpPos, this);
+  
+  // subscribe to massPos topic
+  std::string massPosTopic = "/slidingmass/output";
+  GZ_ASSERT(!massPosTopic.empty(),
+            "Sliding mass position(massPos) topic tag cannot be empty");
+
+  gzmsg << "Subscribing to current mass position topic: " << massPosTopic
+      << std::endl;
+  this->massPosSubscriber = this->node->Subscribe(massPosTopic,
+    &HydrodynamicModel::UpdateMassPos, this);
+
+
+}
+
+/////////////////////////////////////////////////
+void HydrodynamicModel::UpdatePumpPos(ConstVector3dPtr &_msg)
+{
+  this->pumpPos.X() = _msg->x();
+  this->pumpPos.Y() = _msg->y();
+  this->pumpPos.Z() = _msg->z();
+}
+
+/////////////////////////////////////////////////
+void HydrodynamicModel::UpdateMassPos(ConstVector3dPtr &_msg)
+{
+  this->massPos.X() = _msg->x();
+  this->massPos.Y() = _msg->y();
+  this->massPos.Z() = _msg->z();
 }
 
 /////////////////////////////////////////////////
@@ -362,6 +407,26 @@ HMFossen::HMFossen(sdf::ElementPtr _sdf,
 void HMFossen::ApplyHydrodynamicForces(
   double _time, const ignition::math::Vector3d &_flowVelWorld)
 {
+  // ---- Mass calculation ----- //
+  // Ballast volume and mass
+  double V_B = (this->pumpPos).X()*PI*(this->r_w)*(this->r_w);
+  double m_w = V_B*this->fluidDensity;
+
+  // Total vehicle mass
+  double m = this->m_h + this->m_s + m_w;
+
+  // Moving mass position
+  double x_s = this->x_s_o + (this->massPos).X();
+
+  // Hull mass center (uniform hull mass distribution assumed)
+  double x_h = -this->m_s/this->m_h*this->x_s_o;
+
+  // Ballast tank mass center (pushing from front)
+  double x_w = this->x_w_o+(V_B/PI*(this->r_w)*(this->r_w));
+
+  // Center of gravity
+  double x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
+
   // Link's pose
   ignition::math::Pose3d pose;
   ignition::math::Vector3d linVel, angVel;

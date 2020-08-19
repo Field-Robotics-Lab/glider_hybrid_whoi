@@ -65,7 +65,8 @@ void BuoyancyPumpPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Root string for topics
   std::stringstream strs;
-  strs << "/" << _model->GetName() << "/buoyancypumps/" << this->buoyancypumpID << "/";
+  // strs << "/" << _model->GetName() << "/buoyancypumps/" << this->buoyancypumpID << "/";
+  strs << "/" << _model->GetName() << "/buoyancypump/";
   this->topicPrefix = strs.str();
 
   // Subscribe to input signal topic

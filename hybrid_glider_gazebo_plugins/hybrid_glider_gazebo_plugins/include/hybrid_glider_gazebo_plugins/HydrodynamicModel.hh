@@ -103,6 +103,43 @@ class HydrodynamicModel : public BuoyantObject
 
   /// \brief Temperature (not used by all models)
   protected: double temperature;
+
+  /// \brief Gazebo node
+  protected: gazebo::transport::NodePtr node;
+
+  /// \brief Buoyancy pump position vector read from topic
+  protected: ignition::math::Vector3d pumpPos;
+
+  /// \brief Subcriber to pumpPos message
+  protected: gazebo::transport::SubscriberPtr pumpPosSubscriber;
+
+  /// \brief Reads pumpPos topic
+  protected: void UpdatePumpPos(ConstVector3dPtr &_msg);
+
+  /// \brief Sliding mass position vector read from topic
+  protected: ignition::math::Vector3d massPos;
+
+  /// \brief Subcriber to massPos message
+  protected: gazebo::transport::SubscriberPtr massPosSubscriber;
+
+  /// \brief Reads massPos topic
+  protected: void UpdateMassPos(ConstVector3dPtr &_msg);
+
+  /// \brief ballast_radius
+  protected: double r_w;
+
+  /// \brief hull_mass
+  protected: double m_h;
+
+  /// \brief shifter_mass
+  protected: double m_s;
+
+  /// \brief initial_mass_position
+  protected: double x_s_o;
+
+  /// \brief initial_ballast_position
+  protected: double x_w_o;
+
 };
 
 /// \brief Pointer to model

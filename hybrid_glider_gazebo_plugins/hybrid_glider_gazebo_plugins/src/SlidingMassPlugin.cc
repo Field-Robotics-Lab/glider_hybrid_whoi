@@ -65,7 +65,8 @@ void SlidingMassPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
   // Root string for topics
   std::stringstream strs;
-  strs << "/" << _model->GetName() << "/slidingmasses/" << this->slidingmassID << "/";
+  // strs << "/" << _model->GetName() << "/slidingmasses/" << this->slidingmassID << "/";
+  strs << "/" << _model->GetName() << "/slidingmass/";
   this->topicPrefix = strs.str();
 
   // Subscribe to input signal topic
