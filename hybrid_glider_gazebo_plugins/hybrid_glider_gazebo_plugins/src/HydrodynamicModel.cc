@@ -22,7 +22,7 @@ namespace hybridglider
 {
 /////////////////////////////////////////////////
 HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
-    physics::LinkPtr _link) : BuoyantObject(_link)
+    physics::LinkPtr _link) : BuoyantObject(_sdf, _link)
 {
   GZ_ASSERT(_link != NULL, "Invalid link pointer");
 
