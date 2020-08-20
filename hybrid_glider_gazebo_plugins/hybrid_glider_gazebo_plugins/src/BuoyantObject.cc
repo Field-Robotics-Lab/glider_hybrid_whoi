@@ -205,26 +205,28 @@ void BuoyantObject::ApplyBuoyancyForce()
 
     // --- Additional Buyoancy due to ballast ---- //
 
-    // subscribe to pumpPos topic
-    std::string pumpPosTopic = "/buoyancypump/output";
-    GZ_ASSERT(!pumpPosTopic.empty(),
-              "Pump position(pumpPos) topic tag cannot be empty");
+    // // subscribe to pumpPos topic
+    // std::string pumpPosTopic = "/buoyancypump/output";
+    // GZ_ASSERT(!pumpPosTopic.empty(),
+    //           "Pump position(pumpPos) topic tag cannot be empty");
 
-    gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
-        << std::endl;
-    this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
-      &BuoyantObject::UpdatePumpPos, this);
+    // gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
+    //     << std::endl;
+    // this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
+    //   &BuoyantObject::UpdatePumpPos, this);
     
-    // subscribe to massPos topic
-    std::string massPosTopic = "/slidingmass/output";
-    GZ_ASSERT(!massPosTopic.empty(),
-              "Sliding mass position(massPos) topic tag cannot be empty");
+    // // subscribe to massPos topic
+    // std::string massPosTopic = "/slidingmass/output";
+    // GZ_ASSERT(!massPosTopic.empty(),
+    //           "Sliding mass position(massPos) topic tag cannot be empty");
 
-    gzmsg << "Subscribing to current mass position topic: " << massPosTopic
-        << std::endl;
-    this->massPosSubscriber = this->node->Subscribe(massPosTopic,
-      &BuoyantObject::UpdateMassPos, this);
+    // gzmsg << "Subscribing to current mass position topic: " << massPosTopic
+    //     << std::endl;
+    // this->massPosSubscriber = this->node->Subscribe(massPosTopic,
+    //   &BuoyantObject::UpdateMassPos, this);
 
+    this-> pumpPos = 0;
+    this-> massPos = 0;
     
     // ---- Mass calculation ----- //
     // Ballast volume and mass

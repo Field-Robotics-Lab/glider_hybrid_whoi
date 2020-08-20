@@ -111,26 +111,28 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
   this->x_s_o = _sdf->Get<double>("initial_mass_position");
   this->x_w_o = _sdf->Get<double>("initial_ballast_position");
 
-  // subscribe to pumpPos topic
-  std::string pumpPosTopic = "/buoyancypump/output";
-  GZ_ASSERT(!pumpPosTopic.empty(),
-            "Pump position(pumpPos) topic tag cannot be empty");
+  // // subscribe to pumpPos topic
+  // std::string pumpPosTopic = "/buoyancypump/output";
+  // GZ_ASSERT(!pumpPosTopic.empty(),
+  //           "Pump position(pumpPos) topic tag cannot be empty");
 
-  gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
-      << std::endl;
-  this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
-    &HydrodynamicModel::UpdatePumpPos, this);
+  // gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
+  //     << std::endl;
+  // this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
+  //   &HydrodynamicModel::UpdatePumpPos, this);
   
-  // subscribe to massPos topic
-  std::string massPosTopic = "/slidingmass/output";
-  GZ_ASSERT(!massPosTopic.empty(),
-            "Sliding mass position(massPos) topic tag cannot be empty");
+  // // subscribe to massPos topic
+  // std::string massPosTopic = "/slidingmass/output";
+  // GZ_ASSERT(!massPosTopic.empty(),
+  //           "Sliding mass position(massPos) topic tag cannot be empty");
 
-  gzmsg << "Subscribing to current mass position topic: " << massPosTopic
-      << std::endl;
-  this->massPosSubscriber = this->node->Subscribe(massPosTopic,
-    &HydrodynamicModel::UpdateMassPos, this);
+  // gzmsg << "Subscribing to current mass position topic: " << massPosTopic
+  //     << std::endl;
+  // this->massPosSubscriber = this->node->Subscribe(massPosTopic,
+  //   &HydrodynamicModel::UpdateMassPos, this);
 
+  this-> pumpPos = 0;
+  this-> massPos = 0;
 
 }
 
@@ -432,7 +434,6 @@ void HMFossen::ApplyHydrodynamicForces(
   // Center of gravity
   this->x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
 
-
   // ---- Inertial matrix calculation ----- //
   double a = this->l_h/2; // half the length
   double b = this->r_h;   // hull radius
@@ -441,8 +442,9 @@ void HMFossen::ApplyHydrodynamicForces(
   physics::InertialPtr I_0 = this->link->GetInertial();
   I_0->SetIXX(I_xx);  I_0->SetIYY(I_yy);  I_0->SetIZZ(I_zz);
   I_0->SetMass(m);  I_0->SetCoG(x_cg,0,0,0,0,0);
-  this->link->SetInertial(I_0);  this->m = m;
-
+  this->link->SetInertial(I_0);  
+  this->m = m; 
+  // This uppor change inertial and mass section doesn't work
 
   // Link's pose
   ignition::math::Pose3d pose;
@@ -569,10 +571,10 @@ void HMFossen::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
   LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2); 
   LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2); 
   Eigen::Matrix6d RightSide = Eigen::Matrix6d::Identity();
-  S_r_cg = S_r_cg.transpose();
-  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2); 
-  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2); 
-  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2);
+  Eigen::Matrix3d S_r_cg_T = S_r_cg.transpose();
+  LeftSide(0,3) = S_r_cg_T(0,0); LeftSide(0,4) = S_r_cg_T(0,1); LeftSide(0,5) = S_r_cg_T(0,2); 
+  LeftSide(1,3) = S_r_cg_T(1,0); LeftSide(1,4) = S_r_cg_T(1,1); LeftSide(1,5) = S_r_cg_T(1,2); 
+  LeftSide(2,3) = S_r_cg_T(2,0); LeftSide(2,4) = S_r_cg_T(2,1); LeftSide(2,5) = S_r_cg_T(2,2);
   Eigen::Matrix6d M_A = LeftSide*Ma_cg*RightSide;
 
   _Ma = M_A;
