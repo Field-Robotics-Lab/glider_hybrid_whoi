@@ -97,6 +97,14 @@
               0       -34     0       0       0       -32
             </linear_damping_forward_speed>
           </hydrodynamic_model>
+
+            <ballast_radius>0.07</ballast_radius>
+            <hull_length>${length}</hull_length>
+            <hull_radius>${radius}</hull_radius>
+            <hull_mass>${mass}</hull_mass>
+            <shifter_mass>9.3</shifter_mass>
+            <initial_mass_position>0.04</initial_mass_position>
+            <initial_ballast_position>0.06</initial_ballast_position>
         </link>
       </plugin>
     </gazebo>
