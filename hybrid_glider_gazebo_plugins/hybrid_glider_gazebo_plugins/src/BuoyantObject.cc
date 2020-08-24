@@ -249,8 +249,8 @@ void BuoyantObject::ApplyBuoyancyForce()
     this->x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
     
     // Buoyance Force due to ballast tank (to be applied at CoB in world frame)
-    buoyancyForce = buoyancyForceNeautural + ignition::math::Vector3d(0, 0, 
-          m_w * this->g);
+    // buoyancyForce = buoyancyForceNeautural + ignition::math::Vector3d(0, 0, m_w * this->g);
+    buoyancyForce = ignition::math::Vector3d(0, 0, (m+m_w) * this->g);
     buoyancyTorque = ignition::math::Vector3d(0, 0, 0);
 
     // Gravitational Torque due to sliding mass (tobe applied at CoG in body frame)

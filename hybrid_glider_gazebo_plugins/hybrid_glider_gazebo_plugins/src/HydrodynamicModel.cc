@@ -442,7 +442,7 @@ void HMFossen::ApplyHydrodynamicForces(
   double I_yy = 4.0/15.0*m*(b*b+a*a); double I_zz = I_yy;  double I_xx = 4.0/15.0*m*(b*b+b*b);
   physics::InertialPtr I_0 = this->link->GetInertial();
   I_0->SetIXX(I_xx);  I_0->SetIYY(I_yy);  I_0->SetIZZ(I_zz);
-  I_0->SetMass(m);  I_0->SetCoG(x_cg,0.0,0.0);
+  I_0->SetCoG(x_cg,0.0,0.0); I_0->SetMass(m); 
 
   // Link's pose
   ignition::math::Pose3d pose;

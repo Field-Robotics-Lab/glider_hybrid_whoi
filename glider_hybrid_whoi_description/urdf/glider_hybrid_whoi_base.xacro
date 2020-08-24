@@ -22,6 +22,8 @@
   <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
   <!-- Properties -->
   <xacro:property name="mass" value="69.7"/>
+  <xacro:property name="hull_mass" value="60.4"/>
+  <xacro:property name="shifter_mass" value="9.3"/>
   <xacro:property name="length" value="1.98"/>
   <xacro:property name="diameter" value="0.23"/>
   <xacro:property name="radius" value="${diameter*0.5}"/>
@@ -76,7 +78,7 @@
         <link name="${namespace}/base_link">
           <volume>${volume}</volume>
           <center_of_buoyancy>${cob}</center_of_buoyancy>
-          <neutrally_buoyant>0</neutrally_buoyant>
+          <neutrally_buoyant>1</neutrally_buoyant>
           <hydrodynamic_model>
             <type>fossen</type>
             <added_mass>
@@ -101,8 +103,8 @@
             <ballast_radius>0.07</ballast_radius>
             <hull_length>${length}</hull_length>
             <hull_radius>${radius}</hull_radius>
-            <hull_mass>${mass}</hull_mass>
-            <shifter_mass>9.3</shifter_mass>
+            <hull_mass>${hull_mass}</hull_mass>
+            <shifter_mass>${shifter_mass}</shifter_mass>
             <initial_mass_position>0.04</initial_mass_position>
             <initial_ballast_position>0.06</initial_ballast_position>
         </link>
