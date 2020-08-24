@@ -421,6 +421,7 @@ void HMFossen::ApplyHydrodynamicForces(
 
   // Total vehicle mass
   double m = this->m_h + this->m_s + m_w;
+  this->m = m; 
 
   // Moving mass position
   double x_s = this->x_s_o + (this->massPos).X();
@@ -435,16 +436,13 @@ void HMFossen::ApplyHydrodynamicForces(
   this->x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
 
   // ---- Inertial matrix calculation ----- //
-  double a = this->l_h/2; // half the length
+  double a = this->l_h/2.0; // half the length
   double b = this->r_h;   // hull radius
   // inertial matrix (Fossen p.42 (2.156))
-  double I_yy = 4/15*m*(b*b+a*a); double I_zz = I_yy;  double I_xx = 4/15*m*(b*b+b*b);
+  double I_yy = 4.0/15.0*m*(b*b+a*a); double I_zz = I_yy;  double I_xx = 4.0/15.0*m*(b*b+b*b);
   physics::InertialPtr I_0 = this->link->GetInertial();
   I_0->SetIXX(I_xx);  I_0->SetIYY(I_yy);  I_0->SetIZZ(I_zz);
-  I_0->SetMass(m);  I_0->SetCoG(x_cg,0,0,0,0,0);
-  this->link->SetInertial(I_0);  
-  this->m = m; 
-  // This uppor change inertial and mass section doesn't work
+  I_0->SetMass(m);  I_0->SetCoG(x_cg,0.0,0.0);
 
   // Link's pose
   ignition::math::Pose3d pose;
@@ -545,17 +543,17 @@ void HMFossen::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
   //        Sa, -1 * CrossProductOperator(ab.tail<3>());
   
   // computed according to the procedure in Fossen p. 41
-  double a = this->l_h/2; // half the length
+  double a = this->l_h/2.0; // half the length
   double b = this->r_h;   // hull radius
-  double e = 1-std::pow(b/a,2);
-  double alpha_o = (2*(1-e*e)/std::pow(e,3))*(0.5*std::log((1+e)/(1-e))-e);
-  double beta_o = 1/std::pow(e,2)-((1-std::pow(e,2))/(2*std::pow(e,3)))*std::log((1+e)/(1-e));
-  double X_udot = -(alpha_o/(2-alpha_o))*this->m;
-  double Y_vdot = -(beta_o/(2-beta_o))*this->m; 
+  double e = 1.0-std::pow(b/a,2);
+  double alpha_o = (2.0*(1.0-e*e)/std::pow(e,3))*(0.5*std::log((1.0+e)/(1.0-e))-e);
+  double beta_o = 1.0/std::pow(e,2)-((1-std::pow(e,2))/(2.0*std::pow(e,3)))*std::log((1.0+e)/(1.0-e));
+  double X_udot = -(alpha_o/(2.0-alpha_o))*this->m;
+  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m; 
   double Z_wdot = Y_vdot;
-  double K_pdot = 0;
+  double K_pdot = 0.0;
   double M_qdot = -0.2*m*((std::pow(b,2)-std::pow(a,2))*(alpha_o-beta_o))/
-      (2*(std::pow(b,2)-std::pow(a,2))+(std::pow(b,2)+std::pow(a,2))*(beta_o-alpha_o));
+      (2.0*(std::pow(b,2)-std::pow(a,2))+(std::pow(b,2)+std::pow(a,2))*(beta_o-alpha_o));
   double N_rdot = M_qdot;
 
   // M_A_cg
@@ -580,9 +578,9 @@ void HMFossen::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
   _Ma = M_A;
 
   Eigen::Vector6d ab = M_A * _vel;
-  Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
+  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
   _Ca << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1 * CrossProductOperator(ab.tail<3>());
+         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
 }
 
 /////////////////////////////////////////////////
