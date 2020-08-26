@@ -3,7 +3,7 @@
 roslaunch uuv_gazebo_worlds ocean_waves.launch
 roslaunch eca_a9_description upload_eca_a9.launch
 ```
-which uploads eca_a9 model of UUV simulator with its plugins. The AUV moves upward gradually when uploaded with neutural buoyancy option turned off. When neuturally_buoyancy option is turned on, it drawns slowly (same problem with modified hybrid glider plugin). HOWEVER, if waited long enough, the model suddenly make very insane movements without any external forces applied. Don't know whats causing it. Seems building the kinematics from the scrtach would be easier than debugging uuv simulator.
+which uploads eca_a9 model of UUV simulator with its plugins. The AUV moves upward gradually when uploaded with neutural buoyancy option turned off. When neuturally_buoyancy option is turned on, it drawns slowly (same problem with modified hybrid glider plugin). HOWEVER, if waited long enough, the model suddenly make very insane movements without any external forces applied. Don't know whats causing it. It must be related to [UUV simulator bug '<neutrally_buoyant> tag does nothing. #77'](https://github.com/uuvsimulator/uuv_simulator/issues/77) which remains an open issue.
 
 # glider_hybrid_whoi
 Modifying UUV Simulator's eca_a9 and uuv_gazebo_plugin for Hybrid Gliders with Buyoncy ballast, sliding mass, and Propellers
