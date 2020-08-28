@@ -6,10 +6,10 @@ Modifying UUV Simulator's eca_a9 and uuv_gazebo_plugin for Hybrid Gliders with B
 ![alt text](https://github.com/woensug-choi/glider_hybrid_whoi/blob/master/DevelopmentDiagram.png?raw=true)
 
 ## Current Problems
-https://github.com/woensug-choi/glider_hybrid_whoi/issues/2
+https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/7
 
 ## Development to-dos
-https://github.com/woensug-choi/glider_hybrid_whoi/issues/1
+https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/6
 
 ## How to run
 ```bash
