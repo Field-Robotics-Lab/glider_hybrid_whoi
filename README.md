@@ -5,6 +5,9 @@ Modifying UUV Simulator's eca_a9 and uuv_gazebo_plugin for Hybrid Gliders with B
 #### Blue : Newely added,  Red lines : With problems,  Yellow : To be added later
 ![alt text](https://github.com/woensug-choi/glider_hybrid_whoi/blob/master/DevelopmentDiagram.png?raw=true)
 
+## Interface
+![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
+
 ## Current Problems
 https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/7
 
