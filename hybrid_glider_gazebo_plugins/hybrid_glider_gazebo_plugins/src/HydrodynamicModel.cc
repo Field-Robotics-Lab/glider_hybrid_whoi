@@ -494,9 +494,14 @@ void HMFossen::ApplyHydrodynamicForces(
 
   // Added Coriolis term
   Eigen::Vector6d cor = -this->Ca * velRel;
+  
+  // Manual Thruster force
+  // Eigen::Vector3d thrust_tau(1.0, 0.0, 0.0);
+  // Eigen::Vector3d thrust_torque(0.0, 0.0, 0.0);
+  // Eigen::Vector6d thruster; thruster << 0.0,1.0,0.0,0.0,0.0,0.0;
 
   // All additional (compared to standard rigid body) Fossen terms combined.
-  Eigen::Vector6d tau = damping + added + cor;
+  Eigen::Vector6d tau = damping + added + cor;// + thruster;
 
   GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
 

@@ -78,7 +78,7 @@
         <link name="${namespace}/base_link">
           <volume>${volume}</volume>
           <center_of_buoyancy>${cob}</center_of_buoyancy>
-          <neutrally_buoyant>1</neutrally_buoyant>
+          <neutrally_buoyant>0</neutrally_buoyant>
           <hydrodynamic_model>
             <type>fossen</type>
             <added_mass>

@@ -8,12 +8,12 @@
 
   <env name="GAZEBO_MASTER_URI" value="http://localhost:3000"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find hybrid_grid_gazebo_ros_plugins)/test/worlds/test_empty.world"/>
+    <arg name="world_name" value="$(find hybrid_glider_gazebo_ros_plugins)/test/worlds/test_empty.world"/>
     <arg name="paused" value="false"/>
     <arg name="gui" value="false"/>
   </include>
 
-  <include file="$(find hybrid_grid_gazebo_ros_plugins)/test/models/default_fossen_vehicle/test_upload_default_fossen_vehicle.launch"/>
+  <include file="$(find hybrid_glider_gazebo_ros_plugins)/test/models/default_hybrid_glider/test_upload_hybrid_glider.launch"/>
 
-  <test test-name="test_default_fossen_vehicle" pkg="hybrid_grid_gazebo_ros_plugins" type="test_default_fossen_vehicle.py" />
+  <test test-name="test_hybrid_glider" pkg="hybrid_grid_gazebo_ros_plugins" type="test_hybrid_glider.py" />
 </launch>
