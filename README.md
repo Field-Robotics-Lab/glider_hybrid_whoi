@@ -16,6 +16,6 @@ https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/6
 
 ## How to run
 ```bash
-roslaunch uuv_gazebo_worlds ocean_waves.launch
+roslaunch glider_hybrid_whoi_gazebo empty_underwater_world.launch
 roslaunch glider_hybrid_whoi_gazebo start_demo_teleop.launch joy_id:=0
 ```
