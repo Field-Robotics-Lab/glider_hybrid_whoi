@@ -151,9 +151,9 @@
       update_rate="2.0"/>
 
     <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_sensors.xacro"/>
-<!--
     <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/uw_gps_plugin.xacro"/>
--->
+    <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/uw_imu_plugin.xacro"/>
+
   </xacro:macro>
 
 </robot>

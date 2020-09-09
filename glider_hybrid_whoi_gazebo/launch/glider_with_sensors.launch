@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- world -->
+  <include file="$(find uuv_gazebo_worlds)/launch/ocean_waves.launch">
+  </include>
+
+  <!-- teleop -->
+  <include file="$(find glider_hybrid_whoi_gazebo)/launch/start_demo_teleop.launch">
+  </include>
+
+</launch>
+
