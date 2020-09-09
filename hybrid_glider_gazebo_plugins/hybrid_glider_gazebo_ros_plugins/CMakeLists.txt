@@ -78,6 +78,11 @@ add_library(hybrid_glider_custom_battery_consumer_ros_plugin src/CustomBatteryCo
 target_link_libraries(hybrid_glider_custom_battery_consumer_ros_plugin ${catkin_LIBRARIES})
 list(APPEND hybrid_glider_GAZEBO_ROS_PLUGINS_LIST hybrid_glider_custom_battery_consumer_ros_plugin)
 
+add_library(uw_gps_ros_plugin src/UnderwaterGPSROSPlugin.cc)
+target_link_libraries(uw_gps_ros_plugin  ${catkin_LIBRARIES})
+list(APPEND hybrid_glider_GAZEBO_ROS_PLUGINS_LIST uw_gps_ros_plugin)
+
+
 install(TARGETS ${hybrid_glider_GAZEBO_ROS_PLUGINS_LIST}
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
