@@ -60,17 +60,6 @@ BuoyantObject::BuoyantObject(sdf::ElementPtr _sdf, physics::LinkPtr _link)
 #endif
   // Set neutrally buoyant flag to false
   this->neutrallyBuoyant = false;
-
-  // Get parameters
-  this->m = 0; // total mass
-  this->x_cg = 0; // center of gravity
-  this->r_w = _sdf->Get<double>("ballast_radius");
-  this->l_h = _sdf->Get<double>("hull_length");
-  this->r_h = _sdf->Get<double>("hull_radius");
-  this->m_h = _sdf->Get<double>("hull_mass");
-  this->m_s = _sdf->Get<double>("shifter_mass");
-  this->x_s_o = _sdf->Get<double>("initial_mass_position");
-  this->x_w_o = _sdf->Get<double>("initial_ballast_position");
 }
 
 /////////////////////////////////////////////////
@@ -176,7 +165,7 @@ void BuoyantObject::GetBuoyancyForce(const ignition::math::Pose3d &_pose,
 }
 
 /////////////////////////////////////////////////
-void BuoyantObject::ApplyBuoyancyForce()
+void BuoyantObject::ApplyBuoyancyForce(double m_h, double m_s, double m_w, const ignition::math::Vector3d &_cog)
 {
   // Link's pose
   ignition::math::Pose3d pose;
@@ -199,63 +188,50 @@ void BuoyantObject::ApplyBuoyancyForce()
   #else
     mass = this->link->GetInertial()->GetMass();
   #endif
-    
+
+    this->g = 9.81;
+
     buoyancyForceNeautural = ignition::math::Vector3d(
           0, 0, mass * this->g);
 
-    // --- Additional Buyoancy due to ballast ---- //
 
-    // // subscribe to pumpPos topic
-    // std::string pumpPosTopic = "/buoyancypump/output";
-    // GZ_ASSERT(!pumpPosTopic.empty(),
-    //           "Pump position(pumpPos) topic tag cannot be empty");
 
-    // gzmsg << "Subscribing to current pump position topic: " << pumpPosTopic
-    //     << std::endl;
-    // this->pumpPosSubscriber = this->node->Subscribe(pumpPosTopic,
-    //   &BuoyantObject::UpdatePumpPos, this);
-    
-    // // subscribe to massPos topic
-    // std::string massPosTopic = "/slidingmass/output";
-    // GZ_ASSERT(!massPosTopic.empty(),
-    //           "Sliding mass position(massPos) topic tag cannot be empty");
+    // !!!!!!!! BUOYANCY PLUGIN NOT USED FOR GLIDER KINEMATICS PLUGIN. ZERO GRAVITY WORLD
 
-    // gzmsg << "Subscribing to current mass position topic: " << massPosTopic
-    //     << std::endl;
-    // this->massPosSubscriber = this->node->Subscribe(massPosTopic,
-    //   &BuoyantObject::UpdateMassPos, this);
+    // // Get world pos eta(p,q,r)
+    // ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
+    // ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
+    // q.X() = pose.Rot().X();
+    // q.Y() = pose.Rot().Y();
+    // q.Z() = pose.Rot().Z();
+    // q.W() = pose.Rot().W();
+    // // roll (x-axis rotation)
+    // double sinr_cosp = 2 * (q.X() * q.Y() + q.Z() * q.W());
+    // double cosr_cosp = 1 - 2 * (q.Y() * q.Y() + q.Z() * q.Z());
+    // vR.X() = std::atan2(sinr_cosp, cosr_cosp);
+    // // pitch (y-axis rotation)
+    // double sinp = 2 * (q.X() * q.Z() - q.W() * q.Y());
+    // if (std::abs(sinp) >= 1)
+    //   vR.Y() = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    // else
+    //   vR.Y() = std::asin(sinp);
+    // // yaw (z-axis rotation)
+    // double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
+    // double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
+    // vR.Z() = std::atan2(siny_cosp, cosy_cosp);
 
-    this-> pumpPos = 0;
-    this-> massPos = 0;
-    
-    // ---- Mass calculation ----- //
-    // Ballast volume and mass
-    double V_B = (this->pumpPos).X()*M_PI*(this->r_w)*(this->r_w);
-    double m_w = V_B*this->fluidDensity;
-
-    // Total vehicle mass
-    double m = this->m_h + this->m_s + m_w;
-
-    // Moving mass position
-    double x_s = this->x_s_o + (this->massPos).X();
-
-    // Hull mass center (uniform hull mass distribution assumed)
-    double x_h = -this->m_s/this->m_h*this->x_s_o;
-
-    // Ballast tank mass center (pushing from front)
-    double x_w = this->x_w_o+(V_B/M_PI*(this->r_w)*(this->r_w));
-
-    // Center of gravity
-    this->x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
-    
-    // Buoyance Force due to ballast tank (to be applied at CoB in world frame)
-    // buoyancyForce = buoyancyForceNeautural + ignition::math::Vector3d(0, 0, m_w * this->g);
-    buoyancyForce = ignition::math::Vector3d(0, 0, (m+m_w) * this->g);
-    buoyancyTorque = ignition::math::Vector3d(0, 0, 0);
-
-    // Gravitational Torque due to sliding mass (tobe applied at CoG in body frame)
-    slidingMassTorque = ignition::math::Vector3d(0, this->x_cg*(m*this->g + m_w*this->g), 0);
-
+    // // Hydrostatic restoring forces from Fossen (2.168)
+    // double m = m_h + m_s + m_w;
+    // double W = m*this->g; // Gravitational force acting on center of gravity
+    // double B = (m_h+m_s)*this->g; // Buoyancy force acting on center of buoyancy
+    // buoyancyForce = ignition::math::Vector3d(
+    //     (W-B)*sin(vR.Y()), -(W-B)*cos(vR.Y())*sin(vR.X()) , -(W-B)*cos(vR.Y())*cos(vR.X())
+    // );
+    // buoyancyTorque = ignition::math::Vector3d(
+    //     -(_cog.Y()*W-(this->GetCoB()).Y()*B)*cos(vR.Y())*cos(vR.X())+(_cog.Z()*W-(this->GetCoB()).Z()*B)*cos(vR.Y())*sin(vR.X()),
+    //     (_cog.Z()*W-(this->GetCoB()).Z()*B)*sin(vR.Y())+(_cog.X()*W-(this->GetCoB()).X()*B)*cos(vR.Y())*cos(vR.X()),
+    //     -(_cog.X()*W-(this->GetCoB()).X()*B)*cos(vR.Y())*sin(vR.X())-(_cog.Y()*W-(this->GetCoB()).Y()*B)*sin(vR.Y())
+    // );
 
   }else{ // if surface vessel
       gzmsg << this->link->GetName() << 
@@ -270,12 +246,14 @@ void BuoyantObject::ApplyBuoyancyForce()
     "Buoyancy torque is invalid");
   if (!this->isSurfaceVessel){
 #if GAZEBO_MAJOR_VERSION >= 8
-    this->link->AddForceAtRelativePosition(buoyancyForce, this->GetCoB());
-    this->link->AddRelativeTorque(slidingMassTorque);
+    // // this->link->AddForce(buoyancyForce);
+    // this->link->AddForceAtRelativePosition(buoyancyForce,this->GetCoB());
+    // // this->link->AddTorque(buoyancyTorque);
+    // this->link->AddRelativeTorque(buoyancyTorque);
 #else
-    this->link->AddForceAtRelativePosition(
-      math::Vector3(buoyancyForce.X(), buoyancyForce.Y(), buoyancyForce.Z()),
-      math::Vector3(this->GetCoB().X(), this->GetCoB().Y(), this->GetCoB().Z()));
+    // this->link->AddForceAtRelativePosition(
+    //   math::Vector3(buoyancyForce.X(), buoyancyForce.Y(), buoyancyForce.Z()),
+    //   math::Vector3(this->GetCoB().X(), this->GetCoB().Y(), this->GetCoB().Z()));
 #endif
   }
   else
@@ -291,22 +269,6 @@ void BuoyantObject::ApplyBuoyancyForce()
 #endif
   }
 
-}
-
-/////////////////////////////////////////////////
-void BuoyantObject::UpdatePumpPos(ConstVector3dPtr &_msg)
-{
-  this->pumpPos.X() = _msg->x();
-  this->pumpPos.Y() = _msg->y();
-  this->pumpPos.Z() = _msg->z();
-}
-
-/////////////////////////////////////////////////
-void BuoyantObject::UpdateMassPos(ConstVector3dPtr &_msg)
-{
-  this->massPos.X() = _msg->x();
-  this->massPos.Y() = _msg->y();
-  this->massPos.Z() = _msg->z();
 }
 
 /////////////////////////////////////////////////

@@ -22,6 +22,8 @@
 
 #include <map>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/msgs/msgs.hh>
@@ -113,6 +115,11 @@ class UnderwaterObjectPlugin : public gazebo::ModelPlugin
 
   /// \brief Name of vehicle's base_link
   protected: std::string baseLinkName;
+
+  /// \brief CSV log writing stream for verifications
+  protected: std::ofstream writeLog;
+  protected: u_int64_t writeCounter;
+  protected: bool writeLogFlag;
 
   /// \brief Subcriber to flow message
   protected: gazebo::transport::SubscriberPtr flowSubscriber;

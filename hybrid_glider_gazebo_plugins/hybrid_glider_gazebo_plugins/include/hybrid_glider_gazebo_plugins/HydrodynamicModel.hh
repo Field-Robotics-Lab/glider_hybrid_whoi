@@ -129,7 +129,7 @@ class HydrodynamicModel : public BuoyantObject
   protected: double m;
 
   /// \brief center of gravity
-  protected: double x_cg;
+  protected: ignition::math::Vector3d cog;
 
   /// \brief ballast_radius
   protected: double r_w;
@@ -152,6 +152,14 @@ class HydrodynamicModel : public BuoyantObject
   /// \brief initial_ballast_position
   protected: double x_w_o;
 
+  /// \brief max_mass_position
+  protected: double x_s_o_max;
+
+  /// \brief max_ballast_volume
+  protected: double vol_w_max;
+
+  /// \brief hard_input_flag
+  protected: bool HardCodeInputFlag;
 };
 
 /// \brief Pointer to model

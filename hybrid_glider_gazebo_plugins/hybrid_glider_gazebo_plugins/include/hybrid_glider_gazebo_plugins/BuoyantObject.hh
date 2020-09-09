@@ -49,7 +49,7 @@ class BuoyantObject
     ignition::math::Vector3d &buoyancyTorque);
 
   /// \brief Applies buoyancy force on link
-  public: void ApplyBuoyancyForce();
+  public: void ApplyBuoyancyForce(double m_h, double m_s, double m_w, const ignition::math::Vector3d &_cog);
 
   /// \brief Sets the link's submerged volume
   public: void SetVolume(double _volume = -1);
@@ -165,51 +165,6 @@ class BuoyantObject
 
   /// \brief Gazebo node
   protected: gazebo::transport::NodePtr node;
-
-  /// \brief Buoyancy pump position vector read from topic
-  protected: ignition::math::Vector3d pumpPos;
-
-  /// \brief Subcriber to pumpPos message
-  protected: gazebo::transport::SubscriberPtr pumpPosSubscriber;
-
-  /// \brief Reads pumpPos topic
-  protected: void UpdatePumpPos(ConstVector3dPtr &_msg);
-
-  /// \brief Sliding mass position vector read from topic
-  protected: ignition::math::Vector3d massPos;
-
-  /// \brief Subcriber to massPos message
-  protected: gazebo::transport::SubscriberPtr massPosSubscriber;
-
-  /// \brief Reads massPos topic
-  protected: void UpdateMassPos(ConstVector3dPtr &_msg);
-
-  /// \brief total_mass
-  protected: double m;
-
-  /// \brief center of gravity
-  protected: double x_cg;
-
-  /// \brief ballast_radius
-  protected: double r_w;
-
-  /// \brief hull_length
-  protected: double l_h;
-
-  /// \brief hull_radius
-  protected: double r_h;
-
-  /// \brief hull_mass
-  protected: double m_h;
-
-  /// \brief shifter_mass
-  protected: double m_s;
-
-  /// \brief initial_mass_position
-  protected: double x_s_o;
-
-  /// \brief initial_ballast_position
-  protected: double x_w_o;
 };
 }
 

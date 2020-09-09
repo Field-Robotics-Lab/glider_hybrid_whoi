@@ -102,7 +102,6 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
 
   // Get other parameters
   this->m = 0; // total mass
-  this->x_cg = 0; // center of gravity
   this->r_w = _sdf->Get<double>("ballast_radius");
   this->l_h = _sdf->Get<double>("hull_length");
   this->r_h = _sdf->Get<double>("hull_radius");
@@ -110,6 +109,19 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
   this->m_s = _sdf->Get<double>("shifter_mass");
   this->x_s_o = _sdf->Get<double>("initial_mass_position");
   this->x_w_o = _sdf->Get<double>("initial_ballast_position");
+  this->x_s_o_max = _sdf->Get<double>("max_mass_position");
+  this->vol_w_max = (_sdf->Get<double>("max_ballast_volume"))/(PI*(this->r_w)*(this->r_w));
+  std::vector<double> cogSDF = {0, 0, 0};
+  if (_sdf->HasElement("center_of_gravity"))
+  {
+    cogSDF = Str2Vector(_sdf->Get<std::string>("center_of_gravity"));
+    this->cog = ignition::math::Vector3d(cogSDF[0], cogSDF[1], cogSDF[2]);
+  }
+
+  gzmsg << this->cog << std::endl << std::endl;
+  
+  if (_sdf->HasElement("hard_code_input"))
+    this->HardCodeInputFlag = _sdf->Get<bool>("hard_code_input");
 
   // // subscribe to pumpPos topic
   // std::string pumpPosTopic = "/buoyancypump/output";
@@ -131,8 +143,8 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
   // this->massPosSubscriber = this->node->Subscribe(massPosTopic,
   //   &HydrodynamicModel::UpdateMassPos, this);
 
-  this-> pumpPos = 0;
-  this-> massPos = 0;
+  this-> pumpPos = -0.000157604960189972/(PI*(this->r_w)*(this->r_w));
+  this-> massPos = -0.0179951693048699;
 
 }
 
@@ -414,6 +426,33 @@ HMFossen::HMFossen(sdf::ElementPtr _sdf,
 void HMFossen::ApplyHydrodynamicForces(
   double _time, const ignition::math::Vector3d &_flowVelWorld)
 {
+  // Hard input data without ros topic for plugin testing
+  if (this->HardCodeInputFlag){
+    double hardInputPumpVol,hardInputMassPos;
+    double dt = _time - lastTime;
+    if (dt < 1.0){
+        double Period = 30.0;
+
+        hardInputPumpVol = -1.5760e-04;
+        hardInputMassPos = sin(_time/4.0);
+
+        // Max value limiter
+        if (hardInputMassPos > x_s_o_max)
+          hardInputMassPos = x_s_o_max;
+        if (hardInputMassPos < -x_s_o_max)
+          hardInputMassPos = -x_s_o_max;      
+        if (hardInputPumpVol > vol_w_max)
+          hardInputPumpVol = vol_w_max;
+        if (hardInputPumpVol < -vol_w_max)
+          hardInputPumpVol = -vol_w_max;
+
+        // Export
+        (this->pumpPos).X() = hardInputPumpVol/(PI*(this->r_w)*(this->r_w));
+        (this->massPos).X() = hardInputMassPos;
+    }
+  }
+
+
   // ---- Mass calculation ----- //
   // Ballast volume and mass
   double V_B = (this->pumpPos).X()*PI*(this->r_w)*(this->r_w);
@@ -430,19 +469,55 @@ void HMFossen::ApplyHydrodynamicForces(
   double x_h = -this->m_s/this->m_h*this->x_s_o;
 
   // Ballast tank mass center (pushing from front)
-  double x_w = this->x_w_o+(V_B/PI*(this->r_w)*(this->r_w));
+  double x_w = this->x_w_o+(V_B/(PI*(this->r_w)*(this->r_w)));
 
   // Center of gravity
-  this->x_cg = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
+  (this->cog).X() = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
 
   // ---- Inertial matrix calculation ----- //
   double a = this->l_h/2.0; // half the length
   double b = this->r_h;   // hull radius
   // inertial matrix (Fossen p.42 (2.156))
   double I_yy = 4.0/15.0*m*(b*b+a*a); double I_zz = I_yy;  double I_xx = 4.0/15.0*m*(b*b+b*b);
-  physics::InertialPtr I_0 = this->link->GetInertial();
-  I_0->SetIXX(I_xx);  I_0->SetIYY(I_yy);  I_0->SetIZZ(I_zz);
-  I_0->SetCoG(x_cg,0.0,0.0); I_0->SetMass(m); 
+  this->link->GetInertial()->SetCoG((this->cog).X(),(this->cog).Y(),(this->cog).Z());
+  this->link->GetInertial()->SetIXX(I_xx);
+  this->link->GetInertial()->SetIYY(I_yy);
+  this->link->GetInertial()->SetIZZ(I_zz);
+  this->link->GetInertial()->SetMass(m);
+
+  // ---- Added mass matrix calculation ----- //
+  // computed according to the procedure in Fossen p. 41
+  double e = 1.0-std::pow(b/a,2);
+  double alpha_o = (2.0*(1.0-e*e)/std::pow(e,3))*(0.5*std::log((1.0+e)/(1.0-e))-e);
+  double beta_o = 1.0/std::pow(e,2)-((1-std::pow(e,2))/(2.0*std::pow(e,3)))*std::log((1.0+e)/(1.0-e));
+  double X_udot = -(alpha_o/(2.0-alpha_o))*this->m;
+  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m; 
+  double Z_wdot = Y_vdot;
+  double K_pdot = 0.0;
+  double M_qdot = -0.2*this->m*(std::pow(std::pow(b,2)-std::pow(a,2),2)*(alpha_o-beta_o))/
+      (2.0*(std::pow(b,2)-std::pow(a,2))+(std::pow(b,2)+std::pow(a,2))*(beta_o-alpha_o));
+  double N_rdot = M_qdot;
+
+  // M_A_cg
+  Eigen::Matrix6d Ma_cg = Eigen::Matrix6d::Identity();
+  Ma_cg(0,0) = -X_udot;  Ma_cg(1,1) = -Y_vdot;  Ma_cg(2,2) = -Z_wdot;  
+  Ma_cg(3,3) = -K_pdot;  Ma_cg(4,4) = -M_qdot;  Ma_cg(5,5) = -N_rdot;  
+
+  // M_A = LeftSide*M_A_CG*RightSide
+  Eigen::Vector3d cog = Eigen::Vector3d((this->cog).X(),(this->cog).Y(),(this->cog).Z());
+  Eigen::Matrix3d S_r_cg = CrossProductOperator(cog);
+  Eigen::Matrix6d LeftSide = Eigen::Matrix6d::Identity();
+  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2); 
+  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2); 
+  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2); 
+  Eigen::Matrix6d RightSide = Eigen::Matrix6d::Identity();
+  Eigen::Matrix3d S_r_cg_T = S_r_cg.transpose();
+  RightSide(0,3) = S_r_cg_T(0,0); RightSide(0,4) = S_r_cg_T(0,1); RightSide(0,5) = S_r_cg_T(0,2); 
+  RightSide(1,3) = S_r_cg_T(1,0); RightSide(1,4) = S_r_cg_T(1,1); RightSide(1,5) = S_r_cg_T(1,2); 
+  RightSide(2,3) = S_r_cg_T(2,0); RightSide(2,4) = S_r_cg_T(2,1); RightSide(2,5) = S_r_cg_T(2,2);
+  Eigen::Matrix6d M_A = LeftSide*Ma_cg*RightSide;
+
+  this->Ma = M_A;
 
   // Link's pose
   ignition::math::Pose3d pose;
@@ -473,7 +548,7 @@ void HMFossen::ApplyHydrodynamicForces(
   velRel = EigenStack(
     this->ToNED(linVel - flowVel),
     this->ToNED(angVel));
-
+   
   // Update added Coriolis matrix
   this->ComputeAddedCoriolisMatrix(velRel, this->Ma, this->Ca);
 
@@ -494,14 +569,99 @@ void HMFossen::ApplyHydrodynamicForces(
 
   // Added Coriolis term
   Eigen::Vector6d cor = -this->Ca * velRel;
+
+  // --- Calculate Rigid Body Diagonal terms --- //
+  // Rigid Body mass diagonal term
+  Eigen::Matrix3d m_S_r_cg = this->m * CrossProductOperator(cog);
+  Eigen::Matrix6d M_RB = Eigen::Matrix6d::Identity() * this->m;
+  M_RB(3,3) = I_xx; M_RB(4,4) = I_yy; M_RB(5,5) = I_zz;
+  Eigen::Matrix6d M_RB_NoDiag = M_RB;
+  M_RB(0,3) = -m_S_r_cg(0,0); M_RB(0,4) = -m_S_r_cg(0,1); M_RB(0,5) = -m_S_r_cg(0,2); 
+  M_RB(1,3) = -m_S_r_cg(1,0); M_RB(1,4) = -m_S_r_cg(1,1); M_RB(1,5) = -m_S_r_cg(1,2); 
+  M_RB(2,3) = -m_S_r_cg(2,0); M_RB(2,4) = -m_S_r_cg(2,1); M_RB(2,5) = -m_S_r_cg(2,2);
+  M_RB(3,0) = m_S_r_cg(0,0); M_RB(3,1) = m_S_r_cg(0,1); M_RB(3,2) = m_S_r_cg(0,2);
+  M_RB(4,0) = m_S_r_cg(1,0); M_RB(4,1) = m_S_r_cg(1,1); M_RB(4,2) = m_S_r_cg(1,2);
+  M_RB(5,0) = m_S_r_cg(2,0); M_RB(5,1) = m_S_r_cg(2,1); M_RB(5,2) = m_S_r_cg(2,2);
+  // Rigid Body Coriolis diagonal term
+  Eigen::Matrix6d C_RB = Eigen::Matrix6d::Zero();
+  Eigen::Vector6d ab = M_RB * velRel;
+  Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
+  C_RB << Eigen::Matrix3d::Zero(), Sa,
+         Sa, -1 * CrossProductOperator(ab.tail<3>());  
+  Eigen::Matrix6d C_RB_NoDiag = Eigen::Matrix6d::Zero();
+  ab = M_RB_NoDiag * velRel;
+  Sa = -1 * CrossProductOperator(ab.head<3>());
+  C_RB_NoDiag << Eigen::Matrix3d::Zero(), Sa,
+         Sa, -1 * CrossProductOperator(ab.tail<3>());
+  // Calculate diagonal effect as RHS force
+  Eigen::Vector6d rigid_diag = -(M_RB-M_RB_NoDiag)*this->filteredAcc - (C_RB-C_RB_NoDiag)*velRel;
+
+  // --- Calculate hull hydrodynamic force (Graver) --- //
+  //angle of attack of hull
+  double alpha_h;
+  if (velRel(0) > 0)
+      alpha_h = atan(velRel(2)/velRel(0));
+  else
+      alpha_h = 0;
+  // Graver hydrodynamic forces for hull
+  double A_h = M_PI*this->r_h*this->r_h;
+  double C_D_h = 0.214 + 32.3*alpha_h*alpha_h;
+  double C_L_h = 11.76*alpha_h + 4.6 * alpha_h*alpha_h;
+  double C_M_h = 0.63*alpha_h;
+  double F_h_kernel = std::pow(std::pow(velRel(0)*velRel(0)+velRel(2)*velRel(2),0.5),2);
+  double F_D_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_D_h;
+  double F_L_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_L_h;
+  double F_M_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_M_h;
+  Eigen::Vector6d hull_hydro; hull_hydro << F_L_h*sin(alpha_h)-F_D_h*cos(alpha_h), 0.0, -F_L_h*cos(alpha_h)-F_D_h*sin(alpha_h), 0.0, F_M_h, 0.0;
   
-  // Manual Thruster force
-  // Eigen::Vector3d thrust_tau(1.0, 0.0, 0.0);
-  // Eigen::Vector3d thrust_torque(0.0, 0.0, 0.0);
-  // Eigen::Vector6d thruster; thruster << 0.0,1.0,0.0,0.0,0.0,0.0;
+  // --- Calculate Buoyancy force (Hydrostatic restoring force, Fossen (2.168)) --- //
+  // Get world pos eta(p,q,r)
+  ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
+  ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
+  q.X() = pose.Rot().X();
+  q.Y() = pose.Rot().Y();
+  q.Z() = pose.Rot().Z();
+  q.W() = pose.Rot().W();
+  // roll (x-axis rotation)
+  double sinr_cosp = 2 * (q.X() * q.Y() + q.Z() * q.W());
+  double cosr_cosp = 1 - 2 * (q.Y() * q.Y() + q.Z() * q.Z());
+  vR.X() = std::atan2(sinr_cosp, cosr_cosp);
+  // pitch (y-axis rotation)
+  double sinp = 2 * (q.X() * q.Z() - q.W() * q.Y());
+  if (std::abs(sinp) >= 1)
+    vR.Y() = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+  else
+    vR.Y() = std::asin(sinp);
+  // yaw (z-axis rotation)
+  double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
+  double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
+  vR.Z() = std::atan2(siny_cosp, cosy_cosp);
+  // Hydrostatic restoring forces from Fossen (2.168)
+  this->g = 9.81;
+  double W = this->m*this->g; // Gravitational force acting on center of gravity
+  double B = (this->m_h+this->m_s)*this->g; // Buoyancy force acting on center of buoyancy
+  ignition::math::Vector3d buoyancyForce,buoyancyTorque;
+  buoyancyForce = ignition::math::Vector3d(
+      (W-B)*sin(vR.Y()), -(W-B)*cos(vR.Y())*sin(vR.X()) , -(W-B)*cos(vR.Y())*cos(vR.X())
+  );
+  buoyancyTorque = ignition::math::Vector3d(
+      -((this->cog).Y()*W-(this->GetCoB()).Y()*B)*cos(vR.Y())*cos(vR.X())+((this->cog).Z()*W-(this->GetCoB()).Z()*B)*cos(vR.Y())*sin(vR.X()),
+      ((this->cog).Z()*W-(this->GetCoB()).Z()*B)*sin(vR.Y())+((this->cog).X()*W-(this->GetCoB()).X()*B)*cos(vR.Y())*cos(vR.X()),
+      -((this->cog).X()*W-(this->GetCoB()).X()*B)*cos(vR.Y())*sin(vR.X())-((this->cog).Y()*W-(this->GetCoB()).Y()*B)*sin(vR.Y())
+  );
+  Eigen::Vector6d hydrostatic; 
+  hydrostatic << buoyancyForce.X(), buoyancyForce.Y(), buoyancyForce.Z(), buoyancyTorque.X(), buoyancyTorque.Y(), buoyancyTorque.Z();
 
   // All additional (compared to standard rigid body) Fossen terms combined.
-  Eigen::Vector6d tau = damping + added + cor;// + thruster;
+  Eigen::Vector6d tau;
+  if (this->HardCodeInputFlag){ // Manual Thruster force
+    Eigen::Vector6d thruster; thruster << 1.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+    tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
+  } else {
+
+    tau = damping + added + cor + rigid_diag + hull_hydro - hydrostatic;
+
+  }
 
   GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
 
@@ -518,7 +678,7 @@ void HMFossen::ApplyHydrodynamicForces(
     this->link->AddRelativeTorque(hydTorque);
   }
 
-  this->ApplyBuoyancyForce();
+  // this->ApplyBuoyancyForce(this->m_h,this->m_s,m_w,this->cog);
 
   if ( this->debugFlag )
   {
@@ -542,50 +702,10 @@ void HMFossen::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
   // This corresponds to eq. 6.43 on p. 120 in
   // Fossen, Thor, "Handbook of Marine Craft and Hydrodynamics and Motion
   // Control", 2011
-  // Eigen::Vector6d ab = this->GetAddedMass() * _vel;
-  // Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
-  // _Ca << Eigen::Matrix3d::Zero(), Sa,
-  //        Sa, -1 * CrossProductOperator(ab.tail<3>());
-  
-  // computed according to the procedure in Fossen p. 41
-  double a = this->l_h/2.0; // half the length
-  double b = this->r_h;   // hull radius
-  double e = 1.0-std::pow(b/a,2);
-  double alpha_o = (2.0*(1.0-e*e)/std::pow(e,3))*(0.5*std::log((1.0+e)/(1.0-e))-e);
-  double beta_o = 1.0/std::pow(e,2)-((1-std::pow(e,2))/(2.0*std::pow(e,3)))*std::log((1.0+e)/(1.0-e));
-  double X_udot = -(alpha_o/(2.0-alpha_o))*this->m;
-  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m; 
-  double Z_wdot = Y_vdot;
-  double K_pdot = 0.0;
-  double M_qdot = -0.2*m*((std::pow(b,2)-std::pow(a,2))*(alpha_o-beta_o))/
-      (2.0*(std::pow(b,2)-std::pow(a,2))+(std::pow(b,2)+std::pow(a,2))*(beta_o-alpha_o));
-  double N_rdot = M_qdot;
-
-  // M_A_cg
-  Eigen::Matrix6d Ma_cg;
-  Ma_cg(0,0) = -X_udot;  Ma_cg(1,1) = -Y_vdot;  Ma_cg(2,2) = -Z_wdot;  
-  Ma_cg(3,3) = -K_pdot;  Ma_cg(4,4) = -M_qdot;  Ma_cg(5,5) = -N_rdot;  
-
-  // M_A = LeftSide*M_A_CG*RightSide
-  Eigen::Vector3d cog(this->x_cg,0,0);
-  Eigen::Matrix3d S_r_cg = CrossProductOperator(cog);
-  Eigen::Matrix6d LeftSide = Eigen::Matrix6d::Identity();
-  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2); 
-  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2); 
-  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2); 
-  Eigen::Matrix6d RightSide = Eigen::Matrix6d::Identity();
-  Eigen::Matrix3d S_r_cg_T = S_r_cg.transpose();
-  LeftSide(0,3) = S_r_cg_T(0,0); LeftSide(0,4) = S_r_cg_T(0,1); LeftSide(0,5) = S_r_cg_T(0,2); 
-  LeftSide(1,3) = S_r_cg_T(1,0); LeftSide(1,4) = S_r_cg_T(1,1); LeftSide(1,5) = S_r_cg_T(1,2); 
-  LeftSide(2,3) = S_r_cg_T(2,0); LeftSide(2,4) = S_r_cg_T(2,1); LeftSide(2,5) = S_r_cg_T(2,2);
-  Eigen::Matrix6d M_A = LeftSide*Ma_cg*RightSide;
-
-  _Ma = M_A;
-
-  Eigen::Vector6d ab = M_A * _vel;
-  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
+  Eigen::Vector6d ab = _Ma * _vel;
+  Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
   _Ca << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
+         Sa, -1 * CrossProductOperator(ab.tail<3>());
 }
 
 /////////////////////////////////////////////////
