@@ -12,6 +12,7 @@ Modifying UUV Simulator's eca_a9 and uuv_gazebo_plugin for Hybrid Gliders with B
 roslaunch glider_hybrid_whoi_gazebo empty_underwater_world.launch paused:=true
 roslaunch glider_hybrid_whoi_gazebo start_demo_teleop_test.launch joy_id:=0
 ```
+Starts paused. Click 'play' button at the Gazebo window. The data log will be saved at /tmp/HydridGliderLog.csv
 - inputs(pump and battery positions) are defined at [HydrodynamicModel.cc](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/1ec945d94cb247c326ee1a9fbc3f55c1383ca161/hybrid_glider_gazebo_plugins/hybrid_glider_gazebo_plugins/src/HydrodynamicModel.cc#L436)
 
 ## Interface
