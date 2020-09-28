@@ -1,5 +1,6 @@
 #ifndef _DIRECT_KINEMATICS_HH_
 #define _DIRECT_KINEMATICS_HH_
+#define M_PI 3.14159265358979323846
 
 // defaults for the plugin
 #include <gazebo/gazebo.hh>
@@ -15,6 +16,10 @@
 #include "std_msgs/Float32.h"
 #include "std_msgs/Float32MultiArray.h"
 #include "std_msgs/MultiArrayDimension.h"
+#include "gazebo_msgs/SetModelState.h"
+
+#include <cmath>
+#include <iostream>
 
 namespace gazebo
 {
@@ -67,7 +72,7 @@ namespace gazebo
       }
     
     }
-    /// \brief Set the velocity of the vejoc;e
+    /// \brief Set the velocity of the vehicle
     /// \param[in] _vel New target velocity
     public: void SetVelocity(const ignition::math::Vector3d &_vel)
     {
@@ -89,7 +94,34 @@ namespace gazebo
     /// \param[in] _msg Repurpose a vector3 message.
     private: void OnMsg(ConstVector3dPtr &_msg)
     {
-      this->SetVelocity(ignition::math::Vector3d(_msg->x(),_msg->y(),_msg->z()));
+      // Apply velocity to the model.
+
+      // gzmsg << std::endl << _msg->x() << std::endl;
+      // gzmsg << _msg->y() << std::endl;
+      // gzmsg << _msg->z() << std::endl << std::endl;
+      ignition::math::Vector3d _velocity = ignition::math::Vector3d(_msg->x(),_msg->y(),_msg->z());
+      // _msg->x() * cos(_msg->y()) * cos(_msg->z()),
+      // _msg->x() * sin(_msg->y()) * cos(_msg->z()),
+      // _msg->x() * sin(_msg->z()));
+      this->SetVelocity(_velocity);
+
+      // Apply orientation to the model.
+      ignition::math::Pose3d pose = this->model->WorldPose();
+      ignition::math::Vector3<double> vP = pose.Pos();
+      double phi = std::atan(_msg->y()/_msg->x());
+      double theta = std::atan(std::sqrt(_msg->x()*_msg->x()+_msg->y()*_msg->y())/_msg->z()) + M_PI/2.0 ;
+      gzmsg << std::endl << theta << std::endl;
+      gzmsg << phi << std::endl << std::endl;
+      if( std::isnan(theta) )
+      { 
+        theta = 0;
+      }
+      if( std::isnan(phi) )
+      { 
+        phi = 0;
+      }
+      pose.Set(vP.X(),vP.Y(),vP.Z(),0,theta,phi);
+      this->model->SetWorldPose(pose);
     }
   };
 
