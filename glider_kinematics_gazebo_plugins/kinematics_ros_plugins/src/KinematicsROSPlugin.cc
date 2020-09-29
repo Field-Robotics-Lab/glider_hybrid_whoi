@@ -37,12 +37,12 @@ KinematicsROSPlugin::~KinematicsROSPlugin()
 }
 
 /////////////////////////////////////////////////
-void KinematicsROSPlugin::Load(gazebo::physics::WorldPtr _world,
+void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     sdf::ElementPtr _sdf)
 {
   try
   {
-    KinematicsPlugin::Load(_world, _sdf);
+    KinematicsPlugin::Load(_model, _sdf);
   } catch(gazebo::common::Exception &_e)
   {
     gzerr << "Error loading plugin."
@@ -279,5 +279,5 @@ bool KinematicsROSPlugin::UpdateCurrentVertAngleModel(
 }
 
 /////////////////////////////////////////////////
-GZ_REGISTER_WORLD_PLUGIN(KinematicsROSPlugin)
+GZ_REGISTER_MODEL_PLUGIN(KinematicsROSPlugin)
 }

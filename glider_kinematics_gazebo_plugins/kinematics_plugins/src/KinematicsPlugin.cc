@@ -34,7 +34,7 @@
 
 using namespace gazebo;
 
-GZ_REGISTER_WORLD_PLUGIN(KinematicsPlugin)
+GZ_REGISTER_MODEL_PLUGIN(KinematicsPlugin)
 
 /////////////////////////////////////////////////
 KinematicsPlugin::KinematicsPlugin()
@@ -53,24 +53,24 @@ KinematicsPlugin::~KinematicsPlugin()
 }
 
 /////////////////////////////////////////////////
-void KinematicsPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
+void KinematicsPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 {
-  GZ_ASSERT(_world != NULL, "World pointer is invalid");
+  GZ_ASSERT(_model != NULL, "Model pointer is invalid");
   GZ_ASSERT(_sdf != NULL, "SDF pointer is invalid");
 
-  this->world = _world;
+  this->model = _model;
   this->sdf = _sdf;
 
   // Read the namespace for topics and services
   this->ns = _sdf->Get<std::string>("namespace");
 
-  gzmsg << "Loading underwater world..." << std::endl;
+  gzmsg << "Loading vehicle kinematics initials..." << std::endl;
   // Initializing the transport node
   this->node = transport::NodePtr(new transport::Node());
 #if GAZEBO_MAJOR_VERSION >= 8
-  this->node->Init(this->world->Name());
+  this->node->Init(this->model->GetWorld()->Name());
 #else
-  this->node->Init(this->world->GetName());
+  this->node->Init(this->model->GetWorld()->GetName());
 #endif
   // Retrieve the current velocity configuration, if existent
   GZ_ASSERT(this->sdf->HasElement("constant_current"),
@@ -197,9 +197,9 @@ void KinematicsPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
 
   // Initialize the time update
 #if GAZEBO_MAJOR_VERSION >= 8
-  this->lastUpdate = this->world->SimTime();
+  this->lastUpdate = this->model->GetWorld()->SimTime();
 #else
-  this->lastUpdate = this->world->GetSimTime();
+  this->lastUpdate = this->model->GetWorld()->GetSimTime();
 #endif
   this->currentVelModel.lastUpdate = this->lastUpdate.Double();
   this->currentHorzAngleModel.lastUpdate = this->lastUpdate.Double();
@@ -218,7 +218,7 @@ void KinematicsPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
     boost::bind(&KinematicsPlugin::Update,
     this, _1));
 
-  gzmsg << "Underwater current plugin loaded!" << std::endl
+  gzmsg << "Vehicle kinematics plugin loaded!" << std::endl
     << "\tWARNING: Current velocity calculated in the ENU frame"
     << std::endl;
 }
@@ -233,9 +233,9 @@ void KinematicsPlugin::Init()
 void KinematicsPlugin::Update(const common::UpdateInfo & /** _info */)
 {
 #if GAZEBO_MAJOR_VERSION >= 8
-  common::Time time = this->world->SimTime();
+  common::Time time = this->model->GetWorld()->SimTime();
 #else
-  common::Time time = this->world->GetSimTime();
+  common::Time time = this->model->GetWorld()->GetSimTime();
 #endif
   // Calculate the flow velocity and the direction using the Gauss-Markov
   // model

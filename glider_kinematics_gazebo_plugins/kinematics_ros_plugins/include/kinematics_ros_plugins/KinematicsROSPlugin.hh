@@ -49,7 +49,7 @@ namespace kinematics_ros
     public: virtual ~KinematicsROSPlugin();
 
     /// \brief Load module and read parameters from SDF.
-    public: void Load(gazebo::physics::WorldPtr _world,
+    public: void Load(gazebo::physics::ModelPtr _model,
         sdf::ElementPtr _sdf);
 
     /// \brief Service call to update the parameters for the velocity

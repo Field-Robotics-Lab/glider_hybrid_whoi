@@ -14,7 +14,7 @@
 // limitations under the License.
 
 /// \file kinematics_plugins.hh
-/// \brief Plugin that for the underwater world
+/// \brief Plugin that for the vehicle kinematics
 
 #ifndef __KINEMATICS_PLUGIN_HH__
 #define __KINEMATICS_PLUGIN_HH__
@@ -30,10 +30,8 @@
 
 namespace gazebo
 {
-  /// \brief Class for the underwater current plugin
-  /// TODO: Add option to make the underwater current also a function of depth
-  ///       to comply with DNV
-  class KinematicsPlugin : public WorldPlugin
+  /// \brief Class for the vehicle kinematics
+  class KinematicsPlugin : public ModelPlugin
   {
     /// \brief Class constructor
     public: KinematicsPlugin();
@@ -42,7 +40,7 @@ namespace gazebo
     public: virtual ~KinematicsPlugin();
 
     // Documentation inherited.
-    public: virtual void Load(physics::WorldPtr _world,
+    public: virtual void Load(physics::ModelPtr _model,
         sdf::ElementPtr _sdf);
 
     // Documentation inherited.
@@ -58,8 +56,8 @@ namespace gazebo
     /// \brief Update event
     protected: event::ConnectionPtr updateConnection;
 
-    /// \brief Pointer to world
-    protected: physics::WorldPtr world;
+    /// \brief Pointer to the model
+    protected: physics::ModelPtr model;
 
     /// \brief Pointer to sdf
     protected: sdf::ElementPtr sdf;

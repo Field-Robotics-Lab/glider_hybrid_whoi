@@ -124,7 +124,35 @@
       <plugin name="direct_kinematics_plugin" filename="libdirect_kinematics.so">
         <direct_kinematics_topic>kinematics/velocity_control</direct_kinematics_topic>
       </plugin>
+      <plugin name="kinematics_ros_plugin" filename="libkinematics_ros_plugin.so">
+        <namespace>kinematics</namespace>
+        <constant_current>
+          <topic>velocity_control</topic>
+          <velocity>
+            <mean>0</mean>
+            <min>0</min>
+            <max>5</max>
+            <mu>0.0</mu>
+            <noiseAmp>0.0</noiseAmp>
+          </velocity>
 
+          <horizontal_angle>
+            <mean>0</mean>
+            <min>-3.141592653589793238</min>
+            <max>3.141592653589793238</max>
+            <mu>0.0</mu>
+            <noiseAmp>0.0</noiseAmp>
+          </horizontal_angle>
+
+          <vertical_angle>
+            <mean>0</mean>
+            <min>-3.141592653589793238</min>
+            <max>3.141592653589793238</max>
+            <mu>0.0</mu>
+            <noiseAmp>0.0</noiseAmp>
+          </vertical_angle>
+        </constant_current>
+      </plugin>
 
     </gazebo>
 
