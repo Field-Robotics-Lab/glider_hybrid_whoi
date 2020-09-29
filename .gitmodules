@@ -1,3 +1,6 @@
 [submodule "frl_vehicle_msgs"]
 	path = frl_vehicle_msgs
 	url = git@github.com:Field-Robotics-Lab/frl_msgs.git
+[submodule "glider_kinematics_gazebo_plugins/frl_vehicle_msgs"]
+	path = glider_kinematics_gazebo_plugins/frl_vehicle_msgs
+	url = git@github.com:Field-Robotics-Lab/frl_msgs.git
