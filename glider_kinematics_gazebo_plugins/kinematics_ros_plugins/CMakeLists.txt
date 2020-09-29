@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   kinematics_plugins
   kinematics_ros_plugins_msgs
+  frl_vehicle_msgs
   gazebo_dev)
 
 catkin_package(
@@ -23,6 +24,7 @@ catkin_package(
    geometry_msgs
    kinematics_plugins
    kinematics_ros_plugins_msgs
+   frl_vehicle_msgs
    gazebo_dev
 )
 

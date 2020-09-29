@@ -16,6 +16,7 @@
   <depend>kinematics_plugins</depend>
   <depend>geometry_msgs</depend>
   <depend>kinematics_ros_plugins_msgs</depend>
+  <depend>frl_vehicle_msgs</depend>
   <depend>gazebo_dev</depend>
 
   <export>
