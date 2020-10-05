@@ -22,7 +22,7 @@
     <xacro:property name="fin_rho" value="1028.0"/>
 
     <!-- FIN SNIPPETS -->
-    <xacro:macro name="fin_macro" params="namespace fin_id *origin">
+    <!-- <xacro:macro name="fin_macro" params="namespace fin_id *origin">
       <xacro:fin_two_lines_macro
         namespace="${namespace}"
         parent_link="${namespace}/base_link"
@@ -42,7 +42,7 @@
         cda_stall="">
         <xacro:insert_block name="origin"/>
       </xacro:fin_two_lines_macro>
-    </xacro:macro>
+    </xacro:macro> -->
 
     <!-- <xacro:macro name="fin_macro" params="namespace fin_id *origin">
       <xacro:fin_quadratic_macro

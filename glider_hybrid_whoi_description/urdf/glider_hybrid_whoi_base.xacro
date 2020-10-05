@@ -76,7 +76,7 @@
     </link>
 
     <!-- Set up hydrodynamic plugin -->
-    <gazebo>
+    <!-- <gazebo>
       <plugin name="${namespace}_hybrid_glider_plugin" filename="libhybrid_glider_underwater_object_ros_plugin.so">
         <fluid_density>${rho}</fluid_density>
         <flow_velocity_topic>hydrodynamics/current_velocity</flow_velocity_topic>
@@ -120,15 +120,15 @@
             <max_ballast_volume>${max_ballast_vol}</max_ballast_volume>
         </link>
       </plugin>
-    </gazebo>
+    </gazebo> -->
 
     <!-- Instantiate Fins -->
-    <xacro:fin_macro namespace="${namespace}" fin_id="0">
+    <!-- <xacro:fin_macro namespace="${namespace}" fin_id="0">
       <origin xyz="-0.70777 -0.07876 0.078586" rpy="0.7904 -0.0998 -0.1003" />
     </xacro:fin_macro>
     <xacro:fin_macro namespace="${namespace}" fin_id="1">
       <origin xyz="-0.70777 -0.07876 -0.078586" rpy="2.3512 0.0998 -0.1003" />
-    </xacro:fin_macro>
+    </xacro:fin_macro> -->
     <!--
     <xacro:fin_macro namespace="${namespace}" fin_id="2">
       <origin xyz="-0.70777 0.07876 -0.078586" rpy="-2.3512 0.0998 0.1003" />
@@ -138,17 +138,17 @@
     </xacro:fin_macro>
     -->
 
-    <xacro:thruster_module_first_order_basic_fcn_macro
+    <!-- <xacro:thruster_module_first_order_basic_fcn_macro
       namespace="${namespace}"
       thruster_id="0"
       mesh_filename="${prop_mesh_file}"
       dyn_time_constant="0.1"
       rotor_constant="0.000049">
       <origin xyz="-0.9676 0 0" rpy="0 0 ${pi}" />
-    </xacro:thruster_module_first_order_basic_fcn_macro>
+    </xacro:thruster_module_first_order_basic_fcn_macro> -->
 
     <!-- TODO: Parametrize the battery unit -->
-    <xacro:basic_linear_battery_macro
+    <!-- <xacro:basic_linear_battery_macro
       namespace="${namespace}"
       parent_link="${namespace}/base_link"
       prefix=""
@@ -159,7 +159,7 @@
       resistance="0.002"
       smooth_current_tau="1.9499"
       voltage="4.2"
-      update_rate="2.0"/>
+      update_rate="2.0"/> -->
 
     <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_sensors.xacro"/>
   </xacro:macro>
