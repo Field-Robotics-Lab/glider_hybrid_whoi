@@ -19,6 +19,8 @@
   <depend>gazebo_msgs</depend>
   <depend>frl_vehicle_msgs</depend>
   <depend>gazebo_ros</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2</depend>
 
   <export>
     <!-- <gazebo_ros plugin_path="${prefix}/../../lib" gazebo_media_path="${prefix}" /> -->

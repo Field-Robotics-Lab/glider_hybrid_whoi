@@ -19,6 +19,10 @@
 #define __DIRECT_KINEMATICS_ROS_PLUGIN_HH__
 
 #include <ros/ros.h>
+#include <gazebo_msgs/ModelState.h>
+#include <gazebo_msgs/SetModelState.h>
+#include <gazebo_msgs/LinkState.h>
+#include <gazebo_msgs/SetLinkState.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -60,11 +64,15 @@ namespace direct_kinematics_ros
     // protected: virtual void ConveyModelState();
 
     /// \brief Convey model state from gazebo topic to outside
-    protected: virtual void ConveyCommand(const frl_vehicle_msgs::
+    protected: virtual void ConveyCommands(const frl_vehicle_msgs::
                                         UwGliderCommand::ConstPtr &_msg);
 
-    /// \brief Calculate the model state from received command
-    protected: virtual gazebo_msgs::ModelState calculateCommand
+    /// \brief Convey model state from gazebo topic to outside (model)
+    protected: virtual void ConveyModelCommand(const frl_vehicle_msgs::
+                                        UwGliderCommand::ConstPtr &_msg);
+
+    /// \brief Convey link state from gazebo topic to outside (rudder)
+    protected: virtual void ConveyRudderVisualCommand
                 (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
 
     /// \brief Pointer to the model structure
@@ -77,10 +85,10 @@ namespace direct_kinematics_ros
     private: ros::Subscriber commandSubscriber;
 
     /// \brief ROS Publishers to gazebo_msgs topic
-    private: ros::Publisher commandPublisher;
+    private: std::map<std::string, ros::ServiceClient> commandPublisher;
 
     /// \brief ROS Subscriber from gazebo topic
-    private: std::map<std::string, ros::Subscriber> gazeboSubscriber;
+    private: std::map<std::string, ros::ServiceClient> statusSubscriber;
 
     /// \brief ROS Publishers to outside
     private: std::map<std::string, ros::Publisher> statusPublishers;
@@ -90,6 +98,31 @@ namespace direct_kinematics_ros
 
     /// \brief Command starting time recorder
     protected: gazebo::common::Time cmd_start_time;
+
+    /// \brief Base link name
+    protected: std::string base_link_name;
+
+    /// \brief Rudder link name
+    protected: std::string rudder_link_name;
+
+    /// \brief Rudder link exist bool
+    protected: bool rudderExist;
+
+    /// \brief Model State (in model reference frame)
+    protected: gazebo_msgs::ModelState modelState_AtModelFrame;
+
+    /// \brief Model State (in world reference frame)
+    protected: gazebo_msgs::ModelState modelState_AtWorldFrame;
+
+    /// \brief CSV log writing stream for verifications
+    protected: std::ofstream writeLog;
+    protected: u_int64_t writeCounter;
+    protected: bool writeLogFlag;
+    protected: virtual void writeCSVLog();
+
+    private: geometry_msgs::TransformStamped nedTransform;
+
+    private: tf2_ros::TransformBroadcaster tfBroadcaster;
   };
 }
 
