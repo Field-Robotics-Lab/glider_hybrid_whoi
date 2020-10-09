@@ -40,6 +40,7 @@ link_directories(
 
 add_library(direct_kinematics_ros_plugin src/DirectKinematicsROSPlugin.cc)
 target_link_libraries(direct_kinematics_ros_plugin ${catkin_LIBRARIES})
+add_dependencies(direct_kinematics_ros_plugin ${catkin_EXPORTED_TARGETS})
 list(APPEND hybrid_glider_GAZEBO_ROS_PLUGINS_LIST direct_kinematics_ros_plugin)
 
 install(TARGETS ${hybrid_glider_GAZEBO_ROS_PLUGINS_LIST}
