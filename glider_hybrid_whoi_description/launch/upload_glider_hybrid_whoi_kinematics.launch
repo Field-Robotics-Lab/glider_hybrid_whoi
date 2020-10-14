@@ -3,7 +3,7 @@
 
   <arg name="x" default="0" doc="X coordinate of the initial position to spawn the model (in ENU)"/>
   <arg name="y" default="0" doc="Y coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="z" default="-20" doc="Z coordinate of the initial position to spawn the model (in ENU)"/>
+  <arg name="z" default="-5.0" doc="Z coordinate of the initial position to spawn the model (in ENU)"/>
   <arg name="roll" default="0.0" doc="Roll angle of the initial orientation to spawn the model (in ENU)"/>
   <arg name="pitch" default="0.0" doc="Pitch angle of the initial orientation to spawn the model (in ENU)"/>
   <arg name="yaw" default="0.0" doc="Yaw angle of the initial orientation to spawn the model (in ENU)"/>

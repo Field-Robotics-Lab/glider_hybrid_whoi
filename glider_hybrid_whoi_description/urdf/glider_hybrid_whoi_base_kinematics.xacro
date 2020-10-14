@@ -21,8 +21,8 @@
   <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_snippets_test.xacro"/>
   <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
   <!-- Properties -->
-  <xacro:property name="mass" value="56.0"/>
-  <xacro:property name="hull_mass" value="48.2"/>
+  <xacro:property name="mass" value="1000.0"/>
+  <!-- <xacro:property name="hull_mass" value="48.2"/>
   <xacro:property name="shifter_mass" value="7.8"/>
   <xacro:property name="length" value="2.0"/>
   <xacro:property name="radius" value="0.105"/>
@@ -33,54 +33,80 @@
   <xacro:property name="initial_ballast_pos" value="0.711"/>
   <xacro:property name="max_mass_pos" value="0.03"/>
   <xacro:property name="max_ballast_vol" value="2.4e-04"/>
-  <xacro:property name="volume" value="99999999"/> <!-- usage? Neutural buoyancy disabled using zero gravity world-->
+  <xacro:property name="volume" value="99999999"/> 
   <xacro:property name="cob" value="0 0 0"/>
   <xacro:property name="cog" value="0 0 0.0054"/>
-  <xacro:property name="rho" value="1024.0"/>
+  <xacro:property name="rho" value="1024.0"/> -->
 
-  <!-- <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi.dae"/>
-  <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_collision.dae"/>
-  <xacro:property name="prop_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_propeller.dae"/>
-  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi_fin.dae"/> -->
-  <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9.dae"/>
+  <xacro:property name="visual_mesh_file" value="file://$(find uuv_dave)/models/glider_hybrid_whoi/mesh/glider_hybrid_whoi_body.dae" />
+  <xacro:property name="collision_mesh_file" value="file://$(find uuv_dave)/models/glider_hybrid_whoi/mesh/glider_hybrid_whoi_collision.dae" />
+  <xacro:property name="left_prop_mesh_file" value="file://$(find uuv_dave)/models/glider_hybrid_whoi/mesh/glider_hybrid_whoi_left_propeller.dae" />
+  <xacro:property name="right_prop_mesh_file" value="file://$(find uuv_dave)/models/glider_hybrid_whoi/mesh/glider_hybrid_whoi_right_propeller.dae" />
+  <!-- <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9.dae"/>
   <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9.stl"/>
   <xacro:property name="prop_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9_propeller.dae"/>
-  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9_fin.dae"/>
+  <xacro:property name="fin_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/eca_a9/eca_a9_fin.dae"/> -->
 
 
   <xacro:macro name="glider_hybrid_whoi_base" params="namespace debug inertial_reference_frame">
-    <!-- <link name="dummy">
-    </link> -->
     <link name="${namespace}/base_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 -1.5708" />
         <geometry>
           <mesh filename="${visual_mesh_file}" scale="1 1 1" />
         </geometry>
       </visual>
-
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 -1.5708" />
         <geometry>
           <mesh filename="${collision_mesh_file}" scale="1 1 1" />
         </geometry>
       </collision>
-
-      <!-- This inertial input is dummy input. The values will be changed within glider kinamatics plugin with Fossen's-->
-      <inertial> 
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="${mass}" />
-        <inertia ixx="0.3048" ixy="0" ixz="0"
-                 iyy="13.9760" iyz="0"
-                 izz="13.9760" />
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="30.0" ixy="0" ixz="0" iyy="0.6" iyz="0" izz="5.0" />
       </inertial>
     </link>
-
-    <!-- Dummy joint to fix inertial definition at urdf warnings -->
-    <!-- <joint name="dummy_joint" type="fixed">
-      <parent link="dummy"/>
-      <child link="${namespace}/base_link"/>
-    </joint> -->
+    <link name="${namespace}/left_propeller_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0 " />
+        <geometry>
+          <mesh filename="${left_prop_mesh_file}" scale="1 1 1" />
+        </geometry>
+      </visual>
+    </link>
+    <joint name="${namespace}/left_propeller_joint" type="continuous">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/left_propeller_link"/>
+      <axis xyz="0 1 0" />
+    </joint>
+    <link name="${namespace}/right_propeller_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${right_prop_mesh_file}" scale="1 1 1" />
+        </geometry>
+      </visual>
+    </link>
+    <joint name="${namespace}/right_propeller_joint" type="continuous">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/right_propeller_link"/>
+      <axis xyz="0 1 0" />
+    </joint>
+    <link name='${namespace}/battery_link2'>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <battery name='${namespace}/battery'>
+        <voltage>4.2</voltage>
+      </battery>
+    </link>
+    <joint name='${namespace}/battery_joint2' type='fixed'>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/battery_link2"/>
+    </joint>
 
     <!-- Set up hydrodynamic plugin -->
     <gazebo>

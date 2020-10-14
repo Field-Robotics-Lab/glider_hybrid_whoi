@@ -36,8 +36,8 @@ DirectKinematicsROSPlugin::~DirectKinematicsROSPlugin()
   this->rosNode->shutdown();
   this->updateConnection.reset();
   
-  // // CSV log write stream close
-  // writeLog.close();
+  // CSV log write stream close
+  writeLog.close();
 }
 
 /////////////////////////////////////////////////
@@ -80,13 +80,15 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // {
   //   this->rudderExist = false;
   // }
-  // // get writeLog Flag
-  // if (_sdf->HasElement("writeLog"))
-  // {
-  //   this->writeLogFlag = _sdf->Get<bool>("writeLog");
-  //   gzmsg << "World position of the base_link is saved at"
-  //       << "/tmp/HybridGliderLog.csv" << std::endl;
-  // }
+
+  // get writeLog Flag
+  if (_sdf->HasElement("writeLog"))
+  {
+    this->writeLogFlag = _sdf->Get<bool>("writeLog");
+    gzmsg << "World position of the base_link is saved at"
+        << "/tmp/DirectKinematicsLog.csv" << std::endl;
+    remove("/tmp/DirectKinematicsLog.csv");
+  }
 
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
@@ -124,12 +126,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // Spin up the queue helper thread.
   this->commandSubQueueThread = std::thread(std::bind(
       &DirectKinematicsROSPlugin::commandSubThread, this));
-
-  // this->commandSubscriber =
-  //   this->rosNode->subscribe<frl_vehicle_msgs::UwGliderCommand>
-  //   (this->model->GetName() + "/direct_kinematics/UwGliderCommand", 10,
-  //   boost::bind(&DirectKinematicsROSPlugin::ConveyCommands,
-  //   this, _1));
 
   this->nedTransform.header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform.child_frame_id = this->model->GetName() + "/base_link_ned";
@@ -177,6 +173,7 @@ void DirectKinematicsROSPlugin::Connect()
 void DirectKinematicsROSPlugin::Init()
 {
   // Nothing here
+  this->writeCounter = 0;
 }
 
 /////////////////////////////////////////////////
@@ -206,8 +203,6 @@ void DirectKinematicsROSPlugin::updateModelState()
 {
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
-  model_state_msg.request.relative_entity_name = 
-          this->model->GetName() + "::" + this->base_link_name;
   this->stateSubscriber["Model"].call(model_state_msg);
   this->modelState.pose = model_state_msg.response.pose;
   this->modelState.twist = model_state_msg.response.twist;
@@ -244,14 +239,12 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
              const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
   // --------------------------------------- //
-  // ------------ Pitch command ------------ //
+  // ----------- PITCH COMMAND ------------- //
   // --------------------------------------- //
   gazebo_msgs::SetModelState pitch_cmd_msg;
   int _pitch_cmd_type = _msg->pitch_cmd_type;
   pitch_cmd_msg.request.model_state.model_name = this->model->GetName();
-  pitch_cmd_msg.request.model_state.reference_frame =
-            this->model->GetName() + "/" + this->base_link_name;
-
+  pitch_cmd_msg.request.model_state.pose = this->modelState.pose;
   // 1 : battery position, 2: target once , 3: target servo
   if (_pitch_cmd_type == 1)  // battery position control
   {
@@ -285,15 +278,29 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
   pitch_cmd_msg.request.model_state.twist = this->modelState.twist;
   // publish command model state to gazebo/set_model_state topic
   this->commandPublisher["Model"].call(pitch_cmd_msg);
+  this->modelState = pitch_cmd_msg.request.model_state;
 
   // --------------------------------------- //
-  // ------------ Rudder control ----------- //
+  // ----------- RUDDER CONTROL ------------ //
   // --------------------------------------- //
   gazebo_msgs::SetModelState rudder_cmd_msg;
   int _rudder_control_mode = _msg->rudder_control_mode;
   rudder_cmd_msg.request.model_state.model_name = this->model->GetName();
-  rudder_cmd_msg.request.model_state.reference_frame =
-            this->model->GetName() + "/" + this->base_link_name;
+
+  // Pass original state
+  rudder_cmd_msg.request.model_state.pose = this->modelState.pose;
+  rudder_cmd_msg.request.model_state.twist = this->modelState.twist;
+
+  // Convert original orientation state to ignition variable
+  double xOrientation = this->modelState.pose.orientation.x;
+  double yOrientation = this->modelState.pose.orientation.y;
+  double zOrientation = this->modelState.pose.orientation.z;
+  double wOrientation = this->modelState.pose.orientation.w;
+  ignition::math::Quaterniond orientation;
+  orientation.Set(xOrientation, yOrientation, zOrientation, wOrientation);
+  ignition::math::Vector3d orientation_euler = orientation.Euler();
+
+  // Define _target_heading accordingly
   ignition::math::Quaterniond _target_heading;
   // 1 : control heading, 2: control angle
   if (_rudder_control_mode == 1)  // control heading
@@ -311,19 +318,27 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
     double rudderAngleTarget = _msg->target_rudder_angle;
     if (_rudder_angle == 1)  // center
     {
-      _target_heading.Euler(0.0, 0.0, rudderAngleZero);
+      _target_heading.Euler(orientation_euler.X(), 
+                            orientation_euler.Y(), 
+                            orientation_euler.Z()-M_PI + rudderAngleZero);
     }
     else if (_rudder_angle == 2)  // port
     {
-      _target_heading.Euler(0.0, 0.0, rudderAnglePort);
+      _target_heading.Euler(orientation_euler.X(), 
+                            orientation_euler.Y(), 
+                            orientation_euler.Z()-M_PI + rudderAnglePort);
     }
     else if (_rudder_angle == 3)  // staboard
     {
-      _target_heading.Euler(0.0, 0.0, rudderAngleStbd);
+      _target_heading.Euler(orientation_euler.X(), 
+                            orientation_euler.Y(), 
+                            orientation_euler.Z()-M_PI + rudderAngleStbd);
     }
     else if (_rudder_angle == 4)  // direct
     {
-      _target_heading.Euler(0.0, 0.0, rudderAngleTarget);
+      _target_heading.Euler(orientation_euler.X(), 
+                            orientation_euler.Y(), 
+                            orientation_euler.Z()-M_PI + rudderAngleTarget);
     }
     else if (_rudder_angle == 0)  // nothing
     {
@@ -350,12 +365,13 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
         << "(1 : control heading, 2: control angle)" 
         << std::endl;
   }
-  rudder_cmd_msg.request.model_state.twist = this->modelState.twist;
   // publish command model state to gazebo/set_model_state topic
   this->commandPublisher["Model"].call(rudder_cmd_msg);
+  this->modelState = rudder_cmd_msg.request.model_state;
 
   // --------------------------------------- //
-  // ------- Motor/thruster command -------- //
+  // ------- MOTOR/THRUSTER COMMAND -------- //
+  // -------- local frame control ---------- //
   // --------------------------------------- //
   // Velocity control (may be needed later considering drags)
   gazebo_msgs::SetModelState motor_cmd_msg;
@@ -370,16 +386,18 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
   }
   else if (_motor_cmd_type == 2)  // power command
   {
-    motor_cmd_msg.request.model_state.twist.linear.x 
+    motor_cmd_msg.request.model_state.twist.linear.x
           = _msg->target_motor_cmd;
   }
   else if (_motor_cmd_type == 0)  // nothing
   {
-    motor_cmd_msg.request.model_state.twist = this->modelState.twist;
+    motor_cmd_msg.request.model_state.reference_frame = "world";
+    motor_cmd_msg.request.model_state = this->modelState;
   }
   else
   {
-    motor_cmd_msg.request.model_state.twist = this->modelState.twist;
+    motor_cmd_msg.request.model_state.reference_frame = "world";
+    motor_cmd_msg.request.model_state = this->modelState;
     gzmsg << "WRONG MOTOR/THRUSTER COMMAND TYPE "
         << "(1 : voltage command, 2: power command)"
         << std::endl;
@@ -473,13 +491,13 @@ void DirectKinematicsROSPlugin::writeCSVLog()
 if (this->writeLogFlag)
 {
   double time = this->time.Double();
-  if (writeCounter == 0)
+  if (this->writeCounter == 0)
   {
-    writeLog.open("/tmp/HybridGliderLog.csv");
+    writeLog.open("/tmp/DirectKinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
     writeLog << "# t,x,y,z,p,q,r\n";
     writeLog.close();
-    writeCounter = writeCounter + 1;
+    this->writeCounter = this->writeCounter + 1;
   }
   if (floor(time * 10) == time * 10)
   {
@@ -509,10 +527,10 @@ if (this->writeLogFlag)
     double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
     vR.Z() = std::atan2(siny_cosp, cosy_cosp);
 
-    writeLog.open("/tmp/HybridGliderLog.csv", std::ios_base::app);
+    writeLog.open("/tmp/DirectKinematicsLog.csv", std::ios_base::app);
     writeLog << time << ","
             << vP.X() << "," << vP.Y() << "," << vP.Z() << ","
-            << vR.X() << "," << vR.Y() << "," << vR.Z() << "\n";
+            << vR.X() << "," << vR.Y() << "," << vR.Z()-M_PI << "\n";
     writeLog.close();
   }
 }

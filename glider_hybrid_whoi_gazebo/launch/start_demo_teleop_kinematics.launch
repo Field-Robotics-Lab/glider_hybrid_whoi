@@ -3,7 +3,9 @@
   <arg name="x" default="0"/>
   <arg name="y" default="0"/>
   <arg name="z" default="-5"/>
-  <arg name="yaw" default="0"/>
+  <arg name="roll" value="0"/>
+  <arg name="pitch" default="0"/>
+  <arg name="yaw" value="0"/>
 
   <arg name="record" default="false"/>
   <arg name="bag_filename" default="recording.bag"/>
@@ -16,6 +18,8 @@
     <arg name="x" value="$(arg x)"/>
     <arg name="y" value="$(arg y)"/>
     <arg name="z" value="$(arg z)"/>
+    <arg name="roll" value="$(arg roll)"/>
+    <arg name="pitch" value="$(arg yaw)"/>
     <arg name="yaw" value="$(arg yaw)"/>
   </include>
 

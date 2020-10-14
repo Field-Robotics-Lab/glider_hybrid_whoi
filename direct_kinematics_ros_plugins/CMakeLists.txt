@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
   std_msgs
   roscpp
+  rospy
   tf2_ros
   tf2
   gazebo_dev
@@ -25,6 +26,7 @@ catkin_package(
   frl_vehicle_msgs
   std_msgs
   gazebo_ros
+  message_runtime
 )
 
 include_directories(
@@ -53,4 +55,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hh"
   PATTERN "*~" EXCLUDE
+)
+
+catkin_install_python(PROGRAMS test/test_directKinematics.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
