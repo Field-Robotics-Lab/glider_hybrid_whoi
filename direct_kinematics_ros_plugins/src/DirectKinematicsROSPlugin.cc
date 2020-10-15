@@ -127,6 +127,11 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->commandSubQueueThread = std::thread(std::bind(
       &DirectKinematicsROSPlugin::commandSubThread, this));
 
+  // Publisher for glider status
+  this->statePublisher =
+      this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
+        this->model->GetName() + "/direct_kinematics/UwGliderStatus", 10);
+
   this->nedTransform.header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform.child_frame_id = this->model->GetName() + "/base_link_ned";
   this->nedTransform.transform.translation.x = 0;
@@ -190,6 +195,9 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
 
   // Update model state
   this->updateModelState();
+
+  // Send status
+  this->ConveyModelState();
 
   // CSV log write stream
   this->writeCSVLog();
@@ -485,6 +493,39 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
 // }
 
 /////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::ConveyModelState()
+{
+  // Calculate pose
+  this->modelXYZ = 
+      ignition::math::Vector3d(this->modelState.pose.position.x,
+                               this->modelState.pose.position.y,
+                               this->modelState.pose.position.z);
+  this->modelRPY = calculateRPY(this->modelState.pose.orientation.x,
+                                this->modelState.pose.orientation.y,
+                                this->modelState.pose.orientation.z,
+                                this->modelState.pose.orientation.w);
+
+  frl_vehicle_msgs::UwGliderStatus status_msg;
+  status_msg.header.stamp = ros::Time::now();
+  // status_msg.latitude = 
+  // status_msg.longitude =
+  status_msg.roll = this->modelRPY.X();
+  status_msg.pitch = this->modelRPY.Y();
+  status_msg.yaw = this->modelRPY.Z();
+  status_msg.heading = this->modelRPY.Z();
+  status_msg.depth = this->modelXYZ.Z();
+  // status_msg.altitude = 
+  // status_msg.motor_power = 
+  // status_msg.rudder_angle = 
+  // status_msg.battery_position = 
+  // status_msg.pumped_volume = 
+  
+  this->statePublisher.publish(status_msg);
+}
+
+
+
+/////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::writeCSVLog()
 {
 // CSV log write stream
@@ -501,39 +542,40 @@ if (this->writeLogFlag)
   }
   if (floor(time * 10) == time * 10)
   {
-    // ignition::math::Pose3d pose = 
-    //         this->model->GetLink(this->base_link_name)->WorldPose();
-    ignition::math::Pose3d pose = 
-            this->model->WorldPose();
-    ignition::math::Vector3<double> vP = pose.Pos();
-    ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
-    ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
-    q.X() = pose.Rot().X();
-    q.Y() = pose.Rot().Y();
-    q.Z() = pose.Rot().Z();
-    q.W() = pose.Rot().W();
-    // roll (x-axis rotation)
-    double sinr_cosp = 2 * (q.X() * q.Y() + q.Z() * q.W());
-    double cosr_cosp = 1 - 2 * (q.Y() * q.Y() + q.Z() * q.Z());
-    vR.X() = std::atan2(sinr_cosp, cosr_cosp);
-    // pitch (y-axis rotation)
-    double sinp = 2 * (q.X() * q.Z() - q.W() * q.Y());
-    if (std::abs(sinp) >= 1)
-    vR.Y() = std::copysign(M_PI / 2, sinp);  // use 90 deg if out
-    else
-    vR.Y() = std::asin(sinp);
-    // yaw (z-axis rotation)
-    double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
-    double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
-    vR.Z() = std::atan2(siny_cosp, cosy_cosp);
-
     writeLog.open("/tmp/DirectKinematicsLog.csv", std::ios_base::app);
     writeLog << time << ","
-            << vP.X() << "," << vP.Y() << "," << vP.Z() << ","
-            << vR.X() << "," << vR.Y() << "," << vR.Z()-M_PI << "\n";
+            << this->modelXYZ.X() << "," << this->modelXYZ.Y() << "," 
+            << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
+            << this->modelRPY.Y() << "," << this->modelRPY.Z() << "\n";
     writeLog.close();
   }
 }
 }
+
+/////////////////////////////////////////////////
+ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY(double x, double y, double z, double w)
+{
+  ignition::math::Vector3<double> vR;
+  ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
+  q.X() = x; q.Y() = y; q.Z() = z; q.W() = w;
+  // roll (x-axis rotation)
+  double sinr_cosp = 2 * (q.X() * q.Y() + q.Z() * q.W());
+  double cosr_cosp = 1 - 2 * (q.Y() * q.Y() + q.Z() * q.Z());
+  vR.X() = std::atan2(sinr_cosp, cosr_cosp);
+  // pitch (y-axis rotation)
+  double sinp = 2 * (q.X() * q.Z() - q.W() * q.Y());
+  if (std::abs(sinp) >= 1)
+  vR.Y() = - std::copysign(M_PI / 2, sinp);  // use 90 deg if out
+  else
+  vR.Y() = - std::asin(sinp);
+  // yaw (z-axis rotation)
+  double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
+  double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
+  vR.Z() = std::atan2(siny_cosp, cosy_cosp) - M_PI;
+  // SUBTRACTION M_PI needs investigation
+  return vR;
+}
+
+
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
 }

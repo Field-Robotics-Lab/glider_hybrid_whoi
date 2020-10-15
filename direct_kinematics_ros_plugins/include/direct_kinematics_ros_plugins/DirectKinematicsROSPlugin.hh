@@ -74,7 +74,7 @@ namespace direct_kinematics_ros
     protected: gazebo::event::ConnectionPtr updateConnection;
 
     /// \brief Convey model state from gazebo topic to outside
-    // protected: virtual void ConveyModelState();
+    protected: virtual void ConveyModelState();
 
     /// \brief Convey model state from gazebo topic to outside
     protected: virtual void ConveyCommands(const frl_vehicle_msgs::
@@ -115,8 +115,12 @@ namespace direct_kinematics_ros
     /// \brief update model state
     protected: virtual void updateModelState();
 
-    // /// \brief ROS Publishers to outside
-    // private: std::map<std::string, ros::Publisher> statePublishers;
+    /// \brief update model state
+    protected: virtual ignition::math::Vector3<double> calculateRPY(
+                              double x, double y, double z, double w);
+
+    /// \brief ROS Publishers to outside
+    private: ros::Publisher statePublisher;
 
     /// \brief Time at gazebo simulation
     protected: gazebo::common::Time time;
@@ -135,6 +139,10 @@ namespace direct_kinematics_ros
 
     /// \brief Model State 
     protected: gazebo_msgs::ModelState modelState;
+
+    /// \brief Model Pose
+    protected: ignition::math::Vector3<double> modelXYZ;
+    protected: ignition::math::Vector3<double> modelRPY;
 
     // /// \brief Model State (in world reference frame)
     // protected: gazebo_msgs::ModelState modelState_AtWorldFrame;
