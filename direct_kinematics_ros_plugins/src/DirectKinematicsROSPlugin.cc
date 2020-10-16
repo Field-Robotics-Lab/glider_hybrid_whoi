@@ -554,7 +554,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.pitch = this->modelRPY.Y();
   status_msg.yaw = this->modelRPY.Z();
   status_msg.heading = this->modelRPY.Z();
-  status_msg.depth = this->modelXYZ.Z();
+  status_msg.depth = - this->modelXYZ.Z();
   status_msg.altitude = this->sensorAltitude;
   status_msg.motor_power = this->motorPower; 
   status_msg.rudder_angle = this->rudderAngle;
@@ -614,8 +614,10 @@ ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY
   // yaw (z-axis rotation)
   double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
   double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
-  vR.Z() = std::atan2(siny_cosp, cosy_cosp) - M_PI;
-  // SUBTRACTION M_PI needs investigation
+  vR.Z() = std::atan2(siny_cosp, cosy_cosp) + M_PI;
+  // yaw value needs investigation
+  if (vR.Z() > 6.283185)
+    vR.Z() = vR.Z() - 2*M_PI;
   return vR;
 }
 
