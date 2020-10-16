@@ -32,6 +32,7 @@
 
 #include <std_msgs/Bool.h>
 #include <uuv_sensor_ros_plugins_msgs/DVL.h>
+#include <sensor_msgs/NavSatFix.h>
 
 #include <frl_vehicle_msgs/UwGliderCommand.h>
 #include <frl_vehicle_msgs/UwGliderStatus.h>
@@ -122,6 +123,21 @@ namespace direct_kinematics_ros
     /// \brief update DVL sensor data
     protected: virtual void UpdateDVLSensorData(
                           const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
+    
+    /// \brief update GPS sensor state
+    protected: virtual void UpdateGPSSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg);
+
+    /// \brief flag for GPS OnOff status
+    protected: bool GPSOnOff;
+
+    /// \brief GPS sensor data
+    protected: double sensorLatitude;
+    protected: double sensorLongitude;
+
+    /// \brief update GPS sensor data
+    protected: virtual void UpdateGPSSensorData(
+                          const sensor_msgs::NavSatFix::ConstPtr &_msg);
 
     /// \brief ROS helper function that processes messages
     private: void commandSubThread();
@@ -163,6 +179,12 @@ namespace direct_kinematics_ros
     /// \brief Model Pose
     protected: ignition::math::Vector3<double> modelXYZ;
     protected: ignition::math::Vector3<double> modelRPY;
+
+    /// \brief Motor power
+    protected: double motorPower;
+
+    /// \brief Rudder angle
+    protected: double rudderAngle;
 
     // /// \brief Model State (in world reference frame)
     // protected: gazebo_msgs::ModelState modelState_AtWorldFrame;

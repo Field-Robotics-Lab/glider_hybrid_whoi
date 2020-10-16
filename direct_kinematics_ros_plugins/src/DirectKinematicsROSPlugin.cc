@@ -131,6 +131,18 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorData,
     this, _1));
     
+  this->sensorSubscribers["GPSOnOff"]=
+    this->rosNode->subscribe<std_msgs::Bool>(
+    this->model->GetName() + "/dvl/state", 10,
+    boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorOnOff,
+    this, _1));
+
+  this->sensorSubscribers["GPS"]=
+    this->rosNode->subscribe<sensor_msgs::NavSatFix>(
+    this->model->GetName() + "/gps", 10,
+    boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorData,
+    this, _1));
+    
   // Publisher for glider status
   this->statePublisher =
       this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
@@ -236,6 +248,8 @@ void DirectKinematicsROSPlugin::updateModelState()
   this->stateSubscriber["Model"].call(model_state_msg);
   this->modelState.pose = model_state_msg.response.pose;
   this->modelState.twist = model_state_msg.response.twist;
+
+
 }
 
 /////////////////////////////////////////////////
@@ -351,24 +365,28 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
       _target_heading.Euler(orientation_euler.X(), 
                             orientation_euler.Y(), 
                             orientation_euler.Z()-M_PI + rudderAngleZero);
+      this->rudderAngle = rudderAngleZero;
     }
     else if (_rudder_angle == 2)  // port
     {
       _target_heading.Euler(orientation_euler.X(), 
                             orientation_euler.Y(), 
                             orientation_euler.Z()-M_PI + rudderAnglePort);
+      this->rudderAngle = rudderAnglePort;
     }
     else if (_rudder_angle == 3)  // staboard
     {
       _target_heading.Euler(orientation_euler.X(), 
                             orientation_euler.Y(), 
                             orientation_euler.Z()-M_PI + rudderAngleStbd);
+      this->rudderAngle = rudderAngleStbd;
     }
     else if (_rudder_angle == 4)  // direct
     {
       _target_heading.Euler(orientation_euler.X(), 
                             orientation_euler.Y(), 
                             orientation_euler.Z()-M_PI + rudderAngleTarget);
+      this->rudderAngle = rudderAngleTarget;
     }
     else if (_rudder_angle == 0)  // nothing
     {
@@ -418,6 +436,7 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
   {
     motor_cmd_msg.request.model_state.twist.linear.x
           = _msg->target_motor_cmd;
+    this->motorPower = _msg->target_motor_cmd;
   }
   else if (_motor_cmd_type == 0)  // nothing
   {
@@ -529,16 +548,16 @@ void DirectKinematicsROSPlugin::ConveyModelState()
 
   frl_vehicle_msgs::UwGliderStatus status_msg;
   status_msg.header.stamp = ros::Time::now();
-  // status_msg.latitude = 
-  // status_msg.longitude =
+  status_msg.latitude = this->sensorLatitude;
+  status_msg.longitude = this->sensorLongitude;
   status_msg.roll = this->modelRPY.X();
   status_msg.pitch = this->modelRPY.Y();
   status_msg.yaw = this->modelRPY.Z();
   status_msg.heading = this->modelRPY.Z();
   status_msg.depth = this->modelXYZ.Z();
   status_msg.altitude = this->sensorAltitude;
-  // status_msg.motor_power = 
-  // status_msg.rudder_angle = 
+  status_msg.motor_power = this->motorPower; 
+  status_msg.rudder_angle = this->rudderAngle;
   // status_msg.battery_position = 
   // status_msg.pumped_volume = 
   
@@ -599,25 +618,36 @@ ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY
   // SUBTRACTION M_PI needs investigation
   return vR;
 }
+
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::UpdateDVLSensorOnOff
                       (const std_msgs::Bool::ConstPtr &_msg)
 {
   this->DVLOnOff = _msg->data;
 }
+
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::UpdateDVLSensorData
                       (const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg)
 {
   if (this->DVLOnOff)
-  {
     this->sensorAltitude = _msg->altitude;
-  }
-  else
-  {
-    uuv_sensor_ros_plugins_msgs::DVL DVLmsg;
-  } 
+}
 
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::UpdateGPSSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg)
+{
+  this->GPSOnOff = _msg->data;
+}
+
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::UpdateGPSSensorData
+                      (const sensor_msgs::NavSatFix::ConstPtr &_msg)
+{
+  if (this->GPSOnOff)
+    this->sensorLatitude = _msg->latitude;
+    this->sensorLongitude = _msg->longitude;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
