@@ -9,7 +9,7 @@ import pandas as pd
 
 def command(startTime):
     while not rospy.is_shutdown():
-        if rospy.get_time()-startTime >= 2:  # initiate after 2 seconds
+        if rospy.get_time()-startTime >= 1:  # initiate after 2 seconds
             
             # --- UwGliderCommand ---
             # 'header', 'pitch_cmd_type', 'target_pitch_value', 'motor_cmd_type', 'target_motor_cmd', 'rudder_control_mode', 'target_heading', 'rudder_angle', 'target_rudder_angle', 'target_pumped_volume'
@@ -18,15 +18,16 @@ def command(startTime):
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             pub.publish(command)
+            time.sleep(1)
 
             # 1st command
             print("\n----- 1st command ------")
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 2
-            command.target_pitch_value = 0.4
+            command.target_pitch_value = 0.9
             command.motor_cmd_type = 2
-            command.target_motor_cmd = 2
+            command.target_motor_cmd = 6
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)
@@ -36,9 +37,9 @@ def command(startTime):
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 2
-            command.target_pitch_value = 0.6
+            command.target_pitch_value = 1.2
             command.motor_cmd_type = 2
-            command.target_motor_cmd = 4
+            command.target_motor_cmd = 8
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)
@@ -98,7 +99,7 @@ def command(startTime):
 
 def plot(startTime):
     # Read data
-    header_list = ["t", "x", "y", "z", "p", "q", "r"]
+    header_list = ["t", "x", "y", "z", "p", "q", "r", "altitude"]
     log = pd.read_csv('/tmp/DirectKinematicsLog.csv', names = header_list, skiprows = 2)
 
     # limit data to time range where commands are sent
@@ -112,7 +113,7 @@ def plot(startTime):
     log.to_csv('/tmp/DirectKinematicsLog.csv', index=False, header=True)
 
     # plot
-    log.plot("t", ["x", "z", "q"], subplots=True)
+    log.plot("t", ["x", "z", "q", "altitude"], subplots=True)
     plt.show()
 
 if __name__ == '__main__':

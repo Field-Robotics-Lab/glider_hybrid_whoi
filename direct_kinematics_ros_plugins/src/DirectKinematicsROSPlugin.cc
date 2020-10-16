@@ -81,15 +81,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   //   this->rudderExist = false;
   // }
 
-  // get writeLog Flag
-  if (_sdf->HasElement("writeLog"))
-  {
-    this->writeLogFlag = _sdf->Get<bool>("writeLog");
-    gzmsg << "World position of the base_link is saved at"
-        << "/tmp/DirectKinematicsLog.csv" << std::endl;
-    remove("/tmp/DirectKinematicsLog.csv");
-  }
-
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
   bool service_ready = false;
@@ -127,22 +118,44 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->commandSubQueueThread = std::thread(std::bind(
       &DirectKinematicsROSPlugin::commandSubThread, this));
 
+  // Sensor subscribings
+  this->sensorSubscribers["DVLOnOff"]=
+    this->rosNode->subscribe<std_msgs::Bool>(
+    this->model->GetName() + "/dvl/state", 10,
+    boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorOnOff,
+    this, _1));
+
+  this->sensorSubscribers["DVL"]=
+    this->rosNode->subscribe<uuv_sensor_ros_plugins_msgs::DVL>(
+    this->model->GetName() + "/dvl", 10,
+    boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorData,
+    this, _1));
+    
   // Publisher for glider status
   this->statePublisher =
       this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
         this->model->GetName() + "/direct_kinematics/UwGliderStatus", 10);
 
-  this->nedTransform.header.frame_id = this->model->GetName() + "/base_link";
-  this->nedTransform.child_frame_id = this->model->GetName() + "/base_link_ned";
-  this->nedTransform.transform.translation.x = 0;
-  this->nedTransform.transform.translation.y = 0;
-  this->nedTransform.transform.translation.z = 0;
+
+  // THIS PART IS HARD CODED FOR NOW for link names, can't get link names
+  // for (gazebo::physics::Link_V::const_iterator iter = this->model->GetLinks().begin();
+  //      iter != this->model->GetLinks().end(); ++iter)
+  // {
+  //   gzmsg << (*iter)->GetName() << std::endl;
+  // }
+  // gzmsg << this->model->GetWorld()->ModelByName(this->model->GetName())->GetLink("right_propeller_link")->GetName() << std::endl;
+
+  this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
+  this->nedTransform["base_link"].child_frame_id = this->model->GetName() + "/base_link_ned";
+  this->nedTransform["base_link"].transform.translation.x = 0;
+  this->nedTransform["base_link"].transform.translation.y = 0;
+  this->nedTransform["base_link"].transform.translation.z = 0;
   tf2::Quaternion quat;
   quat.setRPY(M_PI, 0, 0);
-  this->nedTransform.transform.rotation.x = quat.x();
-  this->nedTransform.transform.rotation.y = quat.y();
-  this->nedTransform.transform.rotation.z = quat.z();
-  this->nedTransform.transform.rotation.w = quat.w();
+  this->nedTransform["base_link"].transform.rotation.x = quat.x();
+  this->nedTransform["base_link"].transform.rotation.y = quat.y();
+  this->nedTransform["base_link"].transform.rotation.z = quat.z();
+  this->nedTransform["base_link"].transform.rotation.w = quat.w();
 
   // Connect the update event callback
   this->Connect();
@@ -163,6 +176,15 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
           + "/direct_kinematics/UwGliderStatus" << std::endl;
   gzmsg << "##################################################" << std::endl;
   gzmsg << std::endl;
+
+  // get writeLog Flag
+  if (_sdf->HasElement("writeLog"))
+  {
+    this->writeLogFlag = _sdf->Get<bool>("writeLog");
+    gzmsg << "World position of the base_link is saved at"
+        << "/tmp/DirectKinematicsLog.csv" << std::endl;
+    remove("/tmp/DirectKinematicsLog.csv");
+  }
 }
 
 /////////////////////////////////////////////////
@@ -202,8 +224,8 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
   // CSV log write stream
   this->writeCSVLog();
 
-  this->nedTransform.header.stamp = ros::Time::now();
-  this->tfBroadcaster.sendTransform(this->nedTransform);
+  this->nedTransform["base_link"].header.stamp = ros::Time::now();
+  this->tfBroadcaster["base_link"].sendTransform(this->nedTransform["base_link"]);
 }
 
 /////////////////////////////////////////////////
@@ -514,7 +536,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.yaw = this->modelRPY.Z();
   status_msg.heading = this->modelRPY.Z();
   status_msg.depth = this->modelXYZ.Z();
-  // status_msg.altitude = 
+  status_msg.altitude = this->sensorAltitude;
   // status_msg.motor_power = 
   // status_msg.rudder_angle = 
   // status_msg.battery_position = 
@@ -536,7 +558,7 @@ if (this->writeLogFlag)
   {
     writeLog.open("/tmp/DirectKinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
-    writeLog << "# t,x,y,z,p,q,r\n";
+    writeLog << "# t,x,y,z,p,q,r,altitude\n";
     writeLog.close();
     this->writeCounter = this->writeCounter + 1;
   }
@@ -546,14 +568,16 @@ if (this->writeLogFlag)
     writeLog << time << ","
             << this->modelXYZ.X() << "," << this->modelXYZ.Y() << "," 
             << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
-            << this->modelRPY.Y() << "," << this->modelRPY.Z() << "\n";
+            << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
+            << this->sensorAltitude << "\n";
     writeLog.close();
   }
 }
 }
 
 /////////////////////////////////////////////////
-ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY(double x, double y, double z, double w)
+ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY
+                                (double x, double y, double z, double w)
 {
   ignition::math::Vector3<double> vR;
   ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
@@ -575,7 +599,26 @@ ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY(double x
   // SUBTRACTION M_PI needs investigation
   return vR;
 }
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::UpdateDVLSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg)
+{
+  this->DVLOnOff = _msg->data;
+}
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::UpdateDVLSensorData
+                      (const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg)
+{
+  if (this->DVLOnOff)
+  {
+    this->sensorAltitude = _msg->altitude;
+  }
+  else
+  {
+    uuv_sensor_ros_plugins_msgs::DVL DVLmsg;
+  } 
 
+}
 
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
 }

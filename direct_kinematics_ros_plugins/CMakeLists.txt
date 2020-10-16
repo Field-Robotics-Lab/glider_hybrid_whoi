@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   gazebo_dev
   frl_vehicle_msgs
+  sensor_msgs
+  uuv_sensor_ros_plugins_msgs
   gazebo_ros
 )
 
@@ -25,6 +27,8 @@ catkin_package(
   gazebo_msgs
   frl_vehicle_msgs
   std_msgs
+  sensor_msgs
+  uuv_sensor_ros_plugins_msgs
   gazebo_ros
   message_runtime
 )

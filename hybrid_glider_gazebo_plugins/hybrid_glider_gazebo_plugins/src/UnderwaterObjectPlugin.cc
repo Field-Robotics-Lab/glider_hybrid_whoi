@@ -233,7 +233,7 @@ namespace hybridglider
       // CSV log write stream
       if (this->writeLogFlag)
       {
-        gzmsg << std::endl<< "World position of the base_link is saved at /tmp/HybridGliderLog.csv" << std::endl << std::endl;
+        // gzmsg << std::endl<< "World position of the base_link is saved at /tmp/HybridGliderLog.csv" << std::endl << std::endl;
         if (writeCounter == 0)
         {
           writeLog.open("/tmp/HybridGliderLog.csv");

@@ -107,24 +107,12 @@ class HydrodynamicModel : public BuoyantObject
   /// \brief Gazebo node
   protected: gazebo::transport::NodePtr node;
 
-  /// \brief Buoyancy pump position vector read from topic
-  protected: ignition::math::Vector3d pumpPos;
+  /// \brief Buoyancy pump position
+  protected: double pumpPos;
 
-  /// \brief Subcriber to pumpPos message
-  protected: gazebo::transport::SubscriberPtr pumpPosSubscriber;
-
-  /// \brief Reads pumpPos topic
-  protected: void UpdatePumpPos(ConstVector3dPtr &_msg);
-
-  /// \brief Sliding mass position vector read from topic
-  protected: ignition::math::Vector3d massPos;
-
-  /// \brief Subcriber to massPos message
-  protected: gazebo::transport::SubscriberPtr massPosSubscriber;
-
-  /// \brief Reads massPos topic
-  protected: void UpdateMassPos(ConstVector3dPtr &_msg);
-
+  /// \brief Sliding mass position 
+  protected: double massPos;
+  
   /// \brief total_mass
   protected: double m;
 

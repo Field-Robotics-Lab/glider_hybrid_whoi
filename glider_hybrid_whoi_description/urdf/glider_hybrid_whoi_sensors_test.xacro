@@ -32,7 +32,7 @@
       noise_amplitude="0"
       update_rate="7"
       reference_frame="world">
-      <origin xyz="0.4785 0.0 -0.0825" rpy="0 ${0.5*pi} 0" />
+      <origin xyz="0.0 0.0 -0.0825" rpy="0 0 -${0.5*pi}" />
     </xacro:dvl_plugin_macro>
 
     <xacro:switchable_battery_consumer_macro

@@ -30,6 +30,9 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <std_msgs/Bool.h>
+#include <uuv_sensor_ros_plugins_msgs/DVL.h>
+
 #include <frl_vehicle_msgs/UwGliderCommand.h>
 #include <frl_vehicle_msgs/UwGliderStatus.h>
 
@@ -103,6 +106,23 @@ namespace direct_kinematics_ros
     /// \brief A thread the keeps running the rosQueue
     private: std::thread commandSubQueueThread;
 
+    /// \brief Subscribers for sensor data
+    private: std::map<std::string, ros::Subscriber> sensorSubscribers;
+    
+    /// \brief update DVL sensor state
+    protected: virtual void UpdateDVLSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg);
+
+    /// \brief flag for DVL OnOff status
+    protected: bool DVLOnOff;
+
+    /// \brief DVL sensor data
+    protected: double sensorAltitude;
+
+    /// \brief update DVL sensor data
+    protected: virtual void UpdateDVLSensorData(
+                          const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
+
     /// \brief ROS helper function that processes messages
     private: void commandSubThread();
 
@@ -153,9 +173,13 @@ namespace direct_kinematics_ros
     protected: bool writeLogFlag;
     protected: virtual void writeCSVLog();
 
-    private: geometry_msgs::TransformStamped nedTransform;
+    // private: geometry_msgs::TransformStamped nedTransform;
 
-    private: tf2_ros::TransformBroadcaster tfBroadcaster;
+    // private: tf2_ros::TransformBroadcaster tfBroadcaster;
+
+    private: std::map<std::string, geometry_msgs::TransformStamped> nedTransform;
+
+    private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;
   };
 }
 

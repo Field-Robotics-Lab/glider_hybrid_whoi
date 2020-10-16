@@ -149,22 +149,6 @@ HydrodynamicModel::HydrodynamicModel(sdf::ElementPtr _sdf,
 }
 
 /////////////////////////////////////////////////
-void HydrodynamicModel::UpdatePumpPos(ConstVector3dPtr &_msg)
-{
-  this->pumpPos.X() = _msg->x();
-  this->pumpPos.Y() = _msg->y();
-  this->pumpPos.Z() = _msg->z();
-}
-
-/////////////////////////////////////////////////
-void HydrodynamicModel::UpdateMassPos(ConstVector3dPtr &_msg)
-{
-  this->massPos.X() = _msg->x();
-  this->massPos.Y() = _msg->y();
-  this->massPos.Z() = _msg->z();
-}
-
-/////////////////////////////////////////////////
 void HydrodynamicModel::ComputeAcc(Eigen::Vector6d _velRel, double _time,
                                   double _alpha)
 {
@@ -447,15 +431,15 @@ void HMFossen::ApplyHydrodynamicForces(
           hardInputPumpVol = -vol_w_max;
 
         // Export
-        (this->pumpPos).X() = hardInputPumpVol/(PI*(this->r_w)*(this->r_w));
-        (this->massPos).X() = hardInputMassPos;
+        this->pumpPos = hardInputPumpVol/(PI*(this->r_w)*(this->r_w));
+        this->massPos = hardInputMassPos;
     }
   }
 
 
   // ---- Mass calculation ----- //
   // Ballast volume and mass
-  double V_B = (this->pumpPos).X()*PI*(this->r_w)*(this->r_w);
+  double V_B = this->pumpPos*PI*(this->r_w)*(this->r_w);
   double m_w = V_B*this->fluidDensity;
 
   // Total vehicle mass
@@ -463,7 +447,7 @@ void HMFossen::ApplyHydrodynamicForces(
   this->m = m; 
 
   // Moving mass position
-  double x_s = this->x_s_o + (this->massPos).X();
+  double x_s = this->x_s_o + this->massPos;
 
   // Hull mass center (uniform hull mass distribution assumed)
   double x_h = -this->m_s/this->m_h*this->x_s_o;
