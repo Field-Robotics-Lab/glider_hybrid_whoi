@@ -470,7 +470,7 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
   pump_cmd_msg.request.model_state = this->modelState;
   pump_cmd_msg.request.model_state.twist.linear.z = 
       pump_cmd_msg.request.model_state.twist.linear.z 
-      +  _pumped_volume*gravityAccel*fluid_density;
+      +  _pumped_volume/1000000*gravityAccel*fluid_density;
   // publish command model state to gazebo/set_model_state topic
   this->commandPublisher["Model"].call(pump_cmd_msg);
 }
