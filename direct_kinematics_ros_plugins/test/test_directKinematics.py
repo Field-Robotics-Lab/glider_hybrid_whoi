@@ -76,6 +76,7 @@ def command(startTime):
             command.target_pitch_value = -0.2
             command.motor_cmd_type = 2
             command.target_motor_cmd = 4
+            command.target_pumped_volume = 2.0
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)
@@ -85,9 +86,10 @@ def command(startTime):
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 2
-            command.target_pitch_value = 0.0
+            command.target_pitch_value = -0.4
             command.motor_cmd_type = 2
             command.target_motor_cmd = 1
+            command.target_pumped_volume = 15.0
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)
@@ -98,6 +100,9 @@ def command(startTime):
         # rate.sleep()
 
 def plot(startTime):
+    
+    time.sleep(5)
+
     # Read data
     header_list = ["t", "x", "y", "z", "p", "q", "r", "altitude"]
     log = pd.read_csv('/tmp/DirectKinematicsLog.csv', names = header_list, skiprows = 2)
