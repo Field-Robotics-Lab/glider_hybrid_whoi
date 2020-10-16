@@ -453,28 +453,26 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
   }
   // publish command model state to gazebo/set_model_state topic
   this->commandPublisher["Model"].call(motor_cmd_msg);
+  this->modelState = motor_cmd_msg.request.model_state;
 
   // -------------------------------------- //
   // ------- Buoyancy pump command -------- //
   // -------------------------------------- //
-  // Force
-  // double fluid_density = 1024.0;
-  // double gravityAccel = 9.81;
-  // double _pumped_volume = _msg->target_pumped_volume;
+  // Currently assumed that the cob = cog
+  double fluid_density = 1024.0;
+  double gravityAccel = 9.81;
+  double _pumped_volume = _msg->target_pumped_volume;
   // ignition::math::Vector3d buoyantForce(0.0, 0.0,
   //              _pumped_volume*gravityAccel*fluid_density);
-  //              gzmsg << buoyantForce << std::endl;
   // this->model->GetLink(this->model->GetName() + 
   //          "/" + this->base_link_name)->SetForce(buoyantForce);
-  // Velocity
-  // gazebo_msgs::SetModelState pump_cmd_msg;
-  // pump_cmd_msg.request.model_state.model_name = this->model->GetName();
-  // pump_cmd_msg.request.model_state.pose = pose;
-  // pump_cmd_msg.request.model_state.twist.linear.z =
-  //                               _msg->target_pumped_volume*9.81;
-  // pump_cmd_msg.request.model_state.reference_frame = "world";
+  gazebo_msgs::SetModelState pump_cmd_msg;
+  pump_cmd_msg.request.model_state = this->modelState;
+  pump_cmd_msg.request.model_state.twist.linear.z = 
+      pump_cmd_msg.request.model_state.twist.linear.z 
+      +  _pumped_volume*gravityAccel*fluid_density;
   // publish command model state to gazebo/set_model_state topic
-  // this->commandPublisher["Model"].call(pump_cmd_msg);
+  this->commandPublisher["Model"].call(pump_cmd_msg);
 }
 
 // /////////////////////////////////////////////////
