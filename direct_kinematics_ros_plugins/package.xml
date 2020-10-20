@@ -19,6 +19,7 @@
   <depend>gazebo_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>uuv_sensor_ros_plugins_msgs</depend>
+  <depend>uuv_gazebo_ros_plugins_msgs</depend>
   <depend>frl_vehicle_msgs</depend>
   <depend>message_runtime</depend>
   <depend>gazebo_ros</depend>

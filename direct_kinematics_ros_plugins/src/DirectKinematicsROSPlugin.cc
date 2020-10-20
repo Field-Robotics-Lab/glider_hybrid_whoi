@@ -148,14 +148,24 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
       this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
         this->model->GetName() + "/direct_kinematics/UwGliderStatus", 10);
 
-
-  // THIS PART IS HARD CODED FOR NOW for link names, can't get link names
-  // for (gazebo::physics::Link_V::const_iterator iter = this->model->GetLinks().begin();
-  //      iter != this->model->GetLinks().end(); ++iter)
-  // {
-  //   gzmsg << (*iter)->GetName() << std::endl;
-  // }
-  // gzmsg << this->model->GetWorld()->ModelByName(this->model->GetName())->GetLink("right_propeller_link")->GetName() << std::endl;
+  // Check dual props and advertize publishers for visual effects
+  if (this->model->GetJoint(this->model->GetName() + "/thruster_1_joint"))
+  {
+    this->dualProps = true;
+    this->propVisualPubs["left"] =
+        this->rosNode->advertise<uuv_gazebo_ros_plugins_msgs::FloatStamped>(
+          this->model->GetName() + "/thrusters/0/input", 10);
+    this->propVisualPubs["right"] =
+        this->rosNode->advertise<uuv_gazebo_ros_plugins_msgs::FloatStamped>(
+          this->model->GetName() + "/thrusters/1/input", 10);
+  }
+  else
+  {
+    this->dualProps = false;
+    this->propVisualPubs["single"] =
+        this->rosNode->advertise<uuv_gazebo_ros_plugins_msgs::FloatStamped>(
+          this->model->GetName() + "/thrusters/0/input", 10);
+  }
 
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform["base_link"].child_frame_id = this->model->GetName() + "/base_link_ned";
@@ -248,8 +258,6 @@ void DirectKinematicsROSPlugin::updateModelState()
   this->stateSubscriber["Model"].call(model_state_msg);
   this->modelState.pose = model_state_msg.response.pose;
   this->modelState.twist = model_state_msg.response.twist;
-
-
 }
 
 /////////////////////////////////////////////////
@@ -437,6 +445,9 @@ void DirectKinematicsROSPlugin::ConveyModelCommand(
     motor_cmd_msg.request.model_state.twist.linear.x
           = _msg->target_motor_cmd;
     this->motorPower = _msg->target_motor_cmd;
+    
+    // rotate propellers for visual effets
+    this->PropRotate(this->motorPower);
   }
   else if (_motor_cmd_type == 0)  // nothing
   {
@@ -649,6 +660,25 @@ void DirectKinematicsROSPlugin::UpdateGPSSensorData
     this->sensorLatitude = _msg->latitude;
     this->sensorLongitude = _msg->longitude;
 }
+
+
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::PropRotate(double thrustPower)
+{
+    uuv_gazebo_ros_plugins_msgs::FloatStamped input_message;
+    input_message.header.stamp = ros::Time::now();
+    input_message.data = thrustPower;
+    if (this->dualProps)
+    {
+      this->propVisualPubs["left"].publish(input_message);
+      this->propVisualPubs["right"].publish(input_message);
+    }
+    else
+    {
+      this->propVisualPubs["single"].publish(input_message);
+    }
+}
+
 
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
 }

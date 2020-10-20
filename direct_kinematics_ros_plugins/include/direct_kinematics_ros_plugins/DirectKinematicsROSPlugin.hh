@@ -32,6 +32,7 @@
 
 #include <std_msgs/Bool.h>
 #include <uuv_sensor_ros_plugins_msgs/DVL.h>
+#include <uuv_gazebo_ros_plugins_msgs/FloatStamped.h>
 #include <sensor_msgs/NavSatFix.h>
 
 #include <frl_vehicle_msgs/UwGliderCommand.h>
@@ -40,7 +41,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <gazebo/gazebo.hh>
 #include <gazebo/msgs/msgs.hh>
-#include <gazebo/common/Plugin.hh>
+#include <gazebo/physics/physics.hh>
 
 #include <map>
 #include <string>
@@ -166,6 +167,15 @@ namespace direct_kinematics_ros
 
     /// \brief Base link name
     protected: std::string base_link_name;
+
+    /// \brief Publishers for propeller roatation visual effects
+    private: std::map<std::string, ros::Publisher> propVisualPubs;
+
+    /// \brief A flag for dual propellers
+    private: bool dualProps;
+
+    /// \brief Function to rotate the propellers
+    protected: virtual void PropRotate(double thrustPower);
 
     // /// \brief Rudder link name
     // protected: std::string rudder_link_name;

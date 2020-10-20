@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   frl_vehicle_msgs
   sensor_msgs
   uuv_sensor_ros_plugins_msgs
+  uuv_gazebo_ros_plugins_msgs
   gazebo_ros
 )
 
@@ -29,6 +30,7 @@ catkin_package(
   std_msgs
   sensor_msgs
   uuv_sensor_ros_plugins_msgs
+  uuv_gazebo_ros_plugins_msgs
   gazebo_ros
   message_runtime
 )
