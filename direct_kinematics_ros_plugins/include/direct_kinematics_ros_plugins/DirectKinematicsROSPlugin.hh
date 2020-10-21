@@ -26,6 +26,8 @@
 #include <gazebo_msgs/GetModelState.h>
 #include <gazebo_msgs/LinkState.h>
 #include <gazebo_msgs/SetLinkState.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -39,17 +41,34 @@
 #include <frl_vehicle_msgs/UwGliderStatus.h>
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 #include <gazebo/gazebo.hh>
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/physics/Model.hh>
+#include <gazebo/physics/PhysicsEngine.hh>
+
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
 #include <map>
 #include <string>
+#include <vector>
 #include <thread>
+
+namespace Eigen
+{
+  /// \brief Definition of a 6x6 Eigen matrix
+  typedef Eigen::Matrix<double, 6, 6> Matrix6d;
+
+  /// \brief Definition of a 6 element Eigen vector
+  typedef Eigen::Matrix<double, 6, 1> Vector6d;
+}
 
 namespace direct_kinematics_ros
 {
-
   class DirectKinematicsROSPlugin : public gazebo::ModelPlugin
   {
     /// \brief Constructor
@@ -86,12 +105,8 @@ namespace direct_kinematics_ros
                                 UwGliderCommand::ConstPtr &_msg);
 
     /// \brief Convey model state from gazebo topic to outside (model)
-    protected: virtual void ConveyModelCommand(const frl_vehicle_msgs::
+    protected: virtual void ConveyKinematicsCommands(const frl_vehicle_msgs::
                                     UwGliderCommand::ConstPtr &_msg);
-
-    // /// \brief Convey link state from gazebo topic to outside (rudder)
-    // protected: virtual void ConveyRudderVisualCommand
-    //             (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
 
     /// \brief Pointer to the model structure
     protected: gazebo::physics::ModelPtr model;
@@ -107,38 +122,6 @@ namespace direct_kinematics_ros
 
     /// \brief A thread the keeps running the rosQueue
     private: std::thread commandSubQueueThread;
-
-    /// \brief Subscribers for sensor data
-    private: std::map<std::string, ros::Subscriber> sensorSubscribers;
-    
-    /// \brief update DVL sensor state
-    protected: virtual void UpdateDVLSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg);
-
-    /// \brief flag for DVL OnOff status
-    protected: bool DVLOnOff;
-
-    /// \brief DVL sensor data
-    protected: double sensorAltitude;
-
-    /// \brief update DVL sensor data
-    protected: virtual void UpdateDVLSensorData(
-                          const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
-    
-    /// \brief update GPS sensor state
-    protected: virtual void UpdateGPSSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg);
-
-    /// \brief flag for GPS OnOff status
-    protected: bool GPSOnOff;
-
-    /// \brief GPS sensor data
-    protected: double sensorLatitude;
-    protected: double sensorLongitude;
-
-    /// \brief update GPS sensor data
-    protected: virtual void UpdateGPSSensorData(
-                          const sensor_msgs::NavSatFix::ConstPtr &_msg);
 
     /// \brief ROS helper function that processes messages
     private: void commandSubThread();
@@ -162,27 +145,6 @@ namespace direct_kinematics_ros
     /// \brief Time at gazebo simulation
     protected: gazebo::common::Time time;
 
-    // /// \brief Command starting time recorder
-    // protected: gazebo::common::Time cmd_start_time;
-
-    /// \brief Base link name
-    protected: std::string base_link_name;
-
-    /// \brief Publishers for propeller roatation visual effects
-    private: std::map<std::string, ros::Publisher> propVisualPubs;
-
-    /// \brief A flag for dual propellers
-    private: bool dualProps;
-
-    /// \brief Function to rotate the propellers
-    protected: virtual void PropRotate(double thrustPower);
-
-    // /// \brief Rudder link name
-    // protected: std::string rudder_link_name;
-
-    // /// \brief Rudder link exist bool
-    // protected: bool rudderExist;
-
     /// \brief Model State 
     protected: gazebo_msgs::ModelState modelState;
 
@@ -196,8 +158,198 @@ namespace direct_kinematics_ros
     /// \brief Rudder angle
     protected: double rudderAngle;
 
-    // /// \brief Model State (in world reference frame)
-    // protected: gazebo_msgs::ModelState modelState_AtWorldFrame;
+    /// \brief Fluid density
+    protected: double fluidDensity;
+
+    /// \brief Gravity
+    protected: double gravity;  
+    
+    /// \brief Flag to use the global current velocity or the individually
+    /// assigned current velocity
+    protected: bool useGlobalCurrent;
+
+    /// \brief Flow velocity vector read from topic
+    protected: ignition::math::Vector3d flowVelocity;
+
+    /// \brief Reads flow velocity topic
+    protected: void UpdateFlowVelocity
+      (const geometry_msgs::TwistStamped::ConstPtr &_msg);
+
+    /// \brief Subcriber to flow message
+    private: ros::Subscriber flowSubscriber;
+
+    /// ============================================= ///
+    /// ===========-=== Sensor reading ======-======= ///
+    /// ============================================= ///
+
+    /// \brief Subscribers for sensor data
+    private: std::map<std::string, ros::Subscriber> sensorSubscribers;
+    
+    /// \brief update DVL sensor state
+    protected: virtual void UpdateDVLSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg);
+
+    /// \brief flag for DVL OnOff status
+    private: bool DVLOnOff;
+
+    /// \brief DVL sensor data
+    private: double sensorAltitude;
+
+    /// \brief update DVL sensor data
+    protected: virtual void UpdateDVLSensorData(
+                          const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
+    
+    /// \brief update GPS sensor state
+    protected: virtual void UpdateGPSSensorOnOff
+                      (const std_msgs::Bool::ConstPtr &_msg);
+
+    /// \brief flag for GPS OnOff status
+    private: bool GPSOnOff;
+
+    /// \brief GPS sensor data
+    private: double sensorLatitude;
+    private: double sensorLongitude;
+
+    /// \brief update GPS sensor data
+    protected: virtual void UpdateGPSSensorData(
+                          const sensor_msgs::NavSatFix::ConstPtr &_msg);
+
+    /// ============================================= ///
+    /// ===========-=== Visual Effects ======-======= ///
+    /// ============================================= ///
+
+    /// \brief Base link name
+    protected: std::string base_link_name;
+
+    /// \brief Publishers for propeller roatation visual effects
+    protected: std::map<std::string, ros::Publisher> propVisualPubs;
+
+    /// \brief A flag for dual propellers
+    protected: bool dualProps;
+
+    /// \brief Function to rotate the propellers
+    protected: virtual void PropRotate(double thrustPower);
+
+    // /// \brief Rudder link name
+    // protected: std::string rudder_link_name;
+
+    // /// \brief Rudder link exist bool
+    // protected: bool rudderExist;
+
+    // /// \brief Convey link state from gazebo topic to outside (rudder)
+    // protected: virtual void ConveyRudderVisualCommand
+    //             (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
+
+    /// ============================================= ///
+    /// ================   DYNAMICS   =============== ///
+    /// ============================================= ///
+
+    /// \brief Pointer to the base_link
+    protected: gazebo::physics::LinkPtr link;
+
+    /// \brief A flag for dynamics calculations
+    private: bool dynamics;
+
+    /// \brief Buoyancy pump position
+    protected: double pumpPos;
+
+    /// \brief Sliding mass position 
+    protected: double massPos;
+  
+    /// \brief total_mass
+    protected: double m;
+
+    /// \brief Center of gravity
+    protected: ignition::math::Vector3d cog;
+
+    /// \brief Center of buoyancy in the body frame
+    protected: ignition::math::Vector3d cob;
+
+    /// \brief ballast_radius
+    protected: double r_w;
+
+    /// \brief hull_length
+    protected: double l_h;
+
+    /// \brief hull_radius
+    protected: double r_h;
+
+    /// \brief hull_mass
+    protected: double m_h;
+
+    /// \brief shifter_mass
+    protected: double m_s;
+
+    /// \brief initial_mass_position
+    protected: double x_s_o;
+
+    /// \brief initial_ballast_position
+    protected: double x_w_o;
+
+    /// \brief max_mass_position
+    protected: double x_s_o_max;
+
+    /// \brief max_ballast_volume
+    protected: double vol_w_max;
+
+    /// \brief Added-mass matrix
+    protected: Eigen::Matrix6d Ma;
+
+    /// \brief Added-mass associated Coriolis matrix
+    protected: Eigen::Matrix6d Ca;
+
+    /// \brief Damping matrix
+    protected: Eigen::Matrix6d D;  
+
+    /// \brief Linear damping matrix
+    protected: Eigen::Matrix6d DLin;
+
+    /// \brief Last timestamp (in seconds)
+    protected: double lastTime;
+
+    /// \brief Last body-fixed relative velocity (nu_R in Fossen's equations)
+    protected: Eigen::Vector6d lastVelRel;
+
+    /// \brief Get parameters (read matrix form defenitions)
+    protected: void GetParam(std::string _tag, std::vector<double>& _output);
+    
+    /// \brief Filtered linear & angular acceleration vector in link frame.
+    /// This is used to prevent the model to become unstable given that Gazebo
+    /// only calls the update function at the beginning or at the end of a
+    /// iteration of the physics engine
+    protected: Eigen::Vector6d filteredAcc;
+
+    /// \brief Computes the added-mass Coriolis matrix Ca.
+    protected: void ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
+                                             Eigen::Matrix6d &_Ma,
+                                             Eigen::Matrix6d &_Ca) const;
+
+    /// \brief Updates the damping matrix for the current velocity
+    protected: void ComputeDampingMatrix(const Eigen::Vector6d& _vel,
+                                       Eigen::Matrix6d &_D) const;
+
+    /// \brief Filter acceleration (fix due to the update structure of Gazebo)
+    protected: void ComputeAcc(Eigen::Vector6d _velRel,
+                            double _time,
+                            double _alpha = 0.3);
+
+    /// \brief Convert vector to comply with the NED reference frame
+    protected: ignition::math::Vector3d ToNED(ignition::math::Vector3d _vec);
+
+    /// \brief Convert vector to comply with the NED reference frame
+    protected: ignition::math::Vector3d FromNED(ignition::math::Vector3d _vec);
+
+    /// \brief Convey commands to calculate dynamics
+    protected: virtual void ConveyDynamicsCommands
+        (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
+
+    /// \brief Calculate dynamics when commands conveyed and every updates
+    protected: virtual void CalculateDynamics
+        (double _massPos, double _pumpVol, double _thrustPower);
+    
+    /// ============================================= ///
+    /// ============== Other functions ============== ///
+    /// ============================================= ///
 
     /// \brief CSV log writing stream for verifications
     protected: std::ofstream writeLog;
@@ -205,14 +357,94 @@ namespace direct_kinematics_ros
     protected: bool writeLogFlag;
     protected: virtual void writeCSVLog();
 
-    // private: geometry_msgs::TransformStamped nedTransform;
-
-    // private: tf2_ros::TransformBroadcaster tfBroadcaster;
-
     private: std::map<std::string, geometry_msgs::TransformStamped> nedTransform;
-
     private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;
   };
+  
+/// \brief Conversion of a string to a double vector
+inline ignition::math::Vector3<double> Str2Vector(std::string _input)
+{
+  ignition::math::Vector3<double> results;
+  int num = 0;
+  std::string buf;
+  std::stringstream ss(_input);
+  while (ss >> buf)
+  {
+    results[num] = std::stod(buf);
+    num = num+1;
+  }
+  return results;
+}
+
+/// \brief Conversion of a string to a double vector
+inline Eigen::Matrix6d Str2Matrix6(std::string _input)
+{
+  Eigen::Matrix6d results;
+  int num = 0;
+  std::string buf;
+  std::stringstream ss(_input);
+  while (ss >> buf)
+  { 
+    results(num) = std::stod(buf);
+    num = num+1;
+    // results << std::stod(buf);m(0,0)
+  }
+  return results;
+}
+
+/// \brief Returns the cross product operator matrix
+/// for Eigen vectors
+inline Eigen::Matrix3d CrossProductOperator(Eigen::Vector3d _x)
+{
+  Eigen::Matrix3d output;
+  output << 0.0, -_x[2], _x[1], _x[2], 0.0, -_x[0], -_x[1], _x[0], 0.0;
+  return output;
+}
+
+/// \brief Returns the cross product operator matrix
+/// for Gazebo vectors
+inline Eigen::Matrix3d CrossProductOperator(ignition::math::Vector3d _x)
+{
+  Eigen::Matrix3d output;
+  output << 0.0, -_x[2], _x[1], _x[2], 0.0, -_x[0], -_x[1], _x[0], 0.0;
+  return output;
+}
+
+inline Eigen::Vector3d ToEigen(const ignition::math::Vector3d &_x)
+{
+  return Eigen::Vector3d(_x[0], _x[1], _x[2]);
+}
+
+inline Eigen::Matrix3d ToEigen(const ignition::math::Matrix3d &_x)
+{
+  Eigen::Matrix3d m;
+  m << _x(0, 0), _x(0, 1), _x(0, 2),
+       _x(1, 0), _x(1, 1), _x(1, 2),
+       _x(2, 0), _x(2, 1), _x(2, 2);
+  return m;
+}
+
+inline Eigen::Vector6d EigenStack(const ignition::math::Vector3d &_x,
+                                  const ignition::math::Vector3d &_y)
+{
+    Eigen::Vector3d xe = ToEigen(_x);
+    Eigen::Vector3d ye = ToEigen(_y);
+    Eigen::Vector6d out;
+    out << xe, ye;
+    return out;
+}
+
+inline ignition::math::Vector3d Vec3dToGazebo(const Eigen::Vector3d &_x)
+{
+  return ignition::math::Vector3d(_x[0], _x[1], _x[2]);
+}
+
+inline ignition::math::Matrix3d Mat3dToGazebo(const Eigen::Matrix3d &_x)
+{
+  return ignition::math::Matrix3d(_x(0, 0), _x(0, 1), _x(0, 2),
+     _x(1, 0), _x(1, 1), _x(1, 2),
+     _x(2, 0), _x(2, 1), _x(2, 2));
+}
 }
 
 #endif  // __DIRECT_KINEMATICS_ROS_PLUGIN_HH__

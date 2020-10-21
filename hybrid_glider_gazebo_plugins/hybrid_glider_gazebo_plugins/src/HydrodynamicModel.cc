@@ -643,8 +643,7 @@ void HMFossen::ApplyHydrodynamicForces(
     tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
   } else {
 
-    tau = damping + added + cor + rigid_diag + hull_hydro - hydrostatic;
-
+    tau = damping + added + cor + rigid_diag + hull_hydro - hydrostatic;  
   }
 
   GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");

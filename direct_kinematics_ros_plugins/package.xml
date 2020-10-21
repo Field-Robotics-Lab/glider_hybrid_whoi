@@ -25,6 +25,7 @@
   <depend>gazebo_ros</depend>
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
+  <depend>eigen</depend>
 
   <export>
     <gazebo_ros plugin_path="${prefix}/../../lib" gazebo_media_path="${prefix}" />

@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   uuv_gazebo_ros_plugins_msgs
   gazebo_ros
 )
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
  INCLUDE_DIRS include
@@ -40,10 +41,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
   ${GAZEBO_MSG_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 link_directories(
   ${GAZEBO_LIBRARY_DIRS}
+  ${EIGEN3_LIBRARY_DIRS}
 )
 
 add_library(direct_kinematics_ros_plugin src/DirectKinematicsROSPlugin.cc)
@@ -61,6 +64,11 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hh"
   PATTERN "*~" EXCLUDE
+)
+
+install(DIRECTORY include/
+   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN ".hh"
 )
 
 catkin_install_python(PROGRAMS test/test_directKinematics.py
