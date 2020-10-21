@@ -206,12 +206,9 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->nedTransform["base_link"].transform.rotation.w = quat.w();
 
   // Read dynacmis flags and parameters from SDF configuration
-  if (_sdf->HasElement("apply_dynamics"))
+  if (_sdf->HasElement("dynamics"))
   {
-    this->dynamics = _sdf->Get<double>("apply_dynamics");
-    gzmsg << "Dynamics calculation switch found!" << std::endl;
     sdf::ElementPtr sdfDynamics = _sdf->GetElement("dynamics");
-    this->dynamics = true;
     this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
     this->r_w = sdfDynamics->Get<double>("ballast_radius");
     this->l_h = sdfDynamics->Get<double>("hull_length");
@@ -240,10 +237,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     // Initialize filtered acceleration & last velocity
     this->filteredAcc.setZero();
     this->lastVelRel.setZero();
-  }
-  else
-  {
-    this->dynamics = false;
   }
 
   // Connect the update event callback
@@ -345,6 +338,14 @@ void DirectKinematicsROSPlugin::commandSubThread()
 void DirectKinematicsROSPlugin::ConveyCommands(
   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
+  // Determine kinematics or dynamics
+  int _pitch_cmd_type = _msg->pitch_cmd_type;
+  if (_pitch_cmd_type == 1)  // battery position control
+  {
+    this->dynamics = true;
+  }
+
+  // Convey commands to functions accordingly (Kinematics, dynamics)
   if(this->dynamics)
     this->ConveyDynamicsCommands(_msg);
   else
@@ -356,7 +357,7 @@ void DirectKinematicsROSPlugin::ConveyCommands(
   // }
 
   // Print gzmsg
-  gzmsg << "[DIRECT KINEMATICS] Control msg detected! at " 
+  gzmsg << "Control msg detected! at " 
         << this->time << " s" << std::endl;
 }
 
@@ -372,11 +373,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   pitch_cmd_msg.request.model_state.model_name = this->model->GetName();
   pitch_cmd_msg.request.model_state.pose = this->modelState.pose;
   // 1 : battery position, 2: target once , 3: target servo
-  if (_pitch_cmd_type == 1)  // battery position control
-  {
-    // nothing now
-  }
-  else if (_pitch_cmd_type == 2)  // target once
+  if (_pitch_cmd_type == 2)  // target once
   {
     ignition::math::Quaterniond target_pitch;
     target_pitch.Euler(0.0, _msg->target_pitch_value, 0.0);
@@ -647,8 +644,6 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   this->statePublisher.publish(status_msg);
 }
 
-
-
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::writeCSVLog()
 {
@@ -735,7 +730,6 @@ void DirectKinematicsROSPlugin::UpdateGPSSensorData
     this->sensorLongitude = _msg->longitude;
 }
 
-
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::PropRotate(double thrustPower)
 {
@@ -770,22 +764,6 @@ void DirectKinematicsROSPlugin::ConveyDynamicsCommands(
              const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
   // --------------------------------------------- //
-  // ------ CHECK PITCH/YAW COMMAND TYPES -------- //
-  // --------------------------------------------- //
-  // Pitch command type
-  int _pitch_cmd_type = _msg->pitch_cmd_type;
-  if (_pitch_cmd_type != 1)  // battery position control
-    gzmsg << "WRONG PITCH COMMAND TYPE FOR DYNAMICS CALCULATION"
-        << "(1 : battery position, 2: target once, 3: target servo)"
-        << std::endl;
-  // Rudder command type
-  int _rudder_control_mode = _msg->rudder_control_mode;
-  // double _ruddr_angle = _msg->target_rudder_angle;
-  if (_rudder_control_mode != 0)  // rudder command NONE
-      gzmsg << "WRONG RUDDER COMMAND TYPE FOR DYNAMICS CALCULATION"
-        << "(1: center, 2: port, 3: staboard, 4: direct)" 
-        << std::endl;
-  // --------------------------------------------- //
   // ---------- MOTOR/THRUSTER COMMAND ----------- //
   // --------------------------------------------- //
   int _motor_cmd_type = _msg->motor_cmd_type;
@@ -814,26 +792,6 @@ void DirectKinematicsROSPlugin::ConveyDynamicsCommands(
 void DirectKinematicsROSPlugin::CalculateDynamics(
              double _massPos, double _pumpPos, double _thrustPower)
 {
-
-  // double hardInputPumpVol,hardInputMassPos;
-  // double Period = 30.0;
-  // hardInputPumpVol = -1.5760e-04;
-  // hardInputMassPos = sin(this->time.Double()/4.0);
-
-  // // Max value limiter
-  // if (hardInputMassPos > x_s_o_max)
-  //   hardInputMassPos = x_s_o_max;
-  // if (hardInputMassPos < -x_s_o_max)
-  //   hardInputMassPos = -x_s_o_max;      
-  // if (hardInputPumpVol > vol_w_max)
-  //   hardInputPumpVol = vol_w_max;
-  // if (hardInputPumpVol < -vol_w_max)
-  //   hardInputPumpVol = -vol_w_max;
-
-  // // Export
-  // _pumpPos = hardInputPumpVol/(M_PI*(this->r_w)*(this->r_w));
-  // _massPos = hardInputMassPos;
-
   // ---- Mass calculation ----- //
   // Ballast volume and mass
   double V_B = _pumpPos*M_PI*(this->r_w)*(this->r_w);
@@ -1081,20 +1039,6 @@ void DirectKinematicsROSPlugin::ComputeDampingMatrix(const Eigen::Vector6d& _vel
   // matrix Drb
 
   _D.setZero();
-
-  // _D = -1 *
-  //   (this->DLin + this->offsetLinearDamping * Eigen::Matrix6d::Identity()) -
-  //   _vel[0] * (this->DLinForwardSpeed +
-  //     this->offsetLinForwardSpeedDamping * Eigen::Matrix6d::Identity());
-
-  // // Nonlinear damping matrix is considered as a diagonal matrix
-  // for (int i = 0; i < 6; i++)
-  // {
-  //   _D(i, i) += -1 *
-  //     (this->DNonLin(i, i) + this->offsetNonLinDamping) *
-  //     std::fabs(_vel[i]);
-  // }
-  // _D *= this->scalingDamping;
 
   // Simplified only to consider DLin here.
   _D = -1 * this->DLin;
