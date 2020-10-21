@@ -147,7 +147,6 @@
         <use_global_ocean_current>true</use_global_ocean_current>
 
         <!-- Dynamics properties -->
-        <apply_dynamics>true</apply_dynamics>
         <dynamics>
           <hull_mass>48.2</hull_mass>
           <hull_length>2.0</hull_length>

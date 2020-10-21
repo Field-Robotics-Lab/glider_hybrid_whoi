@@ -238,6 +238,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->filteredAcc.setZero();
     this->lastVelRel.setZero();
   }
+    this->dynamics = false;
 
   // Connect the update event callback
   this->Connect();
@@ -343,6 +344,10 @@ void DirectKinematicsROSPlugin::ConveyCommands(
   if (_pitch_cmd_type == 1)  // battery position control
   {
     this->dynamics = true;
+  }
+  else
+  {
+    this->dynamics = false;
   }
 
   // Convey commands to functions accordingly (Kinematics, dynamics)
@@ -636,7 +641,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.heading = this->modelRPY.Z();
   status_msg.depth = - this->modelXYZ.Z();
   status_msg.altitude = this->sensorAltitude;
-  status_msg.motor_power = this->motorPower; 
+  status_msg.motor_power = this->motorPower;
   status_msg.rudder_angle = this->rudderAngle;
   // status_msg.battery_position = 
   // status_msg.pumped_volume = 
