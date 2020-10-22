@@ -809,7 +809,7 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
 {
   // ---- Mass calculation ----- //
   // Ballast volume and mass
-  double V_B = _pumpPos*M_PI*(this->r_w)*(this->r_w);
+  double V_B = -_pumpPos*M_PI*(this->r_w)*(this->r_w);
   double m_w = V_B*this->fluidDensity;
 
   // Total vehicle mass
