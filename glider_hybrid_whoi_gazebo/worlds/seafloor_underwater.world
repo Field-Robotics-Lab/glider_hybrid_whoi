@@ -27,7 +27,7 @@
         </solver>
       </ode>
     </physics>
-    <gravity>0</gravity>
+    <gravity>0 0 0</gravity>
     <scene>
       <ambient>0.01 0.01 0.01 1.0</ambient>
       <sky>

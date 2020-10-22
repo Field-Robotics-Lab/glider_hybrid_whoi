@@ -205,11 +205,11 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->nedTransform["base_link"].transform.rotation.z = quat.z();
   this->nedTransform["base_link"].transform.rotation.w = quat.w();
 
+  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
   // Read dynacmis flags and parameters from SDF configuration
   if (_sdf->HasElement("dynamics"))
   {
     sdf::ElementPtr sdfDynamics = _sdf->GetElement("dynamics");
-    this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
     this->r_w = sdfDynamics->Get<double>("ballast_radius");
     this->l_h = sdfDynamics->Get<double>("hull_length");
     this->r_h = sdfDynamics->Get<double>("hull_radius");
@@ -298,12 +298,12 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
   // Update time
   this->time = this->model->GetWorld()->SimTime();
 
+  // Update model state
+  this->updateModelState();
+
   // Update dynamics
   if (this->dynamics)
     this->CalculateDynamics(this->massPos, this->pumpPos, this->motorPower);
-
-  // Update model state
-  this->updateModelState();
 
   // Send status
   this->ConveyModelState();
@@ -321,6 +321,7 @@ void DirectKinematicsROSPlugin::updateModelState()
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
   this->stateSubscriber["Model"].call(model_state_msg);
+  this->modelState.model_name = this->model->GetName();
   this->modelState.pose = model_state_msg.response.pose;
   this->modelState.twist = model_state_msg.response.twist;
 }
@@ -370,6 +371,27 @@ void DirectKinematicsROSPlugin::ConveyCommands(
 void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
              const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
+  // ignition::math::Quaterniond orientation(this->modelState.pose.orientation.x,
+  //                                         this->modelState.pose.orientation.y,
+  //                                         this->modelState.pose.orientation.z,
+  //                                         this->modelState.pose.orientation.w);
+  // ignition::math::Vector3d orientation_euler = orientation.Euler();
+  // gzmsg << "=====================" << std::endl;
+  // gzmsg << orientation_euler << std::endl;
+  // ignition::math::Quaterniond orientation_quat;
+  // orientation_quat.Euler(orientation_euler.X(),
+  //                        orientation_euler.Y(),
+  //                        orientation_euler.Z());
+  
+  // gazebo_msgs::SetModelState cmd_msg;
+  // cmd_msg.request.model_state = this->modelState;
+  // cmd_msg.request.model_state.pose.orientation.x = orientation_quat.X();
+  // cmd_msg.request.model_state.pose.orientation.y = orientation_quat.Y();
+  // cmd_msg.request.model_state.pose.orientation.z = orientation_quat.Z();
+  // cmd_msg.request.model_state.pose.orientation.w = orientation_quat.W();
+
+  // this->commandPublisher["Model"].call(cmd_msg);
+
   // --------------------------------------- //
   // ----------- PITCH COMMAND ------------- //
   // --------------------------------------- //
@@ -403,114 +425,111 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
         << "(1 : battery position, 2: target once, 3: target servo)"
         << std::endl;
   }
-  pitch_cmd_msg.request.model_state.twist = this->modelState.twist;
   // publish command model state to gazebo/set_model_state topic
   this->commandPublisher["Model"].call(pitch_cmd_msg);
   this->modelState = pitch_cmd_msg.request.model_state;
 
-  // --------------------------------------- //
-  // ----------- RUDDER CONTROL ------------ //
-  // --------------------------------------- //
-  gazebo_msgs::SetModelState rudder_cmd_msg;
-  int _rudder_control_mode = _msg->rudder_control_mode;
-  rudder_cmd_msg.request.model_state.model_name = this->model->GetName();
+  // // --------------------------------------- //
+  // // ----------- RUDDER CONTROL ------------ //
+  // // --------------------------------------- //
+  // gazebo_msgs::SetModelState rudder_cmd_msg;
+  // int _rudder_control_mode = _msg->rudder_control_mode;
 
-  // Pass original state
-  rudder_cmd_msg.request.model_state.pose = this->modelState.pose;
-  rudder_cmd_msg.request.model_state.twist = this->modelState.twist;
+  // // Pass original state
+  // rudder_cmd_msg.request.model_state = this->modelState;
+  // // rudder_cmd_msg.request.model_state.pose.position.x = this->link->WorldPose().Pos().X();
+  // // rudder_cmd_msg.request.model_state.pose.position.y = this->link->WorldPose().Pos().Y();
+  // // rudder_cmd_msg.request.model_state.pose.position.z = this->link->WorldPose().Pos().Z();
+  // // ignition::math::Quaterniond orientation = this->link->WorldPose().Rot();
+  // orientation = ignition::math::Quaterniond(this->modelState.pose.orientation.x,
+  //                                           this->modelState.pose.orientation.y,
+  //                                           this->modelState.pose.orientation.z,
+  //                                           this->modelState.pose.orientation.w);
+  // orientation_euler = orientation.Euler();
+  // gzmsg << "3" << std::endl; 
+  // gzmsg << orientation_euler << std::endl;
 
-  // Convert original orientation state to ignition variable
-  double xOrientation = this->modelState.pose.orientation.x;
-  double yOrientation = this->modelState.pose.orientation.y;
-  double zOrientation = this->modelState.pose.orientation.z;
-  double wOrientation = this->modelState.pose.orientation.w;
-  ignition::math::Quaterniond orientation;
-  orientation.Set(xOrientation, yOrientation, zOrientation, wOrientation);
-  ignition::math::Vector3d orientation_euler = orientation.Euler();
+  // // Define _target_heading accordingly
+  // ignition::math::Quaterniond _target_heading;
+  // // 1 : control heading, 2: control angle
+  // if (_rudder_control_mode == 1)  // control heading
+  // {
+  //   // NOT IMPLEMENTED YET 
+  // }
+  // else if (_rudder_control_mode == 2)  // control angle
+  // {
+  //   int _rudder_angle = _msg->rudder_angle;
+  //   // Rudder angle control
+  //   // 1: center, 2: port, 3: staboard, 4: direct
+  //   double rudderAngleZero = 0.0;
+  //   double rudderAnglePort = M_PI/6.0;
+  //   double rudderAngleStbd = -M_PI/6.0;
+  //   double rudderAngleTarget = _msg->target_rudder_angle;
+  //   if (_rudder_angle == 1)  // center
+  //   {
+  //     _target_heading.Euler(orientation_euler.X(), 
+  //                           orientation_euler.Y(), 
+  //                           orientation_euler.Z() + rudderAngleZero);
+  //     this->rudderAngle = rudderAngleZero;
+  //   }
+  //   else if (_rudder_angle == 2)  // port
+  //   {
+  //     _target_heading.Euler(orientation_euler.X(), 
+  //                           orientation_euler.Y(), 
+  //                           orientation_euler.Z() + rudderAnglePort);
+  //     this->rudderAngle = rudderAnglePort;
+  //   }
+  //   else if (_rudder_angle == 3)  // staboard
+  //   {
+  //     _target_heading.Euler(orientation_euler.X(), 
+  //                           orientation_euler.Y(), 
+  //                           orientation_euler.Z() + rudderAngleStbd);
+  //     this->rudderAngle = rudderAngleStbd;
+  //   }
+  //   else if (_rudder_angle == 4)  // direct
+  //   {
+  //     _target_heading.Euler(orientation_euler.X(), 
+  //                           orientation_euler.Y(), 
+  //                           orientation_euler.Z() + rudderAngleTarget);
+  //     this->rudderAngle = rudderAngleTarget;
+  //   }
+  //   else if (_rudder_angle == 0)  // nothing
+  //   {
+  //     _target_heading.Euler(orientation_euler.X(), 
+  //                           orientation_euler.Y(), 
+  //                           orientation_euler.Z());
+  //   }
+  //   else
+  //   {
+  //     gzmsg << "WRONG RUDDER ANGLE COMMAND "
+  //       << "(1: center, 2: port, 3: staboard, 4: direct)" 
+  //       << std::endl;
+  //   }
+  //   rudder_cmd_msg.request.model_state.pose.orientation.x = _target_heading.X();
+  //   rudder_cmd_msg.request.model_state.pose.orientation.y = _target_heading.Y();
+  //   rudder_cmd_msg.request.model_state.pose.orientation.z = _target_heading.Z();
+  //   rudder_cmd_msg.request.model_state.pose.orientation.w = _target_heading.W();
+  // }
+  // else if (_rudder_control_mode == 0)  // nothing
+  // {
+  //   // default
+  // }
+  // else 
+  // {
+  //   gzmsg << "WRONG RUDDER COMMAND TYPE "
+  //       << "(1 : control heading, 2: control angle)" 
+  //       << std::endl;
+  // }
+  // // publish command model state to gazebo/set_model_state topic
+  // this->commandPublisher["Model"].call(rudder_cmd_msg);
+  // this->modelState = rudder_cmd_msg.request.model_state;
 
-  // Define _target_heading accordingly
-  ignition::math::Quaterniond _target_heading;
-  // 1 : control heading, 2: control angle
-  if (_rudder_control_mode == 1)  // control heading
-  {
-    // NOT IMPLEMENTED YET 
-  }
-  else if (_rudder_control_mode == 2)  // control angle
-  {
-    int _rudder_angle = _msg->rudder_angle;
-    // Rudder angle control
-    // 1: center, 2: port, 3: staboard, 4: direct
-    double rudderAngleZero = 0.0;
-    double rudderAnglePort = M_PI/3.0;
-    double rudderAngleStbd = -M_PI/3.0;
-    double rudderAngleTarget = _msg->target_rudder_angle;
-    if (_rudder_angle == 1)  // center
-    {
-      _target_heading.Euler(orientation_euler.X(), 
-                            orientation_euler.Y(), 
-                            orientation_euler.Z()-M_PI + rudderAngleZero);
-      this->rudderAngle = rudderAngleZero;
-    }
-    else if (_rudder_angle == 2)  // port
-    {
-      _target_heading.Euler(orientation_euler.X(), 
-                            orientation_euler.Y(), 
-                            orientation_euler.Z()-M_PI + rudderAnglePort);
-      this->rudderAngle = rudderAnglePort;
-    }
-    else if (_rudder_angle == 3)  // staboard
-    {
-      _target_heading.Euler(orientation_euler.X(), 
-                            orientation_euler.Y(), 
-                            orientation_euler.Z()-M_PI + rudderAngleStbd);
-      this->rudderAngle = rudderAngleStbd;
-    }
-    else if (_rudder_angle == 4)  // direct
-    {
-      _target_heading.Euler(orientation_euler.X(), 
-                            orientation_euler.Y(), 
-                            orientation_euler.Z()-M_PI + rudderAngleTarget);
-      this->rudderAngle = rudderAngleTarget;
-    }
-    else if (_rudder_angle == 0)  // nothing
-    {
-      // default
-    }
-    else
-    {
-      gzmsg << "WRONG RUDDER ANGLE COMMAND "
-        << "(1: center, 2: port, 3: staboard, 4: direct)" 
-        << std::endl;
-    }
-    rudder_cmd_msg.request.model_state.pose.orientation.x = _target_heading.X();
-    rudder_cmd_msg.request.model_state.pose.orientation.y = _target_heading.Y();
-    rudder_cmd_msg.request.model_state.pose.orientation.z = _target_heading.Z();
-    rudder_cmd_msg.request.model_state.pose.orientation.w = _target_heading.W();
-  }
-  else if (_rudder_control_mode == 0)  // nothing
-  {
-    // default
-  }
-  else 
-  {
-    gzmsg << "WRONG RUDDER COMMAND TYPE "
-        << "(1 : control heading, 2: control angle)" 
-        << std::endl;
-  }
-  // publish command model state to gazebo/set_model_state topic
-  this->commandPublisher["Model"].call(rudder_cmd_msg);
-  this->modelState = rudder_cmd_msg.request.model_state;
 
   // --------------------------------------- //
   // ------- MOTOR/THRUSTER COMMAND -------- //
   // -------- local frame control ---------- //
   // --------------------------------------- //
-  // Velocity control (may be needed later considering drags)
-  gazebo_msgs::SetModelState motor_cmd_msg;
   int _motor_cmd_type = _msg->motor_cmd_type;
-  motor_cmd_msg.request.model_state.model_name = this->model->GetName();
-  motor_cmd_msg.request.model_state.reference_frame =
-        this->model->GetName() + "/" + this->base_link_name;
   // 1 : voltage command, 2: power command
   if (_motor_cmd_type == 1)  // voltage command
   {
@@ -518,8 +537,6 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   }
   else if (_motor_cmd_type == 2)  // power command
   {
-    motor_cmd_msg.request.model_state.twist.linear.x
-          = _msg->target_motor_cmd;
     this->motorPower = _msg->target_motor_cmd;
     
     // rotate propellers for visual effets
@@ -527,39 +544,32 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   }
   else if (_motor_cmd_type == 0)  // nothing
   {
-    motor_cmd_msg.request.model_state.reference_frame = "world";
-    motor_cmd_msg.request.model_state = this->modelState;
+    // Default
   }
   else
   {
-    motor_cmd_msg.request.model_state.reference_frame = "world";
-    motor_cmd_msg.request.model_state = this->modelState;
     gzmsg << "WRONG MOTOR/THRUSTER COMMAND TYPE "
         << "(1 : voltage command, 2: power command)"
         << std::endl;
   }
-  // publish command model state to gazebo/set_model_state topic
-  this->commandPublisher["Model"].call(motor_cmd_msg);
-  this->modelState = motor_cmd_msg.request.model_state;
+  ignition::math::Vector3d thrusterForce(this->motorPower * 50,
+                                         0.0,
+                                         0.0);
+  // Currently, apply the force at cog for kinematics controls
+  this->link->AddRelativeForce(thrusterForce);
 
   // -------------------------------------- //
   // ------- Buoyancy pump command -------- //
   // -------------------------------------- //
   // Currently assumed that the cob = cog
   double fluid_density = this->fluidDensity;
-  double gravityAccel = this->gravity;
   double _pumped_volume = _msg->target_pumped_volume;
-  // ignition::math::Vector3d buoyantForce(0.0, 0.0,
-  //              _pumped_volume*gravityAccel*fluid_density);
-  // this->model->GetLink(this->model->GetName() + 
-  //          "/" + this->base_link_name)->SetForce(buoyantForce);
-  gazebo_msgs::SetModelState pump_cmd_msg;
-  pump_cmd_msg.request.model_state = this->modelState;
-  pump_cmd_msg.request.model_state.twist.linear.z = 
-      pump_cmd_msg.request.model_state.twist.linear.z 
-      +  _pumped_volume/1000000*gravityAccel*fluid_density;
-  // publish command model state to gazebo/set_model_state topic
-  this->commandPublisher["Model"].call(pump_cmd_msg);
+  // Get the buoyancy force in world coordinates
+  ignition::math::Vector3d buoyancyForce;
+  buoyancyForce = ignition::math::Vector3d
+      (0, 0, _pumped_volume/1000000*fluid_density * this->gravity);
+  // Currently, apply the force at cog for kinematics controls
+  this->link->AddForce(buoyancyForce);
 }
 
 // /////////////////////////////////////////////////
