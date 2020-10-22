@@ -998,6 +998,11 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
 
   tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
 
+  // Added for stability for now
+  tau(1) = 0.0;
+  tau(3) = 0.0;
+  tau(5) = 0.0;
+
   GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
 
   if (!std::isnan(tau.norm()))
