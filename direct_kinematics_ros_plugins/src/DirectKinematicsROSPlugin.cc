@@ -552,29 +552,9 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   // -------- local frame control ---------- //
   // --------------------------------------- //
   int _motor_cmd_type = _msg->motor_cmd_type;
-  // 1 : voltage command, 2: power command
-  if (_motor_cmd_type == 1)  // voltage command
-  {
-    // nothing now
-  }
-  else if (_motor_cmd_type == 2)  // power command
-  {
-    this->motorPower = _msg->target_motor_cmd;
-    
-    // rotate propellers for visual effets
-    this->PropRotate(this->motorPower);
-  }
-  else if (_motor_cmd_type == 0)  // nothing
-  {
-    // Default
-  }
-  else
-  {
-    gzmsg << "WRONG MOTOR/THRUSTER COMMAND TYPE "
-        << "(1 : voltage command, 2: power command)"
-        << std::endl;
-  }
-  ignition::math::Vector3d thrusterForce(this->motorPower * 50,
+  double _motor_cmd_value = _msg->target_motor_cmd;
+  this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
+  ignition::math::Vector3d thrusterForce(this->motorPower,
                                          0.0,
                                          0.0);
   // Currently, apply the force at cog for kinematics controls
@@ -804,18 +784,8 @@ void DirectKinematicsROSPlugin::ConveyDynamicsCommands(
   // ---------- MOTOR/THRUSTER COMMAND ----------- //
   // --------------------------------------------- //
   int _motor_cmd_type = _msg->motor_cmd_type;
-  // 1 : voltage command, 2: power command
-  if (_motor_cmd_type == 1)  // voltage command
-  {
-    // nothing now
-  }
-  else if (_motor_cmd_type == 2)  // power command
-  {
-    this->motorPower = _msg->target_motor_cmd;
-    
-    // rotate propellers for visual effets
-    this->PropRotate(this->motorPower);
-  }
+  double _motor_cmd_value = _msg->target_motor_cmd;
+  this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
 
   // --------------------------------------------- //
   // ----------- Dynamics Calculation ------------ //
@@ -1110,6 +1080,34 @@ void DirectKinematicsROSPlugin::ComputeAcc(Eigen::Vector6d _velRel, double _time
 
   lastTime = _time;
   this->lastVelRel = _velRel;
+}
+
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value)
+{
+  // 1 : voltage command, 2: power command
+  if (cmd_type == 1)  // voltage command
+  {
+    double v1 = 1.8953;
+    double v2 = -1.995;
+    double v3 = 1.8701;
+    this->motorPower = v1*(cmd_value*cmd_value)+ v2*cmd_value + v3;
+  }
+  else if (cmd_type == 2)  // power command
+  {
+    double w1 = -0.020919;
+    double w2 = 1.4699;
+    double w3 = 0.97895;
+    this->motorPower = w1*(cmd_value*cmd_value)+ w2*cmd_value + w3;
+    // rotate propellers for visual effets
+    this->PropRotate(this->motorPower);
+  }
+  else
+  {
+    gzmsg << "WRONG MOTOR/THRUSTER COMMAND TYPE "
+        << "(1 : voltage command, 2: power command)"
+        << std::endl;
+  }
 }
 
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)

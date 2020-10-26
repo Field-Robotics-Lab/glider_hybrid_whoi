@@ -351,6 +351,9 @@ namespace direct_kinematics_ros
     /// ============== Other functions ============== ///
     /// ============================================= ///
 
+    /// \brief Function to calculate thruster characteristics
+    protected: virtual void calcThrusterForce(int cmd_type, double cmd_value);
+
     /// \brief CSV log writing stream for verifications
     protected: std::ofstream writeLog;
     protected: u_int64_t writeCounter;
