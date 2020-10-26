@@ -320,6 +320,7 @@ void DirectKinematicsROSPlugin::updateModelState()
 {
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
+  model_state_msg.request.relative_entity_name = "world";
   this->stateSubscriber["Model"].call(model_state_msg);
   this->modelState.model_name = this->model->GetName();
   this->modelState.pose = model_state_msg.response.pose;
@@ -346,10 +347,12 @@ void DirectKinematicsROSPlugin::ConveyCommands(
   {
     this->dynamics = true;
   }
-  else
+  else if (_pitch_cmd_type == 2 || _pitch_cmd_type == 3)
   {
     this->dynamics = false;
   }
+
+
 
   // Convey commands to functions accordingly (Kinematics, dynamics)
   if(this->dynamics)
@@ -389,6 +392,25 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   // cmd_msg.request.model_state.pose.orientation.y = orientation_quat.Y();
   // cmd_msg.request.model_state.pose.orientation.z = orientation_quat.Z();
   // cmd_msg.request.model_state.pose.orientation.w = orientation_quat.W();
+
+  // ignition::math::Quaterniond orientation(this->modelState.pose.orientation.x,
+  //                                         this->modelState.pose.orientation.y,
+  //                                         this->modelState.pose.orientation.z,
+  //                                         this->modelState.pose.orientation.w);
+  // ignition::math::Vector3d orientation_euler = orientation.Euler();
+  // gzmsg << "=====================" << std::endl;
+  // gzmsg << orientation_euler << std::endl;  
+  // gzmsg << "---------------------" << std::endl;
+  // gzmsg << orientation.X() << std::endl;  
+  // gzmsg << orientation.Y() << std::endl;  
+  // gzmsg << orientation.Z() << std::endl;  
+  // gzmsg << orientation.W() << std::endl<< std::endl;  
+  // gazebo_msgs::SetModelState cmd_msg;
+  // cmd_msg.request.model_state = this->modelState;
+  // cmd_msg.request.model_state.pose.orientation.x = orientation.X();
+  // cmd_msg.request.model_state.pose.orientation.y = orientation.Y();
+  // cmd_msg.request.model_state.pose.orientation.z = orientation.Z();
+  // cmd_msg.request.model_state.pose.orientation.w = orientation.W();
 
   // this->commandPublisher["Model"].call(cmd_msg);
 
