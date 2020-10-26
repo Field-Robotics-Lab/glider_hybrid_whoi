@@ -237,8 +237,13 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     // Initialize filtered acceleration & last velocity
     this->filteredAcc.setZero();
     this->lastVelRel.setZero();
-  }
-    this->dynamics = false;
+  }   
+  this->dynamics = false;     // Initiate without dynamics on
+  this->buoyancyFlag = true; // Initialize buoyancy engine
+
+  // Free surface detection
+  this->boundingBox = link->BoundingBox();
+  this->isSubmerged = true;
 
   // Connect the update event callback
   this->Connect();
@@ -307,6 +312,9 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
 
   // Send status
   this->ConveyModelState();
+
+  // Check submergence
+  this->CheckSubmergence();
 
   // CSV log write stream
   this->writeCSVLog();
@@ -567,11 +575,14 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   double fluid_density = this->fluidDensity;
   double _pumped_volume = _msg->target_pumped_volume;
   // Get the buoyancy force in world coordinates
-  ignition::math::Vector3d buoyancyForce;
-  buoyancyForce = ignition::math::Vector3d
+  if (this->buoyancyForce.Z() != _pumped_volume/1000000*fluid_density * this->gravity && _pumped_volume != 0)
+  {
+    this->buoyancyForce = ignition::math::Vector3d
       (0, 0, _pumped_volume/1000000*fluid_density * this->gravity);
-  // Currently, apply the force at cog for kinematics controls
-  this->link->AddForce(buoyancyForce);
+  }
+
+  // Check submergence
+  this->link->AddForceAtRelativePosition(this->buoyancyForce, this->cog);
 }
 
 // /////////////////////////////////////////////////
@@ -972,8 +983,8 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   // Hydrostatic restoring forces from Fossen (2.168)
   double W = this->m*this->gravity; // Gravitational force acting on center of gravity
   double B = (this->m_h+this->m_s)*this->gravity; // Buoyancy force acting on center of buoyancy
-  ignition::math::Vector3d buoyancyForce,buoyancyTorque;
-  buoyancyForce = ignition::math::Vector3d(
+  ignition::math::Vector3d buoyancyForce, buoyancyTorque;
+  this->buoyancyForce = ignition::math::Vector3d(
       (W-B)*sin(vR.Y()), -(W-B)*cos(vR.Y())*sin(vR.X()) , -(W-B)*cos(vR.Y())*cos(vR.X())
   );
   buoyancyTorque = ignition::math::Vector3d(
@@ -981,8 +992,9 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
       ((this->cog).Z()*W-(this->cob).Z()*B)*sin(vR.Y())+((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*cos(vR.X()),
       -((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*sin(vR.X())-((this->cog).Y()*W-(this->cob).Y()*B)*sin(vR.Y())
   );
-  Eigen::Vector6d hydrostatic; 
-  hydrostatic << buoyancyForce.X(), buoyancyForce.Y(), buoyancyForce.Z(), buoyancyTorque.X(), buoyancyTorque.Y(), buoyancyTorque.Z();
+
+  Eigen::Vector6d hydrostatic;
+  hydrostatic << this->buoyancyForce.X(), this->buoyancyForce.Y(), this->buoyancyForce.Z(), buoyancyTorque.X(), buoyancyTorque.Y(), buoyancyTorque.Z();
 
   // All additional (compared to standard rigid body) Fossen terms combined.
   Eigen::Vector6d tau;
@@ -994,6 +1006,18 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   tau(1) = 0.0;
   tau(3) = 0.0;
   tau(5) = 0.0;
+
+  // // Check submergence
+  // this->CheckSubmergence();
+  // if (!this->isSubmerged && tau(2) >= 0)
+  // {
+  //   tau(2) = 0.0;
+  //   this->link->SetLinearVel(
+  //     ignition::math::Vector3d(
+  //       this->link->WorldLinearVel().X(),
+  //       this->link->WorldLinearVel().Y(),
+  //       0.0));
+  // }
 
   GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
 
@@ -1092,7 +1116,11 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
     double v2 = -1.995;
     double v3 = 1.8701;
     this->motorPower = v1*(cmd_value*cmd_value)+ v2*cmd_value + v3;
+    if (cmd_value == 0.0)
+      this->motorPower = 0.0;
     this->motorPower = this->motorPower * 2.0;  // Dual thrusters
+    // rotate propellers for visual effets
+    this->PropRotate(this->motorPower);
   }
   else if (cmd_type == 2)  // power command
   {
@@ -1101,6 +1129,8 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
     double w3 = 0.97895;
     this->motorPower = w1*(cmd_value*cmd_value)+ w2*cmd_value + w3;
     this->motorPower = this->motorPower * 2.0;  // Dual thrusters
+    if (cmd_value == 0.0)
+      this->motorPower = 0.0;
     // rotate propellers for visual effets
     this->PropRotate(this->motorPower);
   }
@@ -1111,6 +1141,41 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
         << std::endl;
   }
 }
+
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::CheckSubmergence()
+{
+  double height = this->boundingBox.ZLength();
+  double x = this->link->WorldPose().Pos().X();
+  double y = this->link->WorldPose().Pos().Y();
+  double z = this->link->WorldPose().Pos().Z();
+  bool previousState = this->isSubmerged;
+
+  if (previousState)
+    this->lastPose = this->link->WorldPose();
+
+  // Submerged vessel  
+  if (z + height / 2 > 0 && z < 0)
+  {
+    this->isSubmerged = false;
+  }
+  else if (z + height / 2 < 0)
+  {
+    this->isSubmerged = true;
+  }
+
+  if (!this->isSubmerged)
+  {
+    if (previousState || this->buoyancyForce.Z() > 0.0)
+    {
+      ignition::math::Quaterniond quat(0.0,0.0,0.0,0.0);
+      this->lastPose.Rot() = quat;
+      this->link->SetWorldPose(this->lastPose);
+      this->model->ResetPhysicsStates();
+    }
+  }
+}
+
 
 GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
 }

@@ -163,6 +163,9 @@ namespace direct_kinematics_ros
 
     /// \brief Gravity
     protected: double gravity;  
+
+    /// \brief buoyancy Command Flag
+    protected: bool buoyancyFlag;
     
     /// \brief Flag to use the global current velocity or the individually
     /// assigned current velocity
@@ -362,6 +365,23 @@ namespace direct_kinematics_ros
 
     private: std::map<std::string, geometry_msgs::TransformStamped> nedTransform;
     private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;
+    
+    /// --------- Free surface detection ----------///
+    /// \brief Bounding box of the body
+    protected: ignition::math::Box boundingBox;
+
+    /// \brief Is submerged flag
+    protected: bool isSubmerged;
+
+    /// \brief Is submerged flag
+    protected: ignition::math::Pose3d lastPose;
+
+    /// \brief Is submerged flag
+    protected: ignition::math::Vector3d buoyancyForce;
+
+    /// \brief Calculate buoyancy force with respect to free surface
+    protected: virtual void CheckSubmergence();
+
   };
   
 /// \brief Conversion of a string to a double vector
