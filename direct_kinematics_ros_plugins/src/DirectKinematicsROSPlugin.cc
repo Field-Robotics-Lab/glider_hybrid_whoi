@@ -1092,6 +1092,7 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
     double v2 = -1.995;
     double v3 = 1.8701;
     this->motorPower = v1*(cmd_value*cmd_value)+ v2*cmd_value + v3;
+    this->motorPower = this->motorPower * 2.0;  // Dual thrusters
   }
   else if (cmd_type == 2)  // power command
   {
@@ -1099,6 +1100,7 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
     double w2 = 1.4699;
     double w3 = 0.97895;
     this->motorPower = w1*(cmd_value*cmd_value)+ w2*cmd_value + w3;
+    this->motorPower = this->motorPower * 2.0;  // Dual thrusters
     // rotate propellers for visual effets
     this->PropRotate(this->motorPower);
   }
