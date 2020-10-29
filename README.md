@@ -18,6 +18,9 @@ Starts paused. Click 'play' button at the Gazebo window. The data log will be sa
 ## Interface
 ![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
 
+The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
+provided by https://gitlab.com/mit-mers/ros/slocum_glider
+
 ## Current Problems
 https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/7
 
