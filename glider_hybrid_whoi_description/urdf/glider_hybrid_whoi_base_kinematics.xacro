@@ -27,7 +27,7 @@
   <xacro:property name="gravity" value="9.81"/>
   <xacro:property name="cob" value="0 0 0"/>
   <xacro:property name="cog" value="0 0 0.0054"/>
-  
+
   <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi/glider_hybrid_whoi_body.dae" />
   <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi/glider_hybrid_whoi_collision.dae" />
   <xacro:property name="left_prop_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_hybrid_whoi/glider_hybrid_whoi_left_propeller.dae" />
@@ -145,8 +145,15 @@
         <writeLog>true</writeLog>
         <flow_velocity_topic>/hydrodynamics/current_velocity</flow_velocity_topic>
         <use_global_ocean_current>true</use_global_ocean_current>
+        <!-- Kinematics coefficients -->
+        <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
+        <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
+        <Area>0.0345</Area>
+        <C_D>0.2534</C_D>
+        <C_L>0.4160</C_L>
 
         <!-- Dynamics properties -->
+        <use_dynamics>false</use_dynamics>
         <dynamics>
           <hull_mass>48.2</hull_mass>
           <hull_length>2.0</hull_length>

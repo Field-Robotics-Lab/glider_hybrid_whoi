@@ -35,7 +35,7 @@ DirectKinematicsROSPlugin::~DirectKinematicsROSPlugin()
 {
   this->rosNode->shutdown();
   this->updateConnection.reset();
-  
+
   // CSV log write stream close
   writeLog.close();
 }
@@ -54,7 +54,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
 
   GZ_ASSERT(_model != NULL, "Invalid model pointer");
   GZ_ASSERT(_sdf != NULL, "Invalid SDF element pointer");
-  
+
   this->model = _model;
   // this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
   this->rosNode.reset(new ros::NodeHandle(""));
@@ -111,7 +111,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // Advertise for command publisher
   bool service_ready = false;
   service_ready = ros::service::exists("/gazebo/get_model_state",true);
-  if (!service_ready) 
+  if (!service_ready)
   {
     ROS_INFO("get_model_state service does not exists");
   }
@@ -156,10 +156,10 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->model->GetName() + "/dvl", 10,
     boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorData,
     this, _1));
-    
+
   this->sensorSubscribers["GPSOnOff"]=
     this->rosNode->subscribe<std_msgs::Bool>(
-    this->model->GetName() + "/dvl/state", 10,
+    this->model->GetName() + "/gps/state", 10,
     boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorOnOff,
     this, _1));
 
@@ -168,7 +168,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->model->GetName() + "/gps", 10,
     boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorData,
     this, _1));
-    
+
   // Publisher for glider status
   this->statePublisher =
       this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
@@ -193,6 +193,30 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
           this->model->GetName() + "/thrusters/0/input", 10);
   }
 
+  // ---------------- READ Kinematics coefficients ---------------- //
+  if (_sdf->HasElement("f_pitch_battpos_cal_m"))
+    this->f_pitch_battpos_cal_m = _sdf->Get<double>("f_pitch_battpos_cal_m");
+  else
+    this->f_pitch_battpos_cal_m = 1.2565;
+  if (_sdf->HasElement("f_pitch_battpos_cal_b"))
+    this->f_pitch_battpos_cal_b = _sdf->Get<double>("f_pitch_battpos_cal_b");
+  else
+    this->f_pitch_battpos_cal_b = -0.055;
+  if (_sdf->HasElement("Area"))
+    this->Area = _sdf->Get<double>("Area");
+  else
+    this->Area = 0.0345;
+  if (_sdf->HasElement("C_D"))
+    this->C_D = _sdf->Get<double>("C_D");
+  else
+    this->C_D = 0.2534;
+  if (_sdf->HasElement("C_L"))
+    this->C_L = _sdf->Get<double>("C_L");
+  else
+    this->C_L = 0.4160;
+
+
+  // Coordinate transform functions
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform["base_link"].child_frame_id = this->model->GetName() + "/base_link_ned";
   this->nedTransform["base_link"].transform.translation.x = 0;
@@ -237,8 +261,17 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     // Initialize filtered acceleration & last velocity
     this->filteredAcc.setZero();
     this->lastVelRel.setZero();
-  }   
-  this->dynamics = false;     // Initiate without dynamics on
+  }
+
+  this->prev_pitch = 0.0;
+  this->prev_yaw = 0.0;
+  this->prev_motorPower = 0.0;
+
+  if (_sdf->HasElement("use_dynamics"))
+    this->dynamics = _sdf->Get<bool>("use_dynamics");
+  else
+    this->dynamics = false;     // Initiate without dynamics on
+
   this->buoyancyFlag = true; // Initialize buoyancy engine
 
   // Free surface detection
@@ -260,7 +293,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   gzmsg << ":\t" + this->model->GetName()
           + "/direct_kinematics/UwGliderCommand" << std::endl;
   gzmsg << "State Topic (frl_msg type)" << std::endl;
-  gzmsg << ":\t" + this->model->GetName() 
+  gzmsg << ":\t" + this->model->GetName()
           + "/direct_kinematics/UwGliderStatus" << std::endl;
   gzmsg << "##################################################" << std::endl;
   gzmsg << std::endl;
@@ -293,8 +326,8 @@ void DirectKinematicsROSPlugin::Init()
 
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::Reset()
-{ 
-  // Nothing here 
+{
+  // Nothing here
 }
 
 /////////////////////////////////////////////////
@@ -349,18 +382,16 @@ void DirectKinematicsROSPlugin::commandSubThread()
 void DirectKinematicsROSPlugin::ConveyCommands(
   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
-  // Determine kinematics or dynamics
-  int _pitch_cmd_type = _msg->pitch_cmd_type;
-  if (_pitch_cmd_type == 1)  // battery position control
-  {
-    this->dynamics = true;
-  }
-  else if (_pitch_cmd_type == 2 || _pitch_cmd_type == 3)
-  {
-    this->dynamics = false;
-  }
-
-
+  // // Determine kinematics or dynamics
+  // int _pitch_cmd_type = _msg->pitch_cmd_type;
+  // if (_pitch_cmd_type == 1)  // battery position control
+  // {
+  //   this->dynamics = true;
+  // }
+  // else if (_pitch_cmd_type == 2 || _pitch_cmd_type == 3)
+  // {
+  //   this->dynamics = false;
+  // }
 
   // Convey commands to functions accordingly (Kinematics, dynamics)
   if(this->dynamics)
@@ -374,7 +405,7 @@ void DirectKinematicsROSPlugin::ConveyCommands(
   // }
 
   // Print gzmsg
-  gzmsg << "Control msg detected! at " 
+  gzmsg << "Control msg detected! at "
         << this->time << " s" << std::endl;
 }
 
@@ -393,7 +424,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   // orientation_quat.Euler(orientation_euler.X(),
   //                        orientation_euler.Y(),
   //                        orientation_euler.Z());
-  
+
   // gazebo_msgs::SetModelState cmd_msg;
   // cmd_msg.request.model_state = this->modelState;
   // cmd_msg.request.model_state.pose.orientation.x = orientation_quat.X();
@@ -407,12 +438,12 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   //                                         this->modelState.pose.orientation.w);
   // ignition::math::Vector3d orientation_euler = orientation.Euler();
   // gzmsg << "=====================" << std::endl;
-  // gzmsg << orientation_euler << std::endl;  
+  // gzmsg << orientation_euler << std::endl;
   // gzmsg << "---------------------" << std::endl;
-  // gzmsg << orientation.X() << std::endl;  
-  // gzmsg << orientation.Y() << std::endl;  
-  // gzmsg << orientation.Z() << std::endl;  
-  // gzmsg << orientation.W() << std::endl<< std::endl;  
+  // gzmsg << orientation.X() << std::endl;
+  // gzmsg << orientation.Y() << std::endl;
+  // gzmsg << orientation.Z() << std::endl;
+  // gzmsg << orientation.W() << std::endl<< std::endl;
   // gazebo_msgs::SetModelState cmd_msg;
   // cmd_msg.request.model_state = this->modelState;
   // cmd_msg.request.model_state.pose.orientation.x = orientation.X();
@@ -422,24 +453,29 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
 
   // this->commandPublisher["Model"].call(cmd_msg);
 
+  // ---------------------------------------- //
+  // ----------- Previous state ------------- //
+  // ---------------------------------------- //
+  gazebo_msgs::SetModelState cmd_msg;
+  cmd_msg.request.model_state.model_name = this->model->GetName();
+  cmd_msg.request.model_state = this->modelState;
+
   // --------------------------------------- //
   // ----------- PITCH COMMAND ------------- //
   // --------------------------------------- //
-  gazebo_msgs::SetModelState pitch_cmd_msg;
+  double target_pitch = this->prev_pitch;
   int _pitch_cmd_type = _msg->pitch_cmd_type;
-  pitch_cmd_msg.request.model_state.model_name = this->model->GetName();
-  pitch_cmd_msg.request.model_state.pose = this->modelState.pose;
   // 1 : battery position, 2: target once , 3: target servo
-  if (_pitch_cmd_type == 2)  // target once
+  if (_pitch_cmd_type == 1)  // battery position
   {
-    ignition::math::Quaterniond target_pitch;
-    target_pitch.Euler(0.0, _msg->target_pitch_value, 0.0);
-    pitch_cmd_msg.request.model_state.pose.orientation.x = target_pitch.X();
-    pitch_cmd_msg.request.model_state.pose.orientation.y = target_pitch.Y();
-    pitch_cmd_msg.request.model_state.pose.orientation.z = target_pitch.Z();
-    pitch_cmd_msg.request.model_state.pose.orientation.w = target_pitch.W();
-    // A table lookup is used to compute the desired
-    // battery position and no corrections are made.
+    double battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
+    double target_pitch_rad
+              = this->f_pitch_battpos_cal_m * battpos + this->f_pitch_battpos_cal_b;
+    target_pitch = target_pitch_rad;
+  }
+  else if (_pitch_cmd_type == 2)  // target once
+  {
+    target_pitch = _msg->target_pitch_value;
   }
   else if (_pitch_cmd_type == 3)  // target servo
   {
@@ -447,7 +483,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   }
   else if (_pitch_cmd_type == 0)  // nothing
   {
-    // default
+    target_pitch = this->prev_pitch;
   }
   else
   {
@@ -455,134 +491,169 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
         << "(1 : battery position, 2: target once, 3: target servo)"
         << std::endl;
   }
-  // publish command model state to gazebo/set_model_state topic
-  this->commandPublisher["Model"].call(pitch_cmd_msg);
-  this->modelState = pitch_cmd_msg.request.model_state;
+  this->prev_pitch = target_pitch;
 
-  // // --------------------------------------- //
-  // // ----------- RUDDER CONTROL ------------ //
-  // // --------------------------------------- //
-  // gazebo_msgs::SetModelState rudder_cmd_msg;
-  // int _rudder_control_mode = _msg->rudder_control_mode;
-
-  // // Pass original state
-  // rudder_cmd_msg.request.model_state = this->modelState;
-  // // rudder_cmd_msg.request.model_state.pose.position.x = this->link->WorldPose().Pos().X();
-  // // rudder_cmd_msg.request.model_state.pose.position.y = this->link->WorldPose().Pos().Y();
-  // // rudder_cmd_msg.request.model_state.pose.position.z = this->link->WorldPose().Pos().Z();
-  // // ignition::math::Quaterniond orientation = this->link->WorldPose().Rot();
-  // orientation = ignition::math::Quaterniond(this->modelState.pose.orientation.x,
-  //                                           this->modelState.pose.orientation.y,
-  //                                           this->modelState.pose.orientation.z,
-  //                                           this->modelState.pose.orientation.w);
-  // orientation_euler = orientation.Euler();
-  // gzmsg << "3" << std::endl; 
-  // gzmsg << orientation_euler << std::endl;
-
-  // // Define _target_heading accordingly
-  // ignition::math::Quaterniond _target_heading;
-  // // 1 : control heading, 2: control angle
-  // if (_rudder_control_mode == 1)  // control heading
-  // {
-  //   // NOT IMPLEMENTED YET 
-  // }
-  // else if (_rudder_control_mode == 2)  // control angle
-  // {
-  //   int _rudder_angle = _msg->rudder_angle;
-  //   // Rudder angle control
-  //   // 1: center, 2: port, 3: staboard, 4: direct
-  //   double rudderAngleZero = 0.0;
-  //   double rudderAnglePort = M_PI/6.0;
-  //   double rudderAngleStbd = -M_PI/6.0;
-  //   double rudderAngleTarget = _msg->target_rudder_angle;
-  //   if (_rudder_angle == 1)  // center
-  //   {
-  //     _target_heading.Euler(orientation_euler.X(), 
-  //                           orientation_euler.Y(), 
-  //                           orientation_euler.Z() + rudderAngleZero);
-  //     this->rudderAngle = rudderAngleZero;
-  //   }
-  //   else if (_rudder_angle == 2)  // port
-  //   {
-  //     _target_heading.Euler(orientation_euler.X(), 
-  //                           orientation_euler.Y(), 
-  //                           orientation_euler.Z() + rudderAnglePort);
-  //     this->rudderAngle = rudderAnglePort;
-  //   }
-  //   else if (_rudder_angle == 3)  // staboard
-  //   {
-  //     _target_heading.Euler(orientation_euler.X(), 
-  //                           orientation_euler.Y(), 
-  //                           orientation_euler.Z() + rudderAngleStbd);
-  //     this->rudderAngle = rudderAngleStbd;
-  //   }
-  //   else if (_rudder_angle == 4)  // direct
-  //   {
-  //     _target_heading.Euler(orientation_euler.X(), 
-  //                           orientation_euler.Y(), 
-  //                           orientation_euler.Z() + rudderAngleTarget);
-  //     this->rudderAngle = rudderAngleTarget;
-  //   }
-  //   else if (_rudder_angle == 0)  // nothing
-  //   {
-  //     _target_heading.Euler(orientation_euler.X(), 
-  //                           orientation_euler.Y(), 
-  //                           orientation_euler.Z());
-  //   }
-  //   else
-  //   {
-  //     gzmsg << "WRONG RUDDER ANGLE COMMAND "
-  //       << "(1: center, 2: port, 3: staboard, 4: direct)" 
-  //       << std::endl;
-  //   }
-  //   rudder_cmd_msg.request.model_state.pose.orientation.x = _target_heading.X();
-  //   rudder_cmd_msg.request.model_state.pose.orientation.y = _target_heading.Y();
-  //   rudder_cmd_msg.request.model_state.pose.orientation.z = _target_heading.Z();
-  //   rudder_cmd_msg.request.model_state.pose.orientation.w = _target_heading.W();
-  // }
-  // else if (_rudder_control_mode == 0)  // nothing
-  // {
-  //   // default
-  // }
-  // else 
-  // {
-  //   gzmsg << "WRONG RUDDER COMMAND TYPE "
-  //       << "(1 : control heading, 2: control angle)" 
-  //       << std::endl;
-  // }
-  // // publish command model state to gazebo/set_model_state topic
-  // this->commandPublisher["Model"].call(rudder_cmd_msg);
-  // this->modelState = rudder_cmd_msg.request.model_state;
-
+  // --------------------------------------- //
+  // ----------- RUDDER CONTROL ------------ //
+  // --------------------------------------- //
+  double target_yaw;
+  int _rudder_control_mode = _msg->rudder_control_mode;
+  // 1 : control heading, 2: control angle
+  if (_rudder_control_mode == 1)  // control heading
+  {
+    target_yaw = _msg->target_heading;
+  }
+  else if (_rudder_control_mode == 2)  // control angle
+  {
+    int _rudder_angle = _msg->rudder_angle;
+    // Rudder angle control
+    // 1: center, 2: port, 3: staboard, 4: direct
+    double rudderAngleZero = 0.0;
+    double rudderAnglePort = M_PI/6.0;
+    double rudderAngleStbd = -M_PI/6.0;
+    double rudderAngleTarget = _msg->target_rudder_angle;
+    if (_rudder_angle == 1)  // center
+    {
+      target_yaw = this->prev_yaw + rudderAngleZero;
+    }
+    else if (_rudder_angle == 2)  // port
+    {
+      target_yaw = this->prev_yaw + rudderAnglePort;
+    }
+    else if (_rudder_angle == 3)  // staboard
+    {
+      target_yaw = this->prev_yaw + rudderAngleStbd;
+    }
+    else if (_rudder_angle == 4)  // direct
+    {
+      target_yaw = this->prev_yaw + rudderAngleTarget;
+    }
+    else if (_rudder_angle == 0)  // nothing
+    {
+      target_yaw = this->prev_yaw;
+    }
+    else
+    {
+      gzmsg << "WRONG RUDDER ANGLE COMMAND "
+        << "(1: center, 2: port, 3: staboard, 4: direct)"
+        << std::endl;
+    }
+  }
+  else if (_rudder_control_mode == 0)  // nothing
+  {
+    target_yaw = this->prev_yaw;
+  }
+  else
+  {
+    gzmsg << "WRONG RUDDER COMMAND TYPE "
+        << "(1 : control heading, 2: control angle)"
+        << std::endl;
+  }
+  this->prev_yaw = target_yaw;
 
   // --------------------------------------- //
   // ------- MOTOR/THRUSTER COMMAND -------- //
-  // -------- local frame control ---------- //
   // --------------------------------------- //
   int _motor_cmd_type = _msg->motor_cmd_type;
   double _motor_cmd_value = _msg->target_motor_cmd;
-  this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
-  ignition::math::Vector3d thrusterForce(this->motorPower,
-                                         0.0,
-                                         0.0);
-  // Currently, apply the force at cog for kinematics controls
-  this->link->AddRelativeForce(thrusterForce);
-
-  // -------------------------------------- //
-  // ------- Buoyancy pump command -------- //
-  // -------------------------------------- //
-  // Currently assumed that the cob = cog
-  double fluid_density = this->fluidDensity;
-  double _pumped_volume = _msg->target_pumped_volume;
-  // Get the buoyancy force in world coordinates
-  if (this->buoyancyForce.Z() != _pumped_volume/1000000*fluid_density * this->gravity && _pumped_volume != 0)
+  // 1 : voltage control, 2: power control
+  if (_motor_cmd_type == 1 || 2)
   {
-    this->buoyancyForce = ignition::math::Vector3d
-      (0, 0, _pumped_volume/1000000*fluid_density * this->gravity);
+    this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
+    this->prev_motorPower = this->motorPower;
+  }
+  else if (_motor_cmd_type == 0)  // nothing
+  {
+    // nothing
+  }
+  else
+  {
+    gzmsg << "WRONG THRUSTER COMMAND TYPE "
+        << "(1 : voltage control, 2: power control)"
+        << std::endl;
+  }
+  double v_thrust = sqrt((2*this->prev_motorPower)/(fluidDensity*Area*C_D));
+
+  // --------------------------------------- //
+  // ------- Caclulate flight model -------- //
+  // --------------------------------------- //
+  double m_0;
+  double alpha, xi, theta;
+  double vx,vz,v_kernel;
+
+  if (_msg->target_pumped_volume != 0.0)
+  {
+    this->prev_pumpVol = _msg->target_pumped_volume;
   }
 
+  if (this->prev_pumpVol != 0.0)
+  {
+    m_0 = this->prev_pumpVol/1000000.0*this->fluidDensity;
+
+    if (target_pitch > 0.0)
+    {
+      alpha = -3.0/180.0*M_PI;
+    }
+    else
+    {
+      alpha = +3.0/180.0*M_PI;
+    }
+
+    xi = target_pitch - alpha;
+    if (m_0 > 0)
+    {
+      v_kernel = sqrt((2*m_0*this->gravity)/(this->fluidDensity*Area));
+      vz = v_kernel*C_D/C_L/sqrt(C_L);
+      if (-sin(xi)/C_D > 0)
+        vx = v_kernel*sqrt(-sin(xi)/C_D)*cos(xi);
+      else
+        vx = 0.0;
+    }
+    else
+    {
+      v_kernel = sqrt((-2*m_0*this->gravity)/(this->fluidDensity*Area));
+      vz = -v_kernel*C_D/C_L/sqrt(C_L);
+      if (sin(xi)/C_D > 0)
+        vx = v_kernel*sqrt(sin(xi)/C_D)*cos(xi);
+      else
+        vx = 0.0;
+    }
+
+    gzmsg << target_pitch << std::endl;
+    gzmsg << xi << std::endl;
+    gzmsg << vx << std::endl;
+    gzmsg << vz << std::endl;
+  }
+
+  // -------------------------------------- //
+  // -------   Send message call   -------- //
+  // -------------------------------------- //
+  ignition::math::Quaterniond target_orientation;
+  target_orientation.Euler(0.0, target_pitch, target_yaw);
+  cmd_msg.request.model_state.pose.orientation.x = target_orientation.X();
+  cmd_msg.request.model_state.pose.orientation.y = target_orientation.Y();
+  cmd_msg.request.model_state.pose.orientation.z = target_orientation.Z();
+  cmd_msg.request.model_state.pose.orientation.w = target_orientation.W();
+  this->commandPublisher["Model"].call(cmd_msg);
+  if (this->prev_pumpVol != 0.0)
+  {
+    double buoyancy_vel_x = vx*cos(target_pitch)+vz*sin(target_pitch);
+    double buoyancy_vel_z = vx*sin(target_pitch)+vz*cos(target_pitch);
+    cmd_msg.request.model_state.twist.linear.x = buoyancy_vel_x*cos(target_yaw) + v_thrust*cos(target_pitch)*cos(target_yaw);
+    cmd_msg.request.model_state.twist.linear.y = buoyancy_vel_x*sin(target_yaw) + v_thrust*cos(target_pitch)*sin(target_yaw);
+    cmd_msg.request.model_state.twist.linear.z = vx*sin(target_pitch)+vz*cos(target_pitch) - v_thrust*sin(target_pitch);;
+  }
+  else
+  {
+    cmd_msg.request.model_state.twist.linear.x = v_thrust*cos(target_pitch)*cos(target_yaw);
+    cmd_msg.request.model_state.twist.linear.y = v_thrust*cos(target_pitch)*sin(target_yaw);
+    cmd_msg.request.model_state.twist.linear.z = -v_thrust*tan(target_pitch);
+  }
+  this->commandPublisher["Model"].call(cmd_msg);
+  this->modelState = cmd_msg.request.model_state;
+
   // Check submergence
-  this->link->AddForceAtRelativePosition(this->buoyancyForce, this->cog);
+  // this->link->AddForceAtRelativePosition(this->buoyancyForce, this->cog);
 }
 
 // /////////////////////////////////////////////////
@@ -596,7 +667,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
 //   rudder_cmd_msg.request.model_state.reference_frame =
 //         this->model->GetName() + "/" + this->rudder_link_name;
 //   int _rudder_control_mode = _msg->rudder_control_mode;
-//   rudder_cmd_msg.request.model_state.link_name = 
+//   rudder_cmd_msg.request.model_state.link_name =
 //         this->model->GetLink(this->rudder_link_name)->GetName();
 //   // 0 : control heading, 1: control angle
 //   if (_rudder_control_mode == 0)  // control heading
@@ -627,14 +698,14 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
 //     else
 //     {
 //       gzmsg << "WRONG RUDDER ANGLE COMMAND "
-//         << "(0: center, 1: port, 2: staboard, 3: direct)" 
+//         << "(0: center, 1: port, 2: staboard, 3: direct)"
 //         << std::endl;
 //     }
 //   }
 //   else
 //   {
 //     gzmsg << "WRONG RUDDER COMMAND TYPE "
-//         << "(0 : control heading, 1: control angle)" 
+//         << "(0 : control heading, 1: control angle)"
 //         << std::endl;
 //   }
 //   // publish command model state to gazebo/set_model_state topic
@@ -645,7 +716,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
 void DirectKinematicsROSPlugin::ConveyModelState()
 {
   // Calculate pose
-  this->modelXYZ = 
+  this->modelXYZ =
       ignition::math::Vector3d(this->modelState.pose.position.x,
                                this->modelState.pose.position.y,
                                this->modelState.pose.position.z);
@@ -666,9 +737,9 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.altitude = this->sensorAltitude;
   status_msg.motor_power = this->motorPower;
   status_msg.rudder_angle = this->rudderAngle;
-  // status_msg.battery_position = 
-  // status_msg.pumped_volume = 
-  
+  // status_msg.battery_position =
+  // status_msg.pumped_volume =
+
   this->statePublisher.publish(status_msg);
 }
 
@@ -691,7 +762,7 @@ if (this->writeLogFlag)
   {
     writeLog.open("/tmp/DirectKinematicsLog.csv", std::ios_base::app);
     writeLog << time << ","
-            << this->modelXYZ.X() << "," << this->modelXYZ.Y() << "," 
+            << this->modelXYZ.X() << "," << this->modelXYZ.Y() << ","
             << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
             << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
             << this->sensorAltitude << "\n";
@@ -802,10 +873,10 @@ void DirectKinematicsROSPlugin::ConveyDynamicsCommands(
   // ----------- Dynamics Calculation ------------ //
   // --------------------------------------------- //
   this->massPos = _msg->target_pitch_value;
-  this->pumpPos = _msg->target_pumped_volume/1000000/(M_PI*(this->r_w)*(this->r_w));
+  this->pumpPos = _msg->target_pumped_volume/1000000.0/(M_PI*(this->r_w)*(this->r_w));
   this->CalculateDynamics
         (this->massPos, this->pumpPos, this->motorPower);
-} 
+}
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::CalculateDynamics(
              double _massPos, double _pumpPos, double _thrustPower)
@@ -817,7 +888,7 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
 
   // Total vehicle mass
   double m = this->m_h + this->m_s + m_w;
-  this->m = m; 
+  this->m = m;
 
   // Moving mass position
   double x_s = this->x_s_o + _massPos;
@@ -840,7 +911,7 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   this->link->GetInertial()->SetIXX(I_xx);
   this->link->GetInertial()->SetIYY(I_yy);
   this->link->GetInertial()->SetIZZ(I_zz);
-  this->link->GetInertial()->SetMass(m);  
+  this->link->GetInertial()->SetMass(m);
 
   // ---- Added mass matrix calculation ----- //
   // computed according to the procedure in Fossen p. 41
@@ -848,7 +919,7 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   double alpha_o = (2.0*(1.0-e*e)/std::pow(e,3))*(0.5*std::log((1.0+e)/(1.0-e))-e);
   double beta_o = 1.0/std::pow(e,2)-((1-std::pow(e,2))/(2.0*std::pow(e,3)))*std::log((1.0+e)/(1.0-e));
   double X_udot = -(alpha_o/(2.0-alpha_o))*this->m;
-  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m; 
+  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m;
   double Z_wdot = Y_vdot;
   double K_pdot = 0.0;
   double M_qdot = -0.2*this->m*(std::pow(std::pow(b,2)-std::pow(a,2),2)*(alpha_o-beta_o))/
@@ -857,20 +928,20 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
 
   // M_A_cg
   Eigen::Matrix6d Ma_cg = Eigen::Matrix6d::Identity();
-  Ma_cg(0,0) = -X_udot;  Ma_cg(1,1) = -Y_vdot;  Ma_cg(2,2) = -Z_wdot;  
-  Ma_cg(3,3) = -K_pdot;  Ma_cg(4,4) = -M_qdot;  Ma_cg(5,5) = -N_rdot;  
+  Ma_cg(0,0) = -X_udot;  Ma_cg(1,1) = -Y_vdot;  Ma_cg(2,2) = -Z_wdot;
+  Ma_cg(3,3) = -K_pdot;  Ma_cg(4,4) = -M_qdot;  Ma_cg(5,5) = -N_rdot;
 
   // M_A = LeftSide*M_A_CG*RightSide
   Eigen::Vector3d cog = Eigen::Vector3d((this->cog).X(),(this->cog).Y(),(this->cog).Z());
   Eigen::Matrix3d S_r_cg = CrossProductOperator(cog);
   Eigen::Matrix6d LeftSide = Eigen::Matrix6d::Identity();
-  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2); 
-  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2); 
-  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2); 
+  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2);
+  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2);
+  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2);
   Eigen::Matrix6d RightSide = Eigen::Matrix6d::Identity();
   Eigen::Matrix3d S_r_cg_T = S_r_cg.transpose();
-  RightSide(0,3) = S_r_cg_T(0,0); RightSide(0,4) = S_r_cg_T(0,1); RightSide(0,5) = S_r_cg_T(0,2); 
-  RightSide(1,3) = S_r_cg_T(1,0); RightSide(1,4) = S_r_cg_T(1,1); RightSide(1,5) = S_r_cg_T(1,2); 
+  RightSide(0,3) = S_r_cg_T(0,0); RightSide(0,4) = S_r_cg_T(0,1); RightSide(0,5) = S_r_cg_T(0,2);
+  RightSide(1,3) = S_r_cg_T(1,0); RightSide(1,4) = S_r_cg_T(1,1); RightSide(1,5) = S_r_cg_T(1,2);
   RightSide(2,3) = S_r_cg_T(2,0); RightSide(2,4) = S_r_cg_T(2,1); RightSide(2,5) = S_r_cg_T(2,2);
   Eigen::Matrix6d M_A = LeftSide*Ma_cg*RightSide;
 
@@ -920,8 +991,8 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   Eigen::Matrix6d M_RB = Eigen::Matrix6d::Identity() * this->m;
   M_RB(3,3) = I_xx; M_RB(4,4) = I_yy; M_RB(5,5) = I_zz;
   Eigen::Matrix6d M_RB_NoDiag = M_RB;
-  M_RB(0,3) = -m_S_r_cg(0,0); M_RB(0,4) = -m_S_r_cg(0,1); M_RB(0,5) = -m_S_r_cg(0,2); 
-  M_RB(1,3) = -m_S_r_cg(1,0); M_RB(1,4) = -m_S_r_cg(1,1); M_RB(1,5) = -m_S_r_cg(1,2); 
+  M_RB(0,3) = -m_S_r_cg(0,0); M_RB(0,4) = -m_S_r_cg(0,1); M_RB(0,5) = -m_S_r_cg(0,2);
+  M_RB(1,3) = -m_S_r_cg(1,0); M_RB(1,4) = -m_S_r_cg(1,1); M_RB(1,5) = -m_S_r_cg(1,2);
   M_RB(2,3) = -m_S_r_cg(2,0); M_RB(2,4) = -m_S_r_cg(2,1); M_RB(2,5) = -m_S_r_cg(2,2);
   M_RB(3,0) = m_S_r_cg(0,0); M_RB(3,1) = m_S_r_cg(0,1); M_RB(3,2) = m_S_r_cg(0,2);
   M_RB(4,0) = m_S_r_cg(1,0); M_RB(4,1) = m_S_r_cg(1,1); M_RB(4,2) = m_S_r_cg(1,2);
@@ -929,24 +1000,24 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   // Rigid Body Coriolis diagonal term
   Eigen::Matrix6d C_RB = Eigen::Matrix6d::Zero();
   Eigen::Vector6d ab = M_RB * velRel;
-  Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
+  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
   C_RB << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1 * CrossProductOperator(ab.tail<3>());  
+         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
   Eigen::Matrix6d C_RB_NoDiag = Eigen::Matrix6d::Zero();
   ab = M_RB_NoDiag * velRel;
-  Sa = -1 * CrossProductOperator(ab.head<3>());
+  Sa = -1.0 * CrossProductOperator(ab.head<3>());
   C_RB_NoDiag << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1 * CrossProductOperator(ab.tail<3>());
+         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
   // Calculate diagonal effect as RHS force
   Eigen::Vector6d rigid_diag = -(M_RB-M_RB_NoDiag)*this->filteredAcc - (C_RB-C_RB_NoDiag)*velRel;
 
     // --- Calculate hull hydrodynamic force (Graver) --- //
   //angle of attack of hull
   double alpha_h;
-  if (velRel(0) > 0)
+  if (velRel(0) > 0.0)
       alpha_h = atan(velRel(2)/velRel(0));
   else
-      alpha_h = 0;
+      alpha_h = 0.0;
   // Graver hydrodynamic forces for hull
   double A_h = M_PI*this->r_h*this->r_h;
   double C_D_h = 0.214 + 32.3*alpha_h*alpha_h;
@@ -957,7 +1028,7 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   double F_L_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_L_h;
   double F_M_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_M_h;
   Eigen::Vector6d hull_hydro; hull_hydro << F_L_h*sin(alpha_h)-F_D_h*cos(alpha_h), 0.0, -F_L_h*cos(alpha_h)-F_D_h*sin(alpha_h), 0.0, F_M_h, 0.0;
-  
+
   // --- Calculate Buoyancy force (Hydrostatic restoring force, Fossen (2.168)) --- //
   // Get world pos eta(p,q,r)
   ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
@@ -967,18 +1038,18 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   q.Z() = pose.Rot().Z();
   q.W() = pose.Rot().W();
   // roll (x-axis rotation)
-  double sinr_cosp = 2 * (q.X() * q.Y() + q.Z() * q.W());
-  double cosr_cosp = 1 - 2 * (q.Y() * q.Y() + q.Z() * q.Z());
+  double sinr_cosp = 2.0 * (q.X() * q.Y() + q.Z() * q.W());
+  double cosr_cosp = 1.0 - 2.0 * (q.Y() * q.Y() + q.Z() * q.Z());
   vR.X() = std::atan2(sinr_cosp, cosr_cosp);
   // pitch (y-axis rotation)
-  double sinp = 2 * (q.X() * q.Z() - q.W() * q.Y());
-  if (std::abs(sinp) >= 1)
+  double sinp = 2.0 * (q.X() * q.Z() - q.W() * q.Y());
+  if (std::abs(sinp) >= 1.0)
     vR.Y() = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
   else
     vR.Y() = std::asin(sinp);
   // yaw (z-axis rotation)
-  double siny_cosp = 2 * (q.X() * q.W() + q.Y() * q.Z());
-  double cosy_cosp = 1 - 2 * (q.Z() * q.Z() + q.W() * q.W());
+  double siny_cosp = 2.0 * (q.X() * q.W() + q.Y() * q.Z());
+  double cosy_cosp = 1.0 - 2.0 * (q.Z() * q.Z() + q.W() * q.W());
   vR.Z() = std::atan2(siny_cosp, cosy_cosp);
   // Hydrostatic restoring forces from Fossen (2.168)
   double W = this->m*this->gravity; // Gravitational force acting on center of gravity
@@ -1003,9 +1074,9 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
   tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
 
   // Added for stability for now
-  tau(1) = 0.0;
-  tau(3) = 0.0;
-  tau(5) = 0.0;
+  // tau(1) = 0.0;
+  // tau(3) = 0.0;
+  // tau(5) = 0.0;
 
   // // Check submergence
   // this->CheckSubmergence();
@@ -1039,8 +1110,8 @@ void DirectKinematicsROSPlugin::CalculateDynamics(
 ignition::math::Vector3d DirectKinematicsROSPlugin::ToNED(ignition::math::Vector3d _vec)
 {
   ignition::math::Vector3d output = _vec;
-  output.Y() = -1 * output.Y();
-  output.Z() = -1 * output.Z();
+  output.Y() = -1.0 * output.Y();
+  output.Z() = -1.0 * output.Z();
   return output;
 }
 
@@ -1059,9 +1130,9 @@ void DirectKinematicsROSPlugin::ComputeAddedCoriolisMatrix(const Eigen::Vector6d
   // Fossen, Thor, "Handbook of Marine Craft and Hydrodynamics and Motion
   // Control", 2011
   Eigen::Vector6d ab = _Ma * _vel;
-  Eigen::Matrix3d Sa = -1 * CrossProductOperator(ab.head<3>());
+  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
   _Ca << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1 * CrossProductOperator(ab.tail<3>());
+         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
 }
 
 /////////////////////////////////////////////////
@@ -1077,7 +1148,7 @@ void DirectKinematicsROSPlugin::ComputeDampingMatrix(const Eigen::Vector6d& _vel
   _D.setZero();
 
   // Simplified only to consider DLin here.
-  _D = -1 * this->DLin;
+  _D = -1.0 * this->DLin;
 }
 
 /////////////////////////////////////////////////
@@ -1146,15 +1217,13 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
 void DirectKinematicsROSPlugin::CheckSubmergence()
 {
   double height = this->boundingBox.ZLength();
-  double x = this->link->WorldPose().Pos().X();
-  double y = this->link->WorldPose().Pos().Y();
   double z = this->link->WorldPose().Pos().Z();
   bool previousState = this->isSubmerged;
 
   if (previousState)
     this->lastPose = this->link->WorldPose();
 
-  // Submerged vessel  
+  // Submerged vessel
   if (z + height / 2 > 0 && z < 0)
   {
     this->isSubmerged = false;

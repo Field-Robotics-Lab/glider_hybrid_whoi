@@ -145,7 +145,7 @@ namespace direct_kinematics_ros
     /// \brief Time at gazebo simulation
     protected: gazebo::common::Time time;
 
-    /// \brief Model State 
+    /// \brief Model State
     protected: gazebo_msgs::ModelState modelState;
 
     /// \brief Model Pose
@@ -162,11 +162,11 @@ namespace direct_kinematics_ros
     protected: double fluidDensity;
 
     /// \brief Gravity
-    protected: double gravity;  
+    protected: double gravity;
 
     /// \brief buoyancy Command Flag
     protected: bool buoyancyFlag;
-    
+
     /// \brief Flag to use the global current velocity or the individually
     /// assigned current velocity
     protected: bool useGlobalCurrent;
@@ -181,13 +181,28 @@ namespace direct_kinematics_ros
     /// \brief Subcriber to flow message
     private: ros::Subscriber flowSubscriber;
 
+    /// \brief Battery pitch control kinematics coefficents
+    protected: double f_pitch_battpos_cal_m;
+    protected: double f_pitch_battpos_cal_b;
+
+    /// \brief Previous values
+    protected: double prev_pitch;
+    protected: double prev_yaw;
+    protected: double prev_motorPower;
+    protected: double prev_pumpVol;
+
+    /// \brief Coefficients
+    protected: double Area;
+    protected: double C_D;
+    protected: double C_L;
+
     /// ============================================= ///
     /// ===========-=== Sensor reading ======-======= ///
     /// ============================================= ///
 
     /// \brief Subscribers for sensor data
     private: std::map<std::string, ros::Subscriber> sensorSubscribers;
-    
+
     /// \brief update DVL sensor state
     protected: virtual void UpdateDVLSensorOnOff
                       (const std_msgs::Bool::ConstPtr &_msg);
@@ -201,7 +216,7 @@ namespace direct_kinematics_ros
     /// \brief update DVL sensor data
     protected: virtual void UpdateDVLSensorData(
                           const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
-    
+
     /// \brief update GPS sensor state
     protected: virtual void UpdateGPSSensorOnOff
                       (const std_msgs::Bool::ConstPtr &_msg);
@@ -256,9 +271,9 @@ namespace direct_kinematics_ros
     /// \brief Buoyancy pump position
     protected: double pumpPos;
 
-    /// \brief Sliding mass position 
+    /// \brief Sliding mass position
     protected: double massPos;
-  
+
     /// \brief total_mass
     protected: double m;
 
@@ -302,7 +317,7 @@ namespace direct_kinematics_ros
     protected: Eigen::Matrix6d Ca;
 
     /// \brief Damping matrix
-    protected: Eigen::Matrix6d D;  
+    protected: Eigen::Matrix6d D;
 
     /// \brief Linear damping matrix
     protected: Eigen::Matrix6d DLin;
@@ -315,7 +330,7 @@ namespace direct_kinematics_ros
 
     /// \brief Get parameters (read matrix form defenitions)
     protected: void GetParam(std::string _tag, std::vector<double>& _output);
-    
+
     /// \brief Filtered linear & angular acceleration vector in link frame.
     /// This is used to prevent the model to become unstable given that Gazebo
     /// only calls the update function at the beginning or at the end of a
@@ -349,7 +364,7 @@ namespace direct_kinematics_ros
     /// \brief Calculate dynamics when commands conveyed and every updates
     protected: virtual void CalculateDynamics
         (double _massPos, double _pumpVol, double _thrustPower);
-    
+
     /// ============================================= ///
     /// ============== Other functions ============== ///
     /// ============================================= ///
@@ -365,7 +380,7 @@ namespace direct_kinematics_ros
 
     private: std::map<std::string, geometry_msgs::TransformStamped> nedTransform;
     private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;
-    
+
     /// --------- Free surface detection ----------///
     /// \brief Bounding box of the body
     protected: ignition::math::Box boundingBox;
@@ -383,7 +398,7 @@ namespace direct_kinematics_ros
     protected: virtual void CheckSubmergence();
 
   };
-  
+
 /// \brief Conversion of a string to a double vector
 inline ignition::math::Vector3<double> Str2Vector(std::string _input)
 {
@@ -407,7 +422,7 @@ inline Eigen::Matrix6d Str2Matrix6(std::string _input)
   std::string buf;
   std::stringstream ss(_input);
   while (ss >> buf)
-  { 
+  {
     results(num) = std::stod(buf);
     num = num+1;
     // results << std::stod(buf);m(0,0)
