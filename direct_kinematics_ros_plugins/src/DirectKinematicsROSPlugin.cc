@@ -618,11 +618,6 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
       else
         vx = 0.0;
     }
-
-    gzmsg << target_pitch << std::endl;
-    gzmsg << xi << std::endl;
-    gzmsg << vx << std::endl;
-    gzmsg << vz << std::endl;
   }
 
   // -------------------------------------- //
