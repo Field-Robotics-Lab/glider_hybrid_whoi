@@ -2,8 +2,7 @@
 Modifying UUV Simulator's eca_a9 and uuv_gazebo_plugin for Hybrid Gliders with Buyoncy ballast, sliding mass, and Propellers
 
 ## Status (using yEd diagram)
-#### Blue : Newely added,  Red lines : With problems,  Yellow : To be added later
-![alt text](https://github.com/woensug-choi/glider_hybrid_whoi/blob/master/DevelopmentDiagram.png?raw=true)
+![image](https://user-images.githubusercontent.com/7955120/98201340-cd896b00-1f72-11eb-9b48-37dd1a15ae61.png)
 
 ## GAZEBO vs MATLAB verification (matched.)
 ![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/CaseAll.PNG?raw=true)
@@ -17,6 +16,9 @@ Starts paused. Click 'play' button at the Gazebo window. The data log will be sa
 
 ## Interface
 ![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
+
+The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
+provided by https://gitlab.com/mit-mers/ros/slocum_glider
 
 ## Current Problems
 https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/7
