@@ -629,7 +629,6 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   cmd_msg.request.model_state.pose.orientation.y = target_orientation.Y();
   cmd_msg.request.model_state.pose.orientation.z = target_orientation.Z();
   cmd_msg.request.model_state.pose.orientation.w = target_orientation.W();
-  this->commandPublisher["Model"].call(cmd_msg);
   if (this->prev_pumpVol != 0.0)
   {
     double buoyancy_vel_x = vx*cos(target_pitch)+vz*sin(target_pitch);
@@ -724,10 +723,10 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.header.stamp = ros::Time::now();
   status_msg.latitude = this->sensorLatitude;
   status_msg.longitude = this->sensorLongitude;
-  status_msg.roll = this->modelRPY.X();
+  status_msg.roll = this->modelRPY.Z();
   status_msg.pitch = this->modelRPY.Y();
-  status_msg.yaw = this->modelRPY.Z();
-  status_msg.heading = this->modelRPY.Z();
+  status_msg.yaw = this->modelRPY.X();
+  status_msg.heading = this->modelRPY.X();
   status_msg.depth = - this->modelXYZ.Z();
   status_msg.altitude = this->sensorAltitude;
   status_msg.motor_power = this->motorPower;
@@ -1230,12 +1229,15 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
 
   if (!this->isSubmerged)
   {
-    if (previousState || this->buoyancyForce.Z() > 0.0)
+    if (prev_pitch < 0 || this->buoyancyForce.Z() > 0.0)
     {
-      ignition::math::Quaterniond quat(0.0,0.0,0.0,0.0);
+      ignition::math::Quaterniond quat;
+      quat.Euler(0.0, 0.0, prev_yaw);
       this->lastPose.Rot() = quat;
       this->link->SetWorldPose(this->lastPose);
-      this->model->ResetPhysicsStates();
+      this->link->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
+      this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
+      this->link->ResetPhysicsStates();
     }
   }
 }
