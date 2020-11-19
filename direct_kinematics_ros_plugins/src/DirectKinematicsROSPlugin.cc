@@ -476,11 +476,9 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
     }
 
     case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_TARGET_ONCE:
-      target_pitch = _msg->target_pitch_value;
-      break;
-
+    // In the kinematic case, _ONCE and _SERVO are equivalent
     case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_TARGET_SERVO:
-      // nothing now yet
+      target_pitch = _msg->target_pitch_value;
       break;
 
     case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_NONE:
