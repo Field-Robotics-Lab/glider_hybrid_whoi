@@ -464,119 +464,126 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   // ----------- PITCH COMMAND ------------- //
   // --------------------------------------- //
   double target_pitch = this->prev_pitch;
-  int _pitch_cmd_type = _msg->pitch_cmd_type;
-  // 1 : battery position, 2: target once , 3: target servo
-  if (_pitch_cmd_type == 1)  // battery position
+  switch(_msg->pitch_cmd_type)
   {
-    double battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
-    double target_pitch_rad
-              = this->f_pitch_battpos_cal_m * battpos + this->f_pitch_battpos_cal_b;
-    target_pitch = target_pitch_rad;
-  }
-  else if (_pitch_cmd_type == 2)  // target once
-  {
-    target_pitch = _msg->target_pitch_value;
-  }
-  else if (_pitch_cmd_type == 3)  // target servo
-  {
-    // nothing now
-  }
-  else if (_pitch_cmd_type == 0)  // nothing
-  {
-    target_pitch = this->prev_pitch;
-  }
-  else
-  {
-    gzmsg << "WRONG PITCH COMMAND TYPE "
-        << "(1 : battery position, 2: target once, 3: target servo)"
-        << std::endl;
+    case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_BATT_POS:
+    {
+      double battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
+      double target_pitch_rad
+                = this->f_pitch_battpos_cal_m * battpos + this->f_pitch_battpos_cal_b;
+      target_pitch = target_pitch_rad;
+      break;
+    }
+
+    case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_TARGET_ONCE:
+      target_pitch = _msg->target_pitch_value;
+      break;
+
+    case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_TARGET_SERVO:
+      // nothing now yet
+      break;
+
+    case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_NONE:
+      target_pitch = this->prev_pitch;
+      break;
+
+    default:
+      gzmsg << "WRONG PITCH COMMAND TYPE "
+          << "(1 : battery position, 2: target once, 3: target servo)"
+          << std::endl;
+      break;
   }
   this->prev_pitch = target_pitch;
 
   // --------------------------------------- //
   // ----------- RUDDER CONTROL ------------ //
   // --------------------------------------- //
-  double target_yaw;
-  int _rudder_control_mode = _msg->rudder_control_mode;
-  // 1 : control heading, 2: control angle
-  if (_rudder_control_mode == 1)  // control heading
+  double target_yaw = this->prev_yaw;
+  switch(_msg->rudder_control_mode)
   {
-    target_yaw = _msg->target_heading;
-  }
-  else if (_rudder_control_mode == 2)  // control angle
-  {
-    int _rudder_angle = _msg->rudder_angle;
-    // Rudder angle control
-    // 1: center, 2: port, 3: staboard, 4: direct
-    double rudderAngleZero = 0.0;
-    double rudderAnglePort = M_PI/6.0;
-    double rudderAngleStbd = -M_PI/6.0;
-    double rudderAngleTarget = _msg->target_rudder_angle;
-    if (_rudder_angle == 1)  // center
+    case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_HEADING:
+      target_yaw = M_PI/2 - _msg->target_heading;
+      break;
+
+    case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_ANGLE:
     {
-      target_yaw = this->prev_yaw + rudderAngleZero;
+      double rudderAngleZero = 0.0;
+      double rudderAnglePort = M_PI/6.0;
+      double rudderAngleStbd = -M_PI/6.0;
+      switch(_msg->rudder_angle)
+      {
+        case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_CENTER:
+          target_yaw = this->prev_yaw + rudderAngleZero;
+          break;
+
+        case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_PORT:
+          target_yaw = this->prev_yaw + rudderAnglePort;
+          break;
+
+        case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_STBD:
+          target_yaw = this->prev_yaw + rudderAngleStbd;
+          break;
+
+        case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_DIRECT:
+          target_yaw = this->prev_yaw + _msg->target_rudder_angle;
+          break;
+
+        default:
+          target_yaw = this->prev_yaw;
+          gzmsg << "WRONG RUDDER ANGLE COMMAND "
+            << "(1: center, 2: port, 3: staboard, 4: direct)"
+            << std::endl; break;
+      }
+      break;
     }
-    else if (_rudder_angle == 2)  // port
-    {
-      target_yaw = this->prev_yaw + rudderAnglePort;
-    }
-    else if (_rudder_angle == 3)  // staboard
-    {
-      target_yaw = this->prev_yaw + rudderAngleStbd;
-    }
-    else if (_rudder_angle == 4)  // direct
-    {
-      target_yaw = this->prev_yaw + rudderAngleTarget;
-    }
-    else if (_rudder_angle == 0)  // nothing
-    {
+
+    case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_NONE:
       target_yaw = this->prev_yaw;
-    }
-    else
-    {
-      gzmsg << "WRONG RUDDER ANGLE COMMAND "
-        << "(1: center, 2: port, 3: staboard, 4: direct)"
-        << std::endl;
-    }
-  }
-  else if (_rudder_control_mode == 0)  // nothing
-  {
-    target_yaw = this->prev_yaw;
-  }
-  else
-  {
-    gzmsg << "WRONG RUDDER COMMAND TYPE "
-        << "(1 : control heading, 2: control angle)"
-        << std::endl;
+      break;
+
+    default:
+      gzmsg << "WRONG RUDDER COMMAND TYPE "
+          << "(1 : control heading, 2: control angle)"
+          << std::endl;
+      break;
   }
   this->prev_yaw = target_yaw;
 
   // --------------------------------------- //
   // ------- MOTOR/THRUSTER COMMAND -------- //
   // --------------------------------------- //
-  int _motor_cmd_type = _msg->motor_cmd_type;
-  double _motor_cmd_value = _msg->target_motor_cmd;
-  // 1 : voltage control, 2: power control
-  if (_motor_cmd_type == 1 || 2)
+  this->motorPower = this->prev_motorPower;
+  switch(_msg->motor_cmd_type)
   {
-    this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
-    this->prev_motorPower = this->motorPower;
-  }
-  else if (_motor_cmd_type == 0)  // nothing
-  {
-    // nothing
-  }
-  else
-  {
-    gzmsg << "WRONG THRUSTER COMMAND TYPE "
-        << "(1 : voltage control, 2: power control)"
-        << std::endl;
+    case frl_vehicle_msgs::UwGliderCommand::MOTOR_CMD_VOLTAGE:
+      this->calcThrusterForce(_msg->motor_cmd_type,
+                              _msg->target_motor_cmd);
+      this->prev_motorPower = this->motorPower;
+      break;
+
+    case frl_vehicle_msgs::UwGliderCommand::MOTOR_CMD_POWER:
+      this->calcThrusterForce(_msg->motor_cmd_type,
+                              _msg->target_motor_cmd);
+      this->prev_motorPower = this->motorPower;
+      break;
+
+    case frl_vehicle_msgs::UwGliderCommand::MOTOR_CMD_NONE:
+      this->motorPower = this->prev_motorPower;
+      break;
+
+    default:
+      gzmsg << "WRONG THRUSTER COMMAND TYPE "
+          << "(1 : voltage control, 2: power control)"
+          << std::endl;
+      break;
+
   }
   double v_thrust = sqrt((2*this->prev_motorPower)/(fluidDensity*Area*C_D));
 
-  // --------------------------------------- //
-  // ------- Caclulate flight model -------- //
-  // --------------------------------------- //
+  // ---------------------------------------- //
+  // ------- Caclulate flight model --------- //
+  // ----- using pumped volume and AoA ------ //
+  // ---------------------------------------- //
   double m_0;
   double alpha, xi, theta;
   double vx,vz,v_kernel;
@@ -645,9 +652,6 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   }
   this->commandPublisher["Model"].call(cmd_msg);
   this->modelState = cmd_msg.request.model_state;
-
-  // Check submergence
-  // this->link->AddForceAtRelativePosition(this->buoyancyForce, this->cog);
 }
 
 // /////////////////////////////////////////////////
@@ -1229,7 +1233,7 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
 
   if (!this->isSubmerged)
   {
-    if (prev_pitch < 0 || this->buoyancyForce.Z() > 0.0)
+    if (prev_pitch < 0.0 || this->buoyancyForce.Z() > 0.0 || prev_pumpVol > 0.0)
     {
       ignition::math::Quaterniond quat;
       quat.Euler(0.0, 0.0, prev_yaw);
