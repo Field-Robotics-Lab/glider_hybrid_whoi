@@ -735,6 +735,10 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.altitude = this->sensorAltitude;
   status_msg.motor_power = this->motorPower;
   status_msg.rudder_angle = this->rudderAngle;
+  status_msg.nav_sat_fix.status.status = this->GPSOnOff;
+  status_msg.nav_sat_fix.latitude = this->sensorLatitude;
+  status_msg.nav_sat_fix.longitude = this->sensorLatitude;
+  status_msg.nav_sat_fix.altitude = this->sensorAltitude;
   // status_msg.battery_position =
   // status_msg.pumped_volume =
 
