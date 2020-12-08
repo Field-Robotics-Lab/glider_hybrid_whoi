@@ -1,4 +1,4 @@
-# Kinematics ROS-GAZEBO plugin for WHOI hybrid gliders
+# Kinematics plugin for WHOI hybrid gliders
 Kinematics control plugin for WHOI hybrid gliders
 
 ## How-to
