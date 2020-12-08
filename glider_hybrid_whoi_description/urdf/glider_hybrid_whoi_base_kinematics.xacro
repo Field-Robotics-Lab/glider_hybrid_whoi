@@ -18,7 +18,6 @@
   <!-- Import macro files -->
   <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro" />
   <xacro:include filename="$(find uuv_sensor_ros_plugins)/urdf/sensor_snippets.xacro"/>
-  <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_snippets_test.xacro"/>
   <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
 
   <!-- Properties -->

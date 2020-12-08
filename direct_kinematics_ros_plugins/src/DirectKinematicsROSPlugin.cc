@@ -1,17 +1,19 @@
-// Copyright (c) 2020 The Dave Simulator Authors.
-// All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2020 Naval Postgraduate School
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
 
 
 #include <direct_kinematics_ros_plugins/DirectKinematicsROSPlugin.hh>
@@ -95,18 +97,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   else
     this->useGlobalCurrent = false;
 
-  // if (_sdf->HasElement("rudder_link_name"))
-  // {
-  //   this->rudder_link_name = _sdf->Get<std::string>("rudder_link_name");
-  //   this->rudderExist = true;
-  //   gzmsg << "DirectKinematicsPlugin: rudder_link name : "
-  //       << this->rudder_link_name << std::endl;
-  // }
-  // else
-  // {
-  //   this->rudderExist = false;
-  // }
-
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
   bool service_ready = false;
@@ -124,13 +114,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->commandPublisher["Model"] =
     this->rosNode->serviceClient
     <gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-
-  // if (this->rudderExist)
-  // {
-  //   this->commandPublisher["Rudder"] =
-  //     this->rosNode->serviceClient
-  //     <gazebo_msgs::SetLinkState>("/gazebo/set_link_state");
-  // }
 
   // Subscribe command from outside
   ros::SubscribeOptions so =
@@ -214,7 +197,6 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->C_L = _sdf->Get<double>("C_L");
   else
     this->C_L = 0.4160;
-
 
   // Coordinate transform functions
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
@@ -382,27 +364,11 @@ void DirectKinematicsROSPlugin::commandSubThread()
 void DirectKinematicsROSPlugin::ConveyCommands(
   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
-  // // Determine kinematics or dynamics
-  // int _pitch_cmd_type = _msg->pitch_cmd_type;
-  // if (_pitch_cmd_type == 1)  // battery position control
-  // {
-  //   this->dynamics = true;
-  // }
-  // else if (_pitch_cmd_type == 2 || _pitch_cmd_type == 3)
-  // {
-  //   this->dynamics = false;
-  // }
-
   // Convey commands to functions accordingly (Kinematics, dynamics)
   if(this->dynamics)
     this->ConveyDynamicsCommands(_msg);
   else
     this->ConveyKinematicsCommands(_msg);
-
-  // if (this->rudderExist)
-  // {
-  //   this->ConveyRudderVisualCommand(_msg);
-  // }
 
   // Print gzmsg
   gzmsg << "Control msg detected! at "
@@ -413,46 +379,6 @@ void DirectKinematicsROSPlugin::ConveyCommands(
 void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
              const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
-  // ignition::math::Quaterniond orientation(this->modelState.pose.orientation.x,
-  //                                         this->modelState.pose.orientation.y,
-  //                                         this->modelState.pose.orientation.z,
-  //                                         this->modelState.pose.orientation.w);
-  // ignition::math::Vector3d orientation_euler = orientation.Euler();
-  // gzmsg << "=====================" << std::endl;
-  // gzmsg << orientation_euler << std::endl;
-  // ignition::math::Quaterniond orientation_quat;
-  // orientation_quat.Euler(orientation_euler.X(),
-  //                        orientation_euler.Y(),
-  //                        orientation_euler.Z());
-
-  // gazebo_msgs::SetModelState cmd_msg;
-  // cmd_msg.request.model_state = this->modelState;
-  // cmd_msg.request.model_state.pose.orientation.x = orientation_quat.X();
-  // cmd_msg.request.model_state.pose.orientation.y = orientation_quat.Y();
-  // cmd_msg.request.model_state.pose.orientation.z = orientation_quat.Z();
-  // cmd_msg.request.model_state.pose.orientation.w = orientation_quat.W();
-
-  // ignition::math::Quaterniond orientation(this->modelState.pose.orientation.x,
-  //                                         this->modelState.pose.orientation.y,
-  //                                         this->modelState.pose.orientation.z,
-  //                                         this->modelState.pose.orientation.w);
-  // ignition::math::Vector3d orientation_euler = orientation.Euler();
-  // gzmsg << "=====================" << std::endl;
-  // gzmsg << orientation_euler << std::endl;
-  // gzmsg << "---------------------" << std::endl;
-  // gzmsg << orientation.X() << std::endl;
-  // gzmsg << orientation.Y() << std::endl;
-  // gzmsg << orientation.Z() << std::endl;
-  // gzmsg << orientation.W() << std::endl<< std::endl;
-  // gazebo_msgs::SetModelState cmd_msg;
-  // cmd_msg.request.model_state = this->modelState;
-  // cmd_msg.request.model_state.pose.orientation.x = orientation.X();
-  // cmd_msg.request.model_state.pose.orientation.y = orientation.Y();
-  // cmd_msg.request.model_state.pose.orientation.z = orientation.Z();
-  // cmd_msg.request.model_state.pose.orientation.w = orientation.W();
-
-  // this->commandPublisher["Model"].call(cmd_msg);
-
   // ---------------------------------------- //
   // ----------- Previous state ------------- //
   // ---------------------------------------- //
@@ -652,62 +578,6 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   this->modelState = cmd_msg.request.model_state;
 }
 
-// /////////////////////////////////////////////////
-// void DirectKinematicsROSPlugin::ConveyRudderVisualCommand(
-//   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
-// {
-//   // --------------------------------------- //
-//   // -------- Rudder visual control -------- //
-//   // --------------------------------------- //
-//   gazebo_msgs::LinkState rudder_cmd_msg;
-//   rudder_cmd_msg.request.model_state.reference_frame =
-//         this->model->GetName() + "/" + this->rudder_link_name;
-//   int _rudder_control_mode = _msg->rudder_control_mode;
-//   rudder_cmd_msg.request.model_state.link_name =
-//         this->model->GetLink(this->rudder_link_name)->GetName();
-//   // 0 : control heading, 1: control angle
-//   if (_rudder_control_mode == 0)  // control heading
-//   {
-//     // nothing here, controlled using at ModelCommand
-//   }
-//   else if (_rudder_control_mode == 1)  // control angle
-//   {
-//     // Rudder angle control
-//     // 0: center, 1: port, 2: staboard, 3: direct
-//     int _rudder_angle = _msg->rudder_angle;
-//     if (_rudder_angle == 0)  // center
-//     {
-//       rudder_cmd_msg.request.model_state.pose.orientation.z = 0;
-//     }
-//     else if (_rudder_angle == 1)  // port
-//     {
-//       rudder_cmd_msg.request.model_state.pose.orientation.z = + M_PI/3.0;
-//     }
-//     else if (_rudder_angle == 2)  // staboard
-//     {
-//       rudder_cmd_msg.request.model_state.pose.orientation.z = - M_PI/3.0;
-//     }
-//     else if (_rudder_angle == 3)  // direct
-//     {
-//       rudder_cmd_msg.request.model_state.pose.orientation.z = _msg->target_rudder_angle;
-//     }
-//     else
-//     {
-//       gzmsg << "WRONG RUDDER ANGLE COMMAND "
-//         << "(0: center, 1: port, 2: staboard, 3: direct)"
-//         << std::endl;
-//     }
-//   }
-//   else
-//   {
-//     gzmsg << "WRONG RUDDER COMMAND TYPE "
-//         << "(0 : control heading, 1: control angle)"
-//         << std::endl;
-//   }
-//   // publish command model state to gazebo/set_model_state topic
-//   this->commandPublisher["Rudder"].publish(rudder_cmd_msg);
-// }
-
 /////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::ConveyModelState()
 {
@@ -737,8 +607,8 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.nav_sat_fix.latitude = this->sensorLatitude;
   status_msg.nav_sat_fix.longitude = this->sensorLatitude;
   status_msg.nav_sat_fix.altitude = this->sensorAltitude;
-  // status_msg.battery_position =
-  // status_msg.pumped_volume =
+  status_msg.pumped_volume = this->prev_pumpVol;
+  // battery_position not used for kinematics
 
   this->statePublisher.publish(status_msg);
 }
