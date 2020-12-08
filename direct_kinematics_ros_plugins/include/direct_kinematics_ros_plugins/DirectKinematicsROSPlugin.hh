@@ -186,6 +186,15 @@ namespace direct_kinematics_ros
     /// \brief Battery pitch control kinematics coefficents
     protected: double f_pitch_battpos_cal_m;
     protected: double f_pitch_battpos_cal_b;
+    protected: double battpos;
+
+    /// \brief Thruster power coefficents
+    protected: double f_thruster_voltage_v1;
+    protected: double f_thruster_voltage_v2;
+    protected: double f_thruster_voltage_v3;
+    protected: double f_thruster_power_w1;
+    protected: double f_thruster_power_w2;
+    protected: double f_thruster_power_w3;
 
     /// \brief Previous values
     protected: double prev_pitch;
@@ -250,126 +259,15 @@ namespace direct_kinematics_ros
     /// \brief Function to rotate the propellers
     protected: virtual void PropRotate(double thrustPower);
 
-    // /// \brief Rudder link name
-    // protected: std::string rudder_link_name;
-
-    // /// \brief Rudder link exist bool
-    // protected: bool rudderExist;
-
-    // /// \brief Convey link state from gazebo topic to outside (rudder)
-    // protected: virtual void ConveyRudderVisualCommand
-    //             (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
-
     /// ============================================= ///
-    /// ================   DYNAMICS   =============== ///
+    /// ============== Other functions ============== ///
     /// ============================================= ///
-
-    /// \brief Pointer to the base_link
-    protected: gazebo::physics::LinkPtr link;
-
-    /// \brief A flag for dynamics calculations
-    private: bool dynamics;
-
-    /// \brief Buoyancy pump position
-    protected: double pumpPos;
-
-    /// \brief Sliding mass position
-    protected: double massPos;
-
-    /// \brief total_mass
-    protected: double m;
-
-    /// \brief Center of gravity
-    protected: ignition::math::Vector3d cog;
-
-    /// \brief Center of buoyancy in the body frame
-    protected: ignition::math::Vector3d cob;
-
-    /// \brief ballast_radius
-    protected: double r_w;
-
-    /// \brief hull_length
-    protected: double l_h;
-
-    /// \brief hull_radius
-    protected: double r_h;
-
-    /// \brief hull_mass
-    protected: double m_h;
-
-    /// \brief shifter_mass
-    protected: double m_s;
-
-    /// \brief initial_mass_position
-    protected: double x_s_o;
-
-    /// \brief initial_ballast_position
-    protected: double x_w_o;
-
-    /// \brief max_mass_position
-    protected: double x_s_o_max;
-
-    /// \brief max_ballast_volume
-    protected: double vol_w_max;
-
-    /// \brief Added-mass matrix
-    protected: Eigen::Matrix6d Ma;
-
-    /// \brief Added-mass associated Coriolis matrix
-    protected: Eigen::Matrix6d Ca;
-
-    /// \brief Damping matrix
-    protected: Eigen::Matrix6d D;
-
-    /// \brief Linear damping matrix
-    protected: Eigen::Matrix6d DLin;
-
-    /// \brief Last timestamp (in seconds)
-    protected: double lastTime;
-
-    /// \brief Last body-fixed relative velocity (nu_R in Fossen's equations)
-    protected: Eigen::Vector6d lastVelRel;
-
-    /// \brief Get parameters (read matrix form defenitions)
-    protected: void GetParam(std::string _tag, std::vector<double>& _output);
-
-    /// \brief Filtered linear & angular acceleration vector in link frame.
-    /// This is used to prevent the model to become unstable given that Gazebo
-    /// only calls the update function at the beginning or at the end of a
-    /// iteration of the physics engine
-    protected: Eigen::Vector6d filteredAcc;
-
-    /// \brief Computes the added-mass Coriolis matrix Ca.
-    protected: void ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
-                                             Eigen::Matrix6d &_Ma,
-                                             Eigen::Matrix6d &_Ca) const;
-
-    /// \brief Updates the damping matrix for the current velocity
-    protected: void ComputeDampingMatrix(const Eigen::Vector6d& _vel,
-                                       Eigen::Matrix6d &_D) const;
-
-    /// \brief Filter acceleration (fix due to the update structure of Gazebo)
-    protected: void ComputeAcc(Eigen::Vector6d _velRel,
-                            double _time,
-                            double _alpha = 0.3);
 
     /// \brief Convert vector to comply with the NED reference frame
     protected: ignition::math::Vector3d ToNED(ignition::math::Vector3d _vec);
 
     /// \brief Convert vector to comply with the NED reference frame
     protected: ignition::math::Vector3d FromNED(ignition::math::Vector3d _vec);
-
-    /// \brief Convey commands to calculate dynamics
-    protected: virtual void ConveyDynamicsCommands
-        (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
-
-    /// \brief Calculate dynamics when commands conveyed and every updates
-    protected: virtual void CalculateDynamics
-        (double _massPos, double _pumpVol, double _thrustPower);
-
-    /// ============================================= ///
-    /// ============== Other functions ============== ///
-    /// ============================================= ///
 
     /// \brief Function to calculate thruster characteristics
     protected: virtual void calcThrusterForce(int cmd_type, double cmd_value);
@@ -384,6 +282,9 @@ namespace direct_kinematics_ros
     private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;
 
     /// --------- Free surface detection ----------///
+    /// \brief Pointer to the base_link
+    protected: gazebo::physics::LinkPtr link;
+
     /// \brief Bounding box of the body
     protected: ignition::math::Box boundingBox;
 

@@ -150,32 +150,12 @@
         <Area>0.0345</Area>
         <C_D>0.2534</C_D>
         <C_L>0.4160</C_L>
-
-        <!-- Dynamics properties -->
-        <use_dynamics>false</use_dynamics>
-        <dynamics>
-          <hull_mass>48.2</hull_mass>
-          <hull_length>2.0</hull_length>
-          <hull_radius>0.105</hull_radius>
-          <shifter_mass>7.8</shifter_mass>
-          <ballast_radius>0.07</ballast_radius>
-          <default_mass_position>0.4</default_mass_position>
-          <default_ballast_position>0.711</default_ballast_position>
-          <initial_mass_position>-0.018</initial_mass_position>
-          <initial_ballast_position>-0.01024</initial_ballast_position>
-          <max_mass_position>0.03</max_mass_position>
-          <max_ballast_volume>2.4e-04</max_ballast_volume>
-          <center_of_buoyancy>0 0 0</center_of_buoyancy>
-          <center_of_gravity>0 0 0.0054</center_of_gravity>
-          <linear_damping>
-            0       0       0       0       0       0
-            0       0       0       0       0       0
-            0       0       -14     0       0       0
-            0       0       0       0       0       0
-            0       0       0       0       -12     0
-            0       0       0       0       0       0
-          </linear_damping>
-        </dynamics>
+        <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>
+        <f_thruster_voltage_v2>-1.995</f_thruster_voltage_v2>
+        <f_thruster_voltage_v3>1.8701</f_thruster_voltage_v3>
+        <f_thruster_power_w1>-0.020919</f_thruster_power_w1>
+        <f_thruster_power_w2>1.4699</f_thruster_power_w2>
+        <f_thruster_power_w3>0.97895</f_thruster_power_w3>
       </plugin>
     </gazebo>
 

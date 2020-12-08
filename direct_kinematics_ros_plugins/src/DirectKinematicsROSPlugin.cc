@@ -197,6 +197,30 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->C_L = _sdf->Get<double>("C_L");
   else
     this->C_L = 0.4160;
+  if (_sdf->HasElement("f_thruster_voltage_v1"))
+    this->f_thruster_voltage_v1 = _sdf->Get<double>("f_thruster_voltage_v1");
+  else
+    this->f_thruster_voltage_v1 = 1.8953;
+  if (_sdf->HasElement("f_thruster_voltage_v2"))
+    this->f_thruster_voltage_v2 = _sdf->Get<double>("f_thruster_voltage_v2");
+  else
+    this->f_thruster_voltage_v2 = -1.995;
+  if (_sdf->HasElement("f_thruster_voltage_v3"))
+    this->f_thruster_voltage_v3 = _sdf->Get<double>("f_thruster_voltage_v3");
+  else
+    this->f_thruster_voltage_v3 = 1.8701;
+  if (_sdf->HasElement("f_thruster_power_w1"))
+    this->f_thruster_power_w1 = _sdf->Get<double>("f_thruster_power_w1");
+  else
+    this->f_thruster_power_w1 = -0.020919;
+  if (_sdf->HasElement("f_thruster_power_w2"))
+    this->f_thruster_power_w2 = _sdf->Get<double>("f_thruster_power_w2");
+  else
+    this->f_thruster_power_w2 = 1.4699;
+  if (_sdf->HasElement("f_thruster_power_w3"))
+    this->f_thruster_power_w3 = _sdf->Get<double>("f_thruster_power_w3");
+  else
+    this->f_thruster_power_w3 = 0.97895;
 
   // Coordinate transform functions
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
@@ -211,52 +235,14 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->nedTransform["base_link"].transform.rotation.z = quat.z();
   this->nedTransform["base_link"].transform.rotation.w = quat.w();
 
-  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
-  // Read dynacmis flags and parameters from SDF configuration
-  if (_sdf->HasElement("dynamics"))
-  {
-    sdf::ElementPtr sdfDynamics = _sdf->GetElement("dynamics");
-    this->r_w = sdfDynamics->Get<double>("ballast_radius");
-    this->l_h = sdfDynamics->Get<double>("hull_length");
-    this->r_h = sdfDynamics->Get<double>("hull_radius");
-    this->m_h = sdfDynamics->Get<double>("hull_mass");
-    this->m_s = sdfDynamics->Get<double>("shifter_mass");
-    this->x_s_o = sdfDynamics->Get<double>("default_mass_position");
-    this->x_w_o = sdfDynamics->Get<double>("default_ballast_position");
-    this->x_s_o_max = sdfDynamics->Get<double>("max_mass_position");
-    this->vol_w_max = (sdfDynamics->Get<double>("max_ballast_volume"))/(M_PI*(this->r_w)*(this->r_w));
-    this->cog = Str2Vector(sdfDynamics->Get<std::string>("center_of_gravity"));
-    this->cob = Str2Vector(sdfDynamics->Get<std::string>("center_of_buoyancy"));
-
-    // Load linear damping coefficients, if provided. Otherwise, the linear
-    // damping matrix is set to zero
-    if (sdfDynamics->HasElement("linear_damping"))
-      this->DLin = Str2Matrix6(sdfDynamics->Get<std::string>("linear_damping"));
-    else
-      gzmsg << "Using linear damping NULL" << std::endl;
-
-    // Initial calculation
-    this->massPos = sdfDynamics->Get<double>("initial_mass_position");
-    this->pumpPos = sdfDynamics->Get<double>("initial_ballast_position");
-    this->motorPower = 0.0;
-
-    // Initialize filtered acceleration & last velocity
-    this->filteredAcc.setZero();
-    this->lastVelRel.setZero();
-  }
-
+  // Initiate variables
   this->prev_pitch = 0.0;
   this->prev_yaw = 0.0;
   this->prev_motorPower = 0.0;
 
-  if (_sdf->HasElement("use_dynamics"))
-    this->dynamics = _sdf->Get<bool>("use_dynamics");
-  else
-    this->dynamics = false;     // Initiate without dynamics on
-
-  this->buoyancyFlag = true; // Initialize buoyancy engine
-
   // Free surface detection
+  this->buoyancyFlag = true; // Initialize buoyancy engine
+  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
   this->boundingBox = link->BoundingBox();
   this->isSubmerged = true;
 
@@ -321,10 +307,6 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
   // Update model state
   this->updateModelState();
 
-  // Update dynamics
-  if (this->dynamics)
-    this->CalculateDynamics(this->massPos, this->pumpPos, this->motorPower);
-
   // Send status
   this->ConveyModelState();
 
@@ -364,11 +346,8 @@ void DirectKinematicsROSPlugin::commandSubThread()
 void DirectKinematicsROSPlugin::ConveyCommands(
   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
-  // Convey commands to functions accordingly (Kinematics, dynamics)
-  if(this->dynamics)
-    this->ConveyDynamicsCommands(_msg);
-  else
-    this->ConveyKinematicsCommands(_msg);
+  // Convey commands to functions
+  this->ConveyKinematicsCommands(_msg);
 
   // Print gzmsg
   gzmsg << "Control msg detected! at "
@@ -394,9 +373,9 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   {
     case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_BATT_POS:
     {
-      double battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
+      this->battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
       double target_pitch_rad
-                = this->f_pitch_battpos_cal_m * battpos + this->f_pitch_battpos_cal_b;
+                = this->f_pitch_battpos_cal_m * this->battpos + this->f_pitch_battpos_cal_b;
       target_pitch = target_pitch_rad;
       break;
     }
@@ -608,7 +587,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.nav_sat_fix.longitude = this->sensorLatitude;
   status_msg.nav_sat_fix.altitude = this->sensorAltitude;
   status_msg.pumped_volume = this->prev_pumpVol;
-  // battery_position not used for kinematics
+  status_msg.battery_position = this->battpos;
 
   this->statePublisher.publish(status_msg);
 }
@@ -729,254 +708,6 @@ void DirectKinematicsROSPlugin::UpdateFlowVelocity
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ConveyDynamicsCommands(
-             const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
-{
-  // --------------------------------------------- //
-  // ---------- MOTOR/THRUSTER COMMAND ----------- //
-  // --------------------------------------------- //
-  int _motor_cmd_type = _msg->motor_cmd_type;
-  double _motor_cmd_value = _msg->target_motor_cmd;
-  this->calcThrusterForce(_motor_cmd_type, _motor_cmd_value);
-
-  // --------------------------------------------- //
-  // ----------- Dynamics Calculation ------------ //
-  // --------------------------------------------- //
-  this->massPos = _msg->target_pitch_value;
-  this->pumpPos = _msg->target_pumped_volume/1000000.0/(M_PI*(this->r_w)*(this->r_w));
-  this->CalculateDynamics
-        (this->massPos, this->pumpPos, this->motorPower);
-}
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::CalculateDynamics(
-             double _massPos, double _pumpPos, double _thrustPower)
-{
-  // ---- Mass calculation ----- //
-  // Ballast volume and mass
-  double V_B = -_pumpPos*M_PI*(this->r_w)*(this->r_w);
-  double m_w = V_B*this->fluidDensity;
-
-  // Total vehicle mass
-  double m = this->m_h + this->m_s + m_w;
-  this->m = m;
-
-  // Moving mass position
-  double x_s = this->x_s_o + _massPos;
-
-  // Hull mass center (uniform hull mass distribution assumed)
-  double x_h = -this->m_s/this->m_h*this->x_s_o;
-
-  // Ballast tank mass center (pushing from front)
-  double x_w = this->x_w_o+(V_B/(M_PI*(this->r_w)*(this->r_w)));
-
-  // Center of gravity
-  (this->cog).X() = (x_h*this->m_h + x_s*this->m_s + x_w*m_w)/(this->m_h+this->m_s+m_w);
-
-  // ---- Inertial matrix calculation ----- //
-  double a = this->l_h/2.0; // half the length
-  double b = this->r_h;   // hull radius
-  // inertial matrix (Fossen p.42 (2.156))
-  double I_yy = 4.0/15.0*m*(b*b+a*a); double I_zz = I_yy;  double I_xx = 4.0/15.0*m*(b*b+b*b);
-  this->link->GetInertial()->SetCoG((this->cog).X(),(this->cog).Y(),(this->cog).Z());
-  this->link->GetInertial()->SetIXX(I_xx);
-  this->link->GetInertial()->SetIYY(I_yy);
-  this->link->GetInertial()->SetIZZ(I_zz);
-  this->link->GetInertial()->SetMass(m);
-
-  // ---- Added mass matrix calculation ----- //
-  // computed according to the procedure in Fossen p. 41
-  double e = 1.0-std::pow(b/a,2);
-  double alpha_o = (2.0*(1.0-e*e)/std::pow(e,3))*(0.5*std::log((1.0+e)/(1.0-e))-e);
-  double beta_o = 1.0/std::pow(e,2)-((1-std::pow(e,2))/(2.0*std::pow(e,3)))*std::log((1.0+e)/(1.0-e));
-  double X_udot = -(alpha_o/(2.0-alpha_o))*this->m;
-  double Y_vdot = -(beta_o/(2.0-beta_o))*this->m;
-  double Z_wdot = Y_vdot;
-  double K_pdot = 0.0;
-  double M_qdot = -0.2*this->m*(std::pow(std::pow(b,2)-std::pow(a,2),2)*(alpha_o-beta_o))/
-      (2.0*(std::pow(b,2)-std::pow(a,2))+(std::pow(b,2)+std::pow(a,2))*(beta_o-alpha_o));
-  double N_rdot = M_qdot;
-
-  // M_A_cg
-  Eigen::Matrix6d Ma_cg = Eigen::Matrix6d::Identity();
-  Ma_cg(0,0) = -X_udot;  Ma_cg(1,1) = -Y_vdot;  Ma_cg(2,2) = -Z_wdot;
-  Ma_cg(3,3) = -K_pdot;  Ma_cg(4,4) = -M_qdot;  Ma_cg(5,5) = -N_rdot;
-
-  // M_A = LeftSide*M_A_CG*RightSide
-  Eigen::Vector3d cog = Eigen::Vector3d((this->cog).X(),(this->cog).Y(),(this->cog).Z());
-  Eigen::Matrix3d S_r_cg = CrossProductOperator(cog);
-  Eigen::Matrix6d LeftSide = Eigen::Matrix6d::Identity();
-  LeftSide(0,3) = S_r_cg(0,0); LeftSide(0,4) = S_r_cg(0,1); LeftSide(0,5) = S_r_cg(0,2);
-  LeftSide(1,3) = S_r_cg(1,0); LeftSide(1,4) = S_r_cg(1,1); LeftSide(1,5) = S_r_cg(1,2);
-  LeftSide(2,3) = S_r_cg(2,0); LeftSide(2,4) = S_r_cg(2,1); LeftSide(2,5) = S_r_cg(2,2);
-  Eigen::Matrix6d RightSide = Eigen::Matrix6d::Identity();
-  Eigen::Matrix3d S_r_cg_T = S_r_cg.transpose();
-  RightSide(0,3) = S_r_cg_T(0,0); RightSide(0,4) = S_r_cg_T(0,1); RightSide(0,5) = S_r_cg_T(0,2);
-  RightSide(1,3) = S_r_cg_T(1,0); RightSide(1,4) = S_r_cg_T(1,1); RightSide(1,5) = S_r_cg_T(1,2);
-  RightSide(2,3) = S_r_cg_T(2,0); RightSide(2,4) = S_r_cg_T(2,1); RightSide(2,5) = S_r_cg_T(2,2);
-  Eigen::Matrix6d M_A = LeftSide*Ma_cg*RightSide;
-
-  this->Ma = M_A;
-
-  // Link's pose
-  ignition::math::Pose3d pose;
-  ignition::math::Vector3d linVel, angVel;
-  pose = this->link->WorldPose();
-  linVel = this->link->RelativeLinearVel();
-  angVel = this->link->RelativeAngularVel();
-
-  // Transform the flow velocity to the BODY frame
-  ignition::math::Vector3d flowVel = pose.Rot().RotateVectorReverse(
-    this->flowVelocity);
-
-  Eigen::Vector6d velRel, acc;
-  // Compute the relative velocity
-  velRel = EigenStack(
-    this->ToNED(linVel - flowVel),
-    this->ToNED(angVel));
-
-  // Update added Coriolis matrix
-  this->ComputeAddedCoriolisMatrix(velRel, this->Ma, this->Ca);
-
-  // Update damping matrix
-  this->ComputeDampingMatrix(velRel, this->D);
-
-  // Filter acceleration (see issue explanation above)
-  this->ComputeAcc(velRel, this->time.Double(), 0.3);
-
-  // We can now compute the additional forces/torques due to thisdynamic
-  // effects based on Eq. 8.136 on p.222 of Fossen: Handbook of Marine Craft ...
-
-  // Damping forces and torques
-  Eigen::Vector6d damping = -this->D * velRel;
-
-  // Added-mass forces and torques
-  Eigen::Vector6d added = -this->Ma * this->filteredAcc;
-
-  // Added Coriolis term
-  Eigen::Vector6d cor = -this->Ca * velRel;
-
-  // --- Calculate Rigid Body Diagonal terms --- //
-  // Rigid Body mass diagonal term
-  Eigen::Matrix3d m_S_r_cg = this->m * CrossProductOperator(cog);
-  Eigen::Matrix6d M_RB = Eigen::Matrix6d::Identity() * this->m;
-  M_RB(3,3) = I_xx; M_RB(4,4) = I_yy; M_RB(5,5) = I_zz;
-  Eigen::Matrix6d M_RB_NoDiag = M_RB;
-  M_RB(0,3) = -m_S_r_cg(0,0); M_RB(0,4) = -m_S_r_cg(0,1); M_RB(0,5) = -m_S_r_cg(0,2);
-  M_RB(1,3) = -m_S_r_cg(1,0); M_RB(1,4) = -m_S_r_cg(1,1); M_RB(1,5) = -m_S_r_cg(1,2);
-  M_RB(2,3) = -m_S_r_cg(2,0); M_RB(2,4) = -m_S_r_cg(2,1); M_RB(2,5) = -m_S_r_cg(2,2);
-  M_RB(3,0) = m_S_r_cg(0,0); M_RB(3,1) = m_S_r_cg(0,1); M_RB(3,2) = m_S_r_cg(0,2);
-  M_RB(4,0) = m_S_r_cg(1,0); M_RB(4,1) = m_S_r_cg(1,1); M_RB(4,2) = m_S_r_cg(1,2);
-  M_RB(5,0) = m_S_r_cg(2,0); M_RB(5,1) = m_S_r_cg(2,1); M_RB(5,2) = m_S_r_cg(2,2);
-  // Rigid Body Coriolis diagonal term
-  Eigen::Matrix6d C_RB = Eigen::Matrix6d::Zero();
-  Eigen::Vector6d ab = M_RB * velRel;
-  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  C_RB << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-  Eigen::Matrix6d C_RB_NoDiag = Eigen::Matrix6d::Zero();
-  ab = M_RB_NoDiag * velRel;
-  Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  C_RB_NoDiag << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-  // Calculate diagonal effect as RHS force
-  Eigen::Vector6d rigid_diag = -(M_RB-M_RB_NoDiag)*this->filteredAcc - (C_RB-C_RB_NoDiag)*velRel;
-
-    // --- Calculate hull hydrodynamic force (Graver) --- //
-  //angle of attack of hull
-  double alpha_h;
-  if (velRel(0) > 0.0)
-      alpha_h = atan(velRel(2)/velRel(0));
-  else
-      alpha_h = 0.0;
-  // Graver hydrodynamic forces for hull
-  double A_h = M_PI*this->r_h*this->r_h;
-  double C_D_h = 0.214 + 32.3*alpha_h*alpha_h;
-  double C_L_h = 11.76*alpha_h + 4.6 * alpha_h*alpha_h;
-  double C_M_h = 0.63*alpha_h;
-  double F_h_kernel = std::pow(std::pow(velRel(0)*velRel(0)+velRel(2)*velRel(2),0.5),2);
-  double F_D_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_D_h;
-  double F_L_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_L_h;
-  double F_M_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_M_h;
-  Eigen::Vector6d hull_hydro; hull_hydro << F_L_h*sin(alpha_h)-F_D_h*cos(alpha_h), 0.0, -F_L_h*cos(alpha_h)-F_D_h*sin(alpha_h), 0.0, F_M_h, 0.0;
-
-  // --- Calculate Buoyancy force (Hydrostatic restoring force, Fossen (2.168)) --- //
-  // Get world pos eta(p,q,r)
-  ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
-  ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
-  q.X() = pose.Rot().X();
-  q.Y() = pose.Rot().Y();
-  q.Z() = pose.Rot().Z();
-  q.W() = pose.Rot().W();
-  // roll (x-axis rotation)
-  double sinr_cosp = 2.0 * (q.X() * q.Y() + q.Z() * q.W());
-  double cosr_cosp = 1.0 - 2.0 * (q.Y() * q.Y() + q.Z() * q.Z());
-  vR.X() = std::atan2(sinr_cosp, cosr_cosp);
-  // pitch (y-axis rotation)
-  double sinp = 2.0 * (q.X() * q.Z() - q.W() * q.Y());
-  if (std::abs(sinp) >= 1.0)
-    vR.Y() = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-  else
-    vR.Y() = std::asin(sinp);
-  // yaw (z-axis rotation)
-  double siny_cosp = 2.0 * (q.X() * q.W() + q.Y() * q.Z());
-  double cosy_cosp = 1.0 - 2.0 * (q.Z() * q.Z() + q.W() * q.W());
-  vR.Z() = std::atan2(siny_cosp, cosy_cosp);
-  // Hydrostatic restoring forces from Fossen (2.168)
-  double W = this->m*this->gravity; // Gravitational force acting on center of gravity
-  double B = (this->m_h+this->m_s)*this->gravity; // Buoyancy force acting on center of buoyancy
-  ignition::math::Vector3d buoyancyForce, buoyancyTorque;
-  this->buoyancyForce = ignition::math::Vector3d(
-      (W-B)*sin(vR.Y()), -(W-B)*cos(vR.Y())*sin(vR.X()) , -(W-B)*cos(vR.Y())*cos(vR.X())
-  );
-  buoyancyTorque = ignition::math::Vector3d(
-      -((this->cog).Y()*W-(this->cob).Y()*B)*cos(vR.Y())*cos(vR.X())+((this->cog).Z()*W-(this->cob).Z()*B)*cos(vR.Y())*sin(vR.X()),
-      ((this->cog).Z()*W-(this->cob).Z()*B)*sin(vR.Y())+((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*cos(vR.X()),
-      -((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*sin(vR.X())-((this->cog).Y()*W-(this->cob).Y()*B)*sin(vR.Y())
-  );
-
-  Eigen::Vector6d hydrostatic;
-  hydrostatic << this->buoyancyForce.X(), this->buoyancyForce.Y(), this->buoyancyForce.Z(), buoyancyTorque.X(), buoyancyTorque.Y(), buoyancyTorque.Z();
-
-  // All additional (compared to standard rigid body) Fossen terms combined.
-  Eigen::Vector6d tau;
-  Eigen::Vector6d thruster; thruster << _thrustPower, 0.0, 0.0, 0.0, 0.0, 0.0;
-
-  tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
-
-  // Added for stability for now
-  // tau(1) = 0.0;
-  // tau(3) = 0.0;
-  // tau(5) = 0.0;
-
-  // // Check submergence
-  // this->CheckSubmergence();
-  // if (!this->isSubmerged && tau(2) >= 0)
-  // {
-  //   tau(2) = 0.0;
-  //   this->link->SetLinearVel(
-  //     ignition::math::Vector3d(
-  //       this->link->WorldLinearVel().X(),
-  //       this->link->WorldLinearVel().Y(),
-  //       0.0));
-  // }
-
-  GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
-
-  if (!std::isnan(tau.norm()))
-  {
-    // Convert the forces and moments back to Gazebo's reference frame
-    ignition::math::Vector3d hydForce =
-      this->FromNED(Vec3dToGazebo(tau.head<3>()));
-    ignition::math::Vector3d hydTorque =
-      this->FromNED(Vec3dToGazebo(tau.tail<3>()));
-
-    // Forces and torques are also wrt link frame
-    this->link->AddRelativeForce(hydForce);
-    this->link->AddRelativeTorque(hydTorque);
-  }
-}
-
-/////////////////////////////////////////////////
 ignition::math::Vector3d DirectKinematicsROSPlugin::ToNED(ignition::math::Vector3d _vec)
 {
   ignition::math::Vector3d output = _vec;
@@ -992,70 +723,14 @@ ignition::math::Vector3d DirectKinematicsROSPlugin::FromNED(ignition::math::Vect
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
-                                          Eigen::Matrix6d &_Ma,
-                                          Eigen::Matrix6d &_Ca) const
-{
-  // This corresponds to eq. 6.43 on p. 120 in
-  // Fossen, Thor, "Handbook of Marine Craft and Hydrodynamics and Motion
-  // Control", 2011
-  Eigen::Vector6d ab = _Ma * _vel;
-  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  _Ca << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ComputeDampingMatrix(const Eigen::Vector6d& _vel,
-                                    Eigen::Matrix6d &_D) const
-{
-  // From Antonelli 2014: the viscosity of the fluid causes
-  // the presence of dissipative drag and lift forces on the
-  // body. A common simplification is to consider only linear
-  // and quadratic damping terms and group these terms in a
-  // matrix Drb
-
-  _D.setZero();
-
-  // Simplified only to consider DLin here.
-  _D = -1.0 * this->DLin;
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ComputeAcc(Eigen::Vector6d _velRel, double _time,
-                                  double _alpha)
-{
-  // Compute Fossen's nu-dot numerically. We have to do this for now since
-  // Gazebo reports angular accelerations that are off by orders of magnitude.
-  double dt = _time - lastTime;
-
-  if (dt <= 0.0)  // Extra caution to prevent division by zero
-    return;
-
-  Eigen::Vector6d acc = (_velRel - this->lastVelRel) / dt;
-
-  // TODO  We only have access to the acceleration of the previous simulation
-  //       step. The added mass will induce a strong force/torque counteracting
-  //       it in the current simulation step. This can lead to an oscillating
-  //       system.
-  //       The most accurate solution would probably be to first compute the
-  //       latest acceleration without added mass and then use this to compute
-  //       added mass effects. This is not how gazebo works, though.
-  this->filteredAcc = (1.0 - _alpha) * this->filteredAcc + _alpha * acc;
-
-  lastTime = _time;
-  this->lastVelRel = _velRel;
-}
-
-/////////////////////////////////////////////////
 void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value)
 {
   // 1 : voltage command, 2: power command
   if (cmd_type == 1)  // voltage command
   {
-    double v1 = 1.8953;
-    double v2 = -1.995;
-    double v3 = 1.8701;
+    double v1 = this->f_thruster_voltage_v1;
+    double v2 = this->f_thruster_voltage_v2;
+    double v3 = this->f_thruster_voltage_v3;
     this->motorPower = v1*(cmd_value*cmd_value)+ v2*cmd_value + v3;
     if (cmd_value == 0.0)
       this->motorPower = 0.0;
@@ -1065,9 +740,9 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
   }
   else if (cmd_type == 2)  // power command
   {
-    double w1 = -0.020919;
-    double w2 = 1.4699;
-    double w3 = 0.97895;
+    double w1 = this->f_thruster_power_w1;
+    double w2 = this->f_thruster_power_w2;
+    double w3 = this->f_thruster_power_w3;
     this->motorPower = w1*(cmd_value*cmd_value)+ w2*cmd_value + w3;
     this->motorPower = this->motorPower * 2.0;  // Dual thrusters
     if (cmd_value == 0.0)
