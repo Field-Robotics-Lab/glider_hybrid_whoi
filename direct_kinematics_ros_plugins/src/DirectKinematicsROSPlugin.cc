@@ -481,7 +481,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
       break;
 
   }
-  double v_thrust = sqrt((2*this->prev_motorPower)/(fluidDensity*Area*C_D));
+  double v_thrust = sqrt((this->prev_motorPower)/(fluidDensity*Area*C_D));
 
   // ---------------------------------------- //
   // ------- Caclulate flight model --------- //
