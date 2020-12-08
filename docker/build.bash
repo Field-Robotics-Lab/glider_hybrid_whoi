@@ -30,7 +30,7 @@ key="$1"
 case $key in
     -w|--without-nvidia)
     BUILD_BASE="--build-arg BASEIMG=ubuntu:bionic"
-    image_name="dave"
+    image_name="glider_kinematics"
     shift
     ;;
     *)    # unknown option

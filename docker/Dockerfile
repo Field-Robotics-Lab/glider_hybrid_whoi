@@ -20,6 +20,7 @@ RUN apt update \
         git \
         python3-dbg \
         python3-pip \
+        python-pip \
         python3-venv \
         ruby \
         software-properties-common \
@@ -97,7 +98,6 @@ USER $USER:$GROUP
 # When running a container start in the developer's home folder.
 WORKDIR /home/$USER
 
-
 # Create workspace
 RUN mkdir -p uuv_ws/src/
 
@@ -108,6 +108,29 @@ RUN /bin/sh -c 'echo ". /opt/ros/${DIST}/setup.bash" >> ~/.bashrc' \
 ENTRYPOINT ["fixuid"]
 
 CMD ["/bin/bash"]
-# Customize your image here.
+
+# Git clone required repositories
+WORKDIR /home/developer/uuv_ws/src
+RUN git clone https://github.com/Field-Robotics-Lab/dave.git
+RUN git clone https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo.git
+RUN git clone https://github.com/Field-Robotics-Lab/frl_msgs.git
+RUN git clone https://github.com/uuvsimulator/uuv_simulator.git
+RUN git clone https://bitbucket.org/whoidsl/ds_sim.git
+RUN git clone https://bitbucket.org/whoidsl/ds_msgs.git
+RUN git clone https://github.com/Field-Robotics-Lab/glider_hybrid_whoi.git
+
+# --------------------------- This should be removed after merge
+WORKDIR /home/developer/uuv_ws/src/glider_hybrid_whoi
+RUN git checkout Kinematics_only
+
+# Update and compile git repositories
+WORKDIR /home/developer/uuv_ws/src
+RUN /bin/sh -c 'ls | xargs -I{} git -C {} pull'
+WORKDIR /home/developer/uuv_ws
+RUN /bin/bash -c '. /opt/ros/melodic/setup.bash; catkin_make'
+RUN /bin/bash -c 'pip install pandas'
+
+# Set environment
+RUN /bin/sh -c 'echo "source ~/uuv_ws/devel/setup.bash" >> ~/.bashrc'
 
 

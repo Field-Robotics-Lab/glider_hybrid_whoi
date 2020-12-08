@@ -100,5 +100,5 @@ docker run -it \
   --rm \
   --security-opt seccomp=unconfined \
   -u $USERID:$GROUPID \
-  $DOCKER_OPTS \
+  $GPUS \
   $IMG
