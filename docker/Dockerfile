@@ -93,10 +93,6 @@ RUN . "/opt/ros/$ros_distro/setup.sh" \
     && rosdep install --from-paths src --ignore-src -y -s --as-root pip:false --as-root apt:false | sort -u | tee /tmp/install-script \
     && rm -rf /var/lib/apt/lists/*
 
-# Assemble the runtime image.
-FROM nvidia/opengl:base-ubuntu18.04
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES},display
-
 FROM ros:$ros_distro-ros-base
 
 ARG ros_distro
@@ -107,24 +103,18 @@ RUN . "/opt/ros/$ros_distro/setup.sh" \
     && apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
        python-pip curl apt-utils sudo wget \
-       libeigen3-dev \
        build-essential \
        pkg-config \
        protobuf-compiler \
        software-properties-common \
+    && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
+    && curl -fsSL http://packages.osrfoundation.org/gazebo.key | apt-key add - \
+    && apt-get update \
     && cat /tmp/install-script \
     && sh /tmp/install-script \
     #&& rm /tmp/install-script
     && pip install pandas \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install gazebo 9
-RUN . "/opt/ros/$ros_distro/setup.sh" \
-    && /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list' \
-    && wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - \
-    && apt-get update \
-    && apt-get install -y ros-$ros_distro-gazebo-ros-pkgs ros-$ros_distro-gazebo-ros-control \
     && rm -rf /var/lib/apt/lists/*
 
 # Carry forward the commit as an env var in this image
@@ -157,30 +147,6 @@ RUN adduser $USER sudo \
 
 # Commands below run as the user.
 USER $USER:$GROUP
-
-RUN  sudo apt-get update \
-  && sudo apt-get install -y \
-    qtbase5-dev \
-    libgles2-mesa-dev \
-    ros-$ros_distro-velodyne-gazebo-plugins \
-    ros-$ros_distro-effort-controllers \
-    ros-$ros_distro-rqt \
-    ros-$ros_distro-rqt-robot-plugins \
-    ros-$ros_distro-rqt-common-plugins \
-    ros-$ros_distro-joy \
-    ros-$ros_distro-teleop-twist-joy \
-    ros-$ros_distro-teleop-twist-keyboard \
-    ros-$ros_distro-teleop-tools \
-    ros-$ros_distro-joy-teleop \
-    ros-$ros_distro-key-teleop \
-    ros-$ros_distro-geographic-info \
-    ros-$ros_distro-move-base \
-    ros-$ros_distro-robot-localization \
-    ros-$ros_distro-robot-state-publisher \
-    ros-$ros_distro-xacro \
-    libignition-math2 \
-  && sudo apt-get clean \
-  && sudo rm -rf /var/lib/apt/lists/*
 
 # When running a container start in the home folder.
 WORKDIR /home/$USER/uuv_ws
