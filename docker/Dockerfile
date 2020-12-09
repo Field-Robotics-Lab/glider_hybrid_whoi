@@ -36,19 +36,19 @@ WORKDIR /uuv_ws/src
 
 ARG version_dave
 ENV VERSION_DAVE=$version_dave
-RUN wget https://github.com/Field-Robotics-Lab/dave/archive/v$VERSION_DAVE.tar.gz
-RUN tar xvzf v$VERSION_DAVE.tar.gz  \
+RUN wget https://github.com/Field-Robotics-Lab/dave/archive/v$VERSION_DAVE.tar.gz \
+    && tar xvzf v$VERSION_DAVE.tar.gz  \
     && mv dave-$VERSION_DAVE dave \
     && rm v$VERSION_DAVE.tar.gz
-RUN wget https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/v$VERSION_DAVE.tar.gz
-RUN tar xvzf v$VERSION_DAVE.tar.gz  \
+RUN wget https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/v$VERSION_DAVE.tar.gz \
+    && tar xvzf v$VERSION_DAVE.tar.gz  \
     && mv nps_uw_sensors_gazebo-$VERSION_DAVE nps_uw_sensors_gazebo \
     && rm v$VERSION_DAVE.tar.gz
 
 ARG version_uuv_simulator
 ENV VERSION_UUV=$version_uuv_simulator
-RUN wget https://github.com/uuvsimulator/uuv_simulator/archive/$VERSION_UUV.tar.gz
-RUN tar xvzf $VERSION_UUV.tar.gz  \
+RUN wget https://github.com/uuvsimulator/uuv_simulator/archive/$VERSION_UUV.tar.gz \
+    && tar xvzf $VERSION_UUV.tar.gz  \
     && mv uuv_simulator-$VERSION_UUV uuv_simulator \
     && rm $VERSION_UUV.tar.gz
 
