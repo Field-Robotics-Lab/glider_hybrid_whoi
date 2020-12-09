@@ -153,10 +153,9 @@ WORKDIR /home/$USER/uuv_ws
 RUN sudo chown -R $USER:$GROUP /home/$USER/uuv_ws
 COPY --from=deps-extractor --chown=$USER:$GROUP /uuv_ws/src src
 
-# make and install!
-# RUN . "/opt/ros/$ros_distro/setup.sh" \
-#     && catkin_make \
-#     && catkin_make install
+# build it!
+RUN . "/opt/ros/$ros_distro/setup.sh" \
+    && catkin_make
 
 # # Source all the needed environment files.
 RUN /bin/sh -c 'echo ". /opt/ros/$ros_distro/setup.bash" >> ~/.bashrc' \
