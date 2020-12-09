@@ -2,10 +2,10 @@
 #------------------------------------------------------------------#
 ARG version_dave=2.0.0
 ARG version_uuv_simulator=0.6.13
+ARG version_uuv_manipulators=0.6.1
 ARG ds_sim_commit=d8b8d1383436978b0244796654950518224c7cfd
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
 ARG frl_msgs_commit=ab362d2f7264ce8be4d6b12bf41538ca4215bfba
-ARG glider_hybrid_whoi_commit=b27cd59a6b8ccc95f3132650ef6060a071067417
 #------------------------------------------------------------------#
 
 ARG ros_distro=melodic
@@ -51,6 +51,13 @@ RUN wget https://github.com/uuvsimulator/uuv_simulator/archive/$VERSION_UUV.tar.
     && tar xvzf $VERSION_UUV.tar.gz  \
     && mv uuv_simulator-$VERSION_UUV uuv_simulator \
     && rm $VERSION_UUV.tar.gz
+
+ARG version_uuv_manipulators
+ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
+RUN wget https://github.com/uuvsimulator/uuv_manipulators/archive/$VERSION_UUV_MANIPULATORS.tar.gz \
+    && tar xvzf $VERSION_UUV_MANIPULATORS.tar.gz  \
+    && mv uuv_manipulators-$VERSION_UUV_MANIPULATORS uuv_manipulators \
+    && rm $VERSION_UUV_MANIPULATORS.tar.gz
 
 WORKDIR /uuv_ws
 
