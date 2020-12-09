@@ -194,11 +194,8 @@ RUN /bin/sh -c 'echo ". /opt/ros/$ros_distro/setup.bash" >> ~/.bashrc' \
  && /bin/sh -c 'echo ". /usr/share/gazebo/setup.sh" >> ~/.bashrc' \
  && /bin/sh -c 'echo "source ~/uuv_ws/devel/setup.bash" >> ~/.bashrc'
 
-ENTRYPOINT ["fixuid"]
+# Replace the standard ROS entrypoint with one that sources our overlay and
+# execs fixuid.
+ADD docker/docker-entrypoint.sh /ros_entrypoint.sh
 
 CMD ["/bin/bash"]
-
-
-
-
-
