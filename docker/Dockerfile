@@ -108,9 +108,8 @@ RUN . "/opt/ros/$ros_distro/setup.sh" \
        software-properties-common \
     && cat /tmp/install-script \
     && sh /tmp/install-script \
-    && rm /tmp/install-script \
-    # The version of six in apt-get is too old
-    && pip install six==1.15.0 pandas\
+    #&& rm /tmp/install-script
+    && pip install pandas \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
