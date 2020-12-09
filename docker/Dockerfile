@@ -79,6 +79,10 @@ RUN git clone https://github.com/Field-Robotics-Lab/frl_msgs.git \
     && git -C frl_msgs archive --prefix=src/frl_msgs/ "$FRL_MSGS_COMMIT" | tar x \
     && rm -rf frl_msgs
 
+RUN apt-get update \
+    && apt-get install -y --no-upgrade --no-install-recommends python-pip \
+    && rm -rf /var/lib/apt/lists/*
+
 ADD . src/glider_hybrid_whoi/
 
 # Generate the install script!
@@ -86,7 +90,6 @@ WORKDIR /uuv_ws
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN . "/opt/ros/$ros_distro/setup.sh" \
     && apt-get update \
-    && apt-get install -y --no-upgrade --no-install-recommends python-pip \
     && rosdep install --from-paths src --ignore-src -y -s --as-root pip:false --as-root apt:false | sort -u | tee /tmp/install-script \
     && rm -rf /var/lib/apt/lists/*
 
