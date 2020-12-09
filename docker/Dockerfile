@@ -27,7 +27,7 @@ RUN . "/opt/ros/$ros_distro/setup.sh" \
     && catkin_make
 
 # Install repositories
-RUN  apt-get update \
+RUN apt-get update \
   && apt-get install -y wget \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
@@ -56,30 +56,26 @@ WORKDIR /uuv_ws
 
 ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
-RUN . "/opt/ros/$ros_distro/setup.sh" \
-    && git clone https://bitbucket.org/whoidsl/ds_sim.git \
+RUN git clone https://bitbucket.org/whoidsl/ds_sim.git \
     && git -C ds_sim archive --prefix=src/ds_sim/ "$DS_SIM_COMMIT" | tar x \
     && rm -rf ds_sim
 
 ARG ds_msgs_commit
 ENV DS_MSGS_COMMIT=$ds_msgs_commit
-RUN . "/opt/ros/$ros_distro/setup.sh" \
-    && git clone https://bitbucket.org/whoidsl/ds_msgs.git \
+RUN git clone https://bitbucket.org/whoidsl/ds_msgs.git \
     && git -C ds_msgs archive --prefix=src/ds_msgs/ "$DS_MSGS_COMMIT" | tar x \
     && rm -rf ds_msgs
 
 ARG frl_msgs_commit
 ENV FRL_MSGS_COMMIT=$frl_msgs_commit
-RUN . "/opt/ros/$ros_distro/setup.sh" \
-    && git clone https://github.com/Field-Robotics-Lab/frl_msgs.git \
+RUN git clone https://github.com/Field-Robotics-Lab/frl_msgs.git \
     && git -C frl_msgs archive --prefix=src/frl_msgs/ "$FRL_MSGS_COMMIT" | tar x \
     && rm -rf frl_msgs
 
 # ------------------------------------ CLONEING SPECIFIC BRANCH SHOULD BE REMOVED AFTER MERGE
 ARG glider_hybrid_whoi_commit
 ENV GLIDER_HYBRID_WHOI_COMMIT=$glider_hybrid_whoi_commit
-RUN . "/opt/ros/$ros_distro/setup.sh" \
-    && git clone -b Kinematics_only --single-branch https://github.com/Field-Robotics-Lab/glider_hybrid_whoi.git \
+RUN git clone -b Kinematics_only --single-branch https://github.com/Field-Robotics-Lab/glider_hybrid_whoi.git \
     && git -C glider_hybrid_whoi archive --prefix=src/glider_hybrid_whoi/ "$GLIDER_HYBRID_WHOI_COMMIT" | tar x \
     && rm -rf glider_hybrid_whoi
 
