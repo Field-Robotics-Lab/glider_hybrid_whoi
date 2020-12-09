@@ -72,15 +72,11 @@ RUN git clone https://github.com/Field-Robotics-Lab/frl_msgs.git \
     && git -C frl_msgs archive --prefix=src/frl_msgs/ "$FRL_MSGS_COMMIT" | tar x \
     && rm -rf frl_msgs
 
-# ------------------------------------ CLONEING SPECIFIC BRANCH SHOULD BE REMOVED AFTER MERGE
-ARG glider_hybrid_whoi_commit
-ENV GLIDER_HYBRID_WHOI_COMMIT=$glider_hybrid_whoi_commit
-RUN git clone -b Kinematics_only --single-branch https://github.com/Field-Robotics-Lab/glider_hybrid_whoi.git \
-    && git -C glider_hybrid_whoi archive --prefix=src/glider_hybrid_whoi/ "$GLIDER_HYBRID_WHOI_COMMIT" | tar x \
-    && rm -rf glider_hybrid_whoi
+ADD . src/glider_hybrid_whoi/
 
 # Generate the install script!
 WORKDIR /uuv_ws
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN . "/opt/ros/$ros_distro/setup.sh" \
     && apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends python-pip \

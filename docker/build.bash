@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -Eeuo pipefail
 
 #
 # Copyright (C) 2018 Open Source Robotics Foundation
@@ -17,9 +18,11 @@
 #
 #
 
+# Change into the parent directory of this script, no matter how it is invoked.
+cd "$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
+
 # Builds a Docker image.
-BUILD_BASE=""
-BUILD_ROS_GAZ=""
+BUILD_ARGS=""
 image_name="glider_kinematics"
 
 POSITIONAL=()
@@ -29,7 +32,7 @@ key="$1"
 
 case $key in
     -w|--without-nvidia)
-    BUILD_BASE="--build-arg BASEIMG=ubuntu:bionic"
+    BUILD_ARGS="--build-arg BASEIMG=ubuntu:bionic"
     image_name="glider_kinematics"
     shift
     ;;
@@ -42,22 +45,7 @@ done
 
 set -- "${POSITIONAL[@]}"
 
-if [ $# -lt 1 ]
-then
-    echo "Usage: $0 [-n --nvidia] <root of vrx repo>"
-    exit 1
-fi
-
-if [ ! -f $1/Dockerfile ]
-then
-    echo "Err: Directory does not contain a Dockerfile to build."
-    exit 1
-fi
-
-
 image_plus_tag=$image_name:$(export LC_ALL=C; date +%Y_%m_%d_%H%M)
-echo ".*" > "${1}"/.dockerignore
-docker build --rm -t $image_plus_tag -f "${1}"/Dockerfile "${1}" $BUILD_BASE $BUILD_ROS_GAZ && \
-docker tag $image_plus_tag $image_name:latest && \
+docker build --rm -t "$image_plus_tag" $BUILD_ARGS -f docker/Dockerfile "$@" .
+docker tag $image_plus_tag $image_name:latest
 echo "Built $image_plus_tag and tagged as $image_name:latest"
-rm "${1}"/.dockerignore
