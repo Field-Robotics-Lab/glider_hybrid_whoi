@@ -222,7 +222,7 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   else
     this->f_thruster_power_w3 = 0.97895;
 
-  // Coordinate transform functions
+  // Coordinate transform functions : base_link
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform["base_link"].child_frame_id = this->model->GetName() + "/base_link_ned";
   this->nedTransform["base_link"].transform.translation.x = 0;
@@ -584,7 +584,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.rudder_angle = this->rudderAngle;
   status_msg.nav_sat_fix.status.status = this->GPSOnOff;
   status_msg.nav_sat_fix.latitude = this->sensorLatitude;
-  status_msg.nav_sat_fix.longitude = this->sensorLatitude;
+  status_msg.nav_sat_fix.longitude = this->sensorLongitude;
   status_msg.nav_sat_fix.altitude = this->sensorAltitude;
   status_msg.pumped_volume = this->prev_pumpVol;
   status_msg.battery_position = this->battpos;

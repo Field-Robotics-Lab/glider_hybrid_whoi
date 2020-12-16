@@ -21,8 +21,8 @@
   <!-- Include the UUV macro file -->
   <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_base_kinematics.xacro"/>
   <!-- Create the glider_hybrid_whoi -->
-  <xacro:glider_hybrid_whoi_base 
-    namespace="$(arg namespace)" 
+  <xacro:glider_hybrid_whoi_base
+    namespace="$(arg namespace)"
     debug="$(arg debug)"
     inertial_reference_frame="$(arg inertial_reference_frame)"/>
 

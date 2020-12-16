@@ -159,6 +159,18 @@
       </plugin>
     </gazebo>
 
+     <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/$(arg namespace)</robotNamespace>
+        <robotParam>/$(arg namespace)/robot_description</robotParam>
+
+        <bathymetry>
+          <interval_s>5.0</interval_s>
+        </bathymetry>
+
+      </plugin>
+    </gazebo>
+
     <!-- TODO: Parametrize the battery unit -->
     <xacro:basic_linear_battery_macro
       namespace="${namespace}"

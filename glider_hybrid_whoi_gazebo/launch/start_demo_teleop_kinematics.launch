@@ -1,8 +1,8 @@
 <launch>
   <!-- Vehicle's initial position -->
-  <arg name="x" default="0"/>
-  <arg name="y" default="0"/>
-  <arg name="z" default="-5"/>
+  <arg name="x" default="429322.29"/>
+  <arg name="y" default="43101.99"/>
+  <arg name="z" default="-8600"/>
   <arg name="roll" value="0"/>
   <arg name="pitch" default="0"/>
   <arg name="yaw" value="0"/>
