@@ -18,17 +18,10 @@
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>10</real_time_update_rate>
       <ode>
-        <!-- <solver>
-          <type>world</type>
-          <constraints>
-            <contact_max_correcting_vel>0.1</contact_max_correcting_vel>
-            <contact_surface_layer>0.0001</contact_surface_layer>
-          </constraints>
-        </solver> -->
         <solver>
           <type>quick</type>
           <iters>20</iters>
-          <sor>1.4</sor>
+          <sor>1.2</sor>
         </solver>
       </ode>
     </physics>
@@ -36,8 +29,8 @@
 
     <!-- Setting this to origin of EPSG:26987 -->
     <spherical_coordinates>
-      <longitude_deg>-70.5</longitude_deg>
-      <latitude_deg>41.0</latitude_deg>
+      <longitude_deg>76.4334063</longitude_deg>
+      <latitude_deg>-40.8458253</latitude_deg>
     </spherical_coordinates>
 
     <!-- Global light source -->
@@ -65,9 +58,9 @@
     </include>
 
     <!-- Bounding box with sea surface -->
-    <include>
+    <!-- <include>
       <uri>model://ocean</uri>
-    </include>
+    </include> -->
 
     <plugin name="underwater_current_plugin" filename="libuuv_underwater_current_ros_plugin.so">
       <namespace>hydrodynamics</namespace>
@@ -104,9 +97,7 @@
     <plugin name="bathy_dave_plugin" filename="libbathy_dave_plugin.so">
       <projection epsg="26987" />
       <bathymetry interval_s="0.1">
-        <!-- <grid prefix="buzzbay" priority="1" epsg="26987" colmax="5" rowmax="5" anchor_lon="-71.355747" anchor_lat="41.353127" spacing_lon="0.15" spacing_lat="0.15" /> -->
-
-        <grid prefix="buzzbay" priority="1" epsg="26987" colmax="5" rowmax="5" anchor_lon="-70.857" anchor_lat="41.447" spacing_lon="0.005" spacing_lat="0.005" />
+        <grid prefix="buzzbay" priority="1" epsg="26987" colmax="50" rowmax="50" anchor_lon="-71.36" anchor_lat="41.35" spacing_lon="0.015" spacing_lat="0.015" />
       </bathymetry>
     </plugin>
 
@@ -114,8 +105,8 @@
       <camera name="user_camera">
         <view_controller>ortho</view_controller>
         <projection_type>orthographic</projection_type>
-        <clip>0.1 5000</clip>
-        <pose>470494 50030 -2.24 0.0 0.288 0.6416</pose>
+        <clip>0.1 10000</clip>
+        <pose>480378.78 56669.9 -3.5375 0.0 0.47275 -0.996715</pose>
       </camera>
     </gui>
 

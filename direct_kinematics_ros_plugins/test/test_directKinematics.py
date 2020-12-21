@@ -2,6 +2,7 @@
 
 import rospy
 import time
+import math
 from frl_vehicle_msgs.msg import UwGliderCommand
 
 import matplotlib.pyplot as plt
@@ -21,24 +22,25 @@ def command(startTime):
             time.sleep(1)
 
             # initial command
-            print("\n----- Pitch control (Batt pos) ------")
-            command = UwGliderCommand()
-            command.header.stamp = rospy.Time.now()
-            command.pitch_cmd_type = 1
-            command.target_pitch_value = 0.005
-            command.target_pumped_volume = -5
-            rospy.loginfo(command)
-            pub.publish(command)
-            time.sleep(3)
+            # print("\n----- Pitch control (Batt pos) ------")
+            # command = UwGliderCommand()
+            # command.header.stamp = rospy.Time.now()
+            # command.pitch_cmd_type = 1
+            # command.target_pitch_value = 0.005
+            # command.target_pumped_volume = -5
+            # rospy.loginfo(command)
+            # pub.publish(command)
+            # time.sleep(3)
 
             print("\n----- Ascend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 1
-            command.target_pitch_value = 0.001
-            command.target_pumped_volume = 0.01
+            command.target_pitch_value = 0.0017
+            command.rudder_control_mode = 1
+            command.target_heading = math.pi/2
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 1
+            command.target_motor_cmd = 30
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)

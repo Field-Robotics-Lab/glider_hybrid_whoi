@@ -609,8 +609,9 @@ if (this->writeLogFlag)
   }
   if (floor(time * 10) == time * 10)
   {
+    int prec = std::numeric_limits<double>::digits10+2; // generally 17
     writeLog.open("/tmp/DirectKinematicsLog.csv", std::ios_base::app);
-    writeLog << time << ","
+    writeLog << std::setprecision(prec) << time << ","
             << this->modelXYZ.X() << "," << this->modelXYZ.Y() << ","
             << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
             << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
