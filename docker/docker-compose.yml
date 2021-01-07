@@ -1,0 +1,53 @@
+# This Docker Compose file runs the Gazebo simulation and the glider control
+# system simulation.
+
+version: "3"
+
+services:
+  ros-master:
+    image: ros:melodic-ros-core
+    command: stdbuf -o L roscore
+    networks:
+      - ros
+    restart: always
+  gazebo:
+    image: glider_hybrid_whoi:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    networks:
+      - ros
+    environment:
+      - "DISPLAY"
+      - "ROS_MASTER_URI=http://ros-master:11311"
+      - "QT_X11_NO_MITSHM=1"
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "/etc/localtime:/etc/localtime:ro"
+    command:
+      - roslaunch
+      - --wait
+      - glider_hybrid_whoi_gazebo
+      - BuzzBay.launch
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    user: "${UID:-1000}:${GID:-1000}"
+  glider_control_sim:
+    image: registry.gitlab.com/mit-mers/ros/slocum_glider:master
+    networks:
+      - ros
+    environment:
+      - "ROS_MASTER_URI=http://ros-master:11311"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+    command:
+      - bash
+      - -c
+      - |
+        roslaunch --wait \
+                  slocum_glider_launch sim_driver.launch \
+                  data_dir:=$$(rospack find slocum_glider_sim_driver)/example_gliders/bear
+
+networks:
+  ros: {}
