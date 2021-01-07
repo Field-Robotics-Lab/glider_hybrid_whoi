@@ -2,12 +2,13 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=2.0.0
+ARG version_dave=3.0.0
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
-ARG ds_sim_commit=d8b8d1383436978b0244796654950518224c7cfd
+ARG acoustic_msgs_commit=e4c93b6f8169d45b103289faf4500c40ab705ac9
+ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
-ARG frl_msgs_commit=ab362d2f7264ce8be4d6b12bf41538ca4215bfba
+ARG frl_msgs_commit=f2eb86e1a82445006c9c49b3508bd44a0de54fd7
 #------------------------------------------------------------------#
 
 #------------------------------------------------------------------#
@@ -50,7 +51,7 @@ WORKDIR /glider_hybrid_whoi_deps/src
 
 ARG version_dave
 ENV VERSION_DAVE=$version_dave
-RUN curl -fsSL https://github.com/Field-Robotics-Lab/dave/archive/v$VERSION_DAVE.tar.gz | tar xz \
+RUN curl -fsSL https://github.com/daewok/dave/archive/2d116f22230d1d563670e4d225eea94e275dc1f0.tar.gz | tar xz \
     && curl -fsSL https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/v$VERSION_DAVE.tar.gz | tar xz
 
 ARG version_uuv_simulator
@@ -61,9 +62,13 @@ ARG version_uuv_manipulators
 ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
 RUN curl -fsSL https://github.com/uuvsimulator/uuv_manipulators/archive/$VERSION_UUV_MANIPULATORS.tar.gz | tar xz
 
+ARG acoustic_msgs_commit
+ENV ACOUSTIC_MSGS_COMMIT=$acoustic_msgs_commit
+RUN curl -fsSL https://github.com/apl-ocean-engineering/acoustic_msgs/archive/$ACOUSTIC_MSGS_COMMIT.tar.gz | tar xz
+
 ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
-RUN curl -fsSL https://bitbucket.org/whoidsl/ds_sim/get/$DS_SIM_COMMIT.tar.gz | tar xz
+RUN curl -fsSL https://bitbucket.org/daewok/ds_sim/get/$DS_SIM_COMMIT.tar.gz | tar xz
 
 ARG ds_msgs_commit
 ENV DS_MSGS_COMMIT=$ds_msgs_commit
@@ -123,7 +128,7 @@ COPY --from=source-deps /tmp/install-script-for-deps /tmp/install-script-for-dep
 
 RUN apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
-       python-pip curl apt-utils software-properties-common xauth \
+       python-pip curl apt-utils software-properties-common xauth nvidia-cuda-toolkit \
     && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
     && curl -fsSL http://packages.osrfoundation.org/gazebo.key | apt-key add - \
     && apt-get update \
@@ -222,6 +227,8 @@ ARG version_uuv_simulator
 ENV VERSION_UUV_SIMULATOR=$version_uuv_simulator
 ARG version_uuv_manipulators
 ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
+ARG acoustic_msgs_commit
+ENV ACOUSTIC_MSGS_COMMIT=$acoustic_msgs_commit
 ARG ds_msgs_commit
 ENV DS_MSGS_COMMIT=$ds_msgs_commit
 ARG ds_sim_commit
