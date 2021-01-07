@@ -1,0 +1,5 @@
+.vscode
+**/.git
+/docker/*
+!/docker/docker-entrypoint.sh
+!/docker/docker-dev-entrypoint.sh

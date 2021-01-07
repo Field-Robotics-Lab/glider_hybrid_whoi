@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-#
 # Copyright (C) 2020 glider_hybrid_whoi authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +20,5 @@ set -Eeuo pipefail
 # Determine the parent directory of this script, no matter how it is invoked.
 PARENT_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
 
-image_name="glider_hybrid_whoi"
-
-image_plus_tag=$image_name:$(export LC_ALL=C; date +%Y_%m_%d_%H%M)
-docker build -t "$image_plus_tag" -t "$image_name:latest" -f docker/Dockerfile.dev "$@" "$PARENT_DIR"
-echo "Built $image_plus_tag and tagged as $image_name:latest"
+docker build -t "glider_hybrid_whoi:dev" -f docker/Dockerfile.dev "$@" "$PARENT_DIR"
+echo "Built glider_hybrid_whoi:dev"

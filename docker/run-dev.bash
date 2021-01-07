@@ -16,12 +16,15 @@
 #
 #
 
-# Runs a docker container with the image created by build.bash
+# Runs a docker container with the image created by build-dev.bash
 # Requires:
 #   docker 19.03 or higher
 #   an X server
 # Recommended:
 #   A joystick mounted to /dev/input/js0 or /dev/input/js1
+
+# Determine the parent directory of this script, no matter how it is invoked.
+PARENT_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
 
 # Determine if we have the nvidia runtime enabled. If so, default to exposing
 # all gpus.
@@ -29,7 +32,8 @@ if docker info -f '{{ range $key, $value := .Runtimes }}{{ $key }}{{ end }}' | g
     GPUS="--gpus all"
 fi
 
-IMG="glider_hybrid_whoi:latest"
+IMG="glider_hybrid_whoi:dev"
+WORKSPACE="$PARENT_DIR"
 RUN_ARGS=""
 
 while [[ $# -gt 0 ]]
@@ -37,6 +41,10 @@ do
 key="$1"
 
 case $key in
+    -w|--whole-workspace)
+        WORKSPACE="$(readlink -f "$PARENT_DIR/..")"
+        shift
+        ;;
     -i)
         IMG="$2"
         shift 2
@@ -71,13 +79,18 @@ done
 USERID=$(id -u)
 GROUPID=$(id -g)
 
+# If we ever want to not match UIDs, setting the following env var would help.
+
+#   -e XAUTHORITY_ENTRY="$(xauth nextract - "$DISPLAY")"
+
 docker run -it \
   -e DISPLAY \
   -e QT_X11_NO_MITSHM=1 \
+  -v "$WORKSPACE:/home/ros/glider_hybrid_whoi/src/glider_hybrid_whoi" \
   -v "/tmp/.X11-unix:/tmp/.X11-unix" \
   -v "/etc/localtime:/etc/localtime:ro" \
-  --privileged \
   --rm \
+  --privileged \
   --security-opt seccomp=unconfined \
   -u "$USERID:$GROUPID" \
   $RUN_ARGS \

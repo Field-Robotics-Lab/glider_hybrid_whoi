@@ -1,7 +1,4 @@
-# This Dockerfile builds a "kitchen-sink" production ready image. This image is
-# useful for deployment to desktop computers, but is not ideal for deployment
-# to resource constrained robots (not that you'd want to deploy this package to
-# a robot anyways).
+# This Dockerfile builds a "kitchen-sink" dev image.
 
 #------------------------------------------------------------------#
 # Dependency versions
@@ -236,9 +233,22 @@ ARG user
 ARG group
 
 COPY --from=source-deps-builder --chown=$user:$group /home/$user/glider_hybrid_whoi_deps/install /home/$user/glider_hybrid_whoi_deps/install
-COPY --from=builder --chown=$user:$group /home/$user/glider_hybrid_whoi/install /home/$user/glider_hybrid_whoi/install
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends sudo \
+    && adduser $user sudo \
+    && echo "$user ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$user \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV GLIDER_HYBRID_WHOI_USER=$user
-COPY docker/docker-entrypoint.sh /ros_entrypoint.sh
+COPY docker/docker-dev-entrypoint.sh /ros_entrypoint.sh
 
 USER $user:$group
+
+RUN . "/home/$user/glider_hybrid_whoi_deps/install/setup.bash" \
+    && mkdir -p ~/glider_hybrid_whoi/src \
+    && (cd ~/glider_hybrid_whoi/src && catkin_init_workspace) \
+    && (cd ~/glider_hybrid_whoi && catkin_make) \
+    && echo "source /home/$user/glider_hybrid_whoi/devel/setup.bash" >> ~/.bashrc
+
+WORKDIR /home/$user/glider_hybrid_whoi/
