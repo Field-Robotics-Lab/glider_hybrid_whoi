@@ -25,6 +25,9 @@ services:
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "/etc/localtime:/etc/localtime:ro"
     command:
+      - stdbuf
+      - -o
+      - L
       - roslaunch
       - --wait
       - glider_hybrid_whoi_gazebo
@@ -45,9 +48,9 @@ services:
       - bash
       - -c
       - |
-        roslaunch --wait \
-                  slocum_glider_launch sim_driver.launch \
-                  data_dir:=$$(rospack find slocum_glider_sim_driver)/example_gliders/bear
+        stdbuf -o L roslaunch --wait \
+                              slocum_glider_launch sim_driver.launch \
+                              data_dir:=$$(rospack find slocum_glider_sim_driver)/example_gliders/bear
 
 networks:
   ros: {}

@@ -25,7 +25,7 @@
 
 # Determine if we have the nvidia runtime enabled. If so, default to exposing
 # all gpus.
-if docker info -f '{{ range $key, $value := .Runtimes }}{{ $key }}{{ end }}' | grep nvidia; then
+if docker info -f '{{ range $key, $value := .Runtimes }}{{ $key }}{{ end }}' | grep nvidia > /dev/null 2>&1; then
     GPUS="--gpus all"
 fi
 
