@@ -33,7 +33,7 @@ if docker info -f '{{ range $key, $value := .Runtimes }}{{ $key }}{{ end }}' | g
 fi
 
 IMG="glider_hybrid_whoi:dev"
-WORKSPACE="$PARENT_DIR"
+WORKSPACE="$(readlink -f "$PARENT_DIR")"
 RUN_ARGS=""
 
 while [[ $# -gt 0 ]]

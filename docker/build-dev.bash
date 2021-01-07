@@ -18,7 +18,7 @@ set -Eeuo pipefail
 #
 
 # Determine the parent directory of this script, no matter how it is invoked.
-PARENT_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
+cd "$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
 
-docker build -t "glider_hybrid_whoi:dev" -f docker/Dockerfile.dev "$@" "$PARENT_DIR"
+docker build -t "glider_hybrid_whoi:dev" -f docker/Dockerfile.dev "$@" .
 echo "Built glider_hybrid_whoi:dev"

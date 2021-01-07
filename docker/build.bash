@@ -19,10 +19,10 @@ set -Eeuo pipefail
 #
 
 # Determine the parent directory of this script, no matter how it is invoked.
-PARENT_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
+cd "$(dirname "$(readlink -f "$BASH_SOURCE")")/.."
 
 image_name="glider_hybrid_whoi"
 
 image_plus_tag=$image_name:$(export LC_ALL=C; date +%Y_%m_%d_%H%M)
-docker build -t "$image_plus_tag" -t "$image_name:latest" -f docker/Dockerfile.dev "$@" "$PARENT_DIR"
+docker build -t "$image_plus_tag" -t "$image_name:latest" -f docker/Dockerfile.dev "$@" .
 echo "Built $image_plus_tag and tagged as $image_name:latest"
