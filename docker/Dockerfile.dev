@@ -29,18 +29,17 @@ ARG group=ros
 # at /glider_hybrid_whoi_deps.
 FROM ros:$ros_distro-ros-base as source-deps
 
-ARG ros_distro
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Initialize the dependency workspace
 WORKDIR /glider_hybrid_whoi_deps/src
 
-RUN . "/opt/ros/$ros_distro/setup.bash" \
+RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && catkin_init_workspace
 
 # Get the devel, etc. folders created
 WORKDIR /glider_hybrid_whoi_deps
-RUN . "/opt/ros/$ros_distro/setup.bash" \
+RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && catkin_make
 
 # Install ROS dependencies that are not available via a package manager.
@@ -80,7 +79,7 @@ RUN curl -fsSL https://github.com/Field-Robotics-Lab/frl_msgs/archive/$FRL_MSGS_
 
 # Generate the install script needed to install the dependencies of our
 # dependencies.
-RUN . "/opt/ros/$ros_distro/setup.bash" \
+RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && apt-get update \
     && rosdep install --from-paths . --ignore-src -y -s --as-root pip:false --as-root apt:false | tee /tmp/install-script-for-deps
 
@@ -101,7 +100,7 @@ FROM source-deps as deps
 COPY . glider_hybrid_whoi/
 
 # Generate the install script!
-RUN . "/opt/ros/$ros_distro/setup.sh" \
+RUN . "/opt/ros/$ROS_DISTRO/setup.sh" \
     && apt-get update \
     && rosdep install --from-paths . --ignore-src -y -s --as-root pip:false --as-root apt:false | tee /tmp/install-script
 
@@ -117,7 +116,6 @@ RUN . "/opt/ros/$ros_distro/setup.sh" \
 FROM ros:$ros_distro-ros-base as user-creation
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG ros_distro
 ARG user
 ARG group
 
@@ -145,16 +143,19 @@ RUN apt-get update \
 
 FROM user-creation as source-deps-builder
 
-ARG ros_distro
 ARG user
 ARG group
 
-COPY --from=source-deps --chown=$user:$group /glider_hybrid_whoi_deps/src /home/$user/glider_hybrid_whoi_deps/src
 USER $user:$group
+
+# It seems that WORKDIR doesn't respect the user??
+RUN mkdir /home/$user/glider_hybrid_whoi_deps
 
 WORKDIR /home/$user/glider_hybrid_whoi_deps
 
-RUN . "/opt/ros/$ros_distro/setup.sh" \
+COPY --from=source-deps --chown=$user:$group /glider_hybrid_whoi_deps/src src
+
+RUN . "/opt/ros/$ROS_DISTRO/setup.sh" \
     && catkin_make \
     && catkin_make install
 
@@ -179,6 +180,10 @@ ARG user
 ARG group
 
 USER $user:$group
+
+# It seems that WORKDIR doesn't respect the user??
+RUN mkdir -p /home/$user/glider_hybrid_whoi/src
+
 WORKDIR /home/$user/glider_hybrid_whoi/src
 COPY --chown=$user:$group . glider_hybrid_whoi
 
