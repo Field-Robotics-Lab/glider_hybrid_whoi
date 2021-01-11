@@ -141,7 +141,7 @@
       <plugin name="${namespace}_direct_kinematics_plugin"
               filename="libdirect_kinematics_ros_plugin.so">
         <fluid_deisnty>${fluid_density}</fluid_deisnty>
-        <writeLog>true</writeLog>
+        <writeLog>false</writeLog>
         <flow_velocity_topic>/hydrodynamics/current_velocity</flow_velocity_topic>
         <use_global_ocean_current>true</use_global_ocean_current>
         <!-- Kinematics coefficients -->

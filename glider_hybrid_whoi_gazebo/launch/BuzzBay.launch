@@ -3,10 +3,12 @@
 
   <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(find glider_hybrid_whoi_gazebo)/worlds/BuzzBay.world --verbose -u -e ode -s libdsros_sensors.so" respawn="false" output="screen">
       <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find glider_hybrid_whoi_gazebo)/models/BuzzBay/"/>
+
+      <param name="paused" value="false"/>
+      <param name="use_sim_time" value="true"/>
+      <param name="gui" value="true"/>
   </node>
 
-  <arg name="gui" default="true"/>
-  <arg name="paused" default="false"/>
   <arg name="set_timeout" default="false"/>
   <arg name="timeout" default="0.0"/>
 
