@@ -50,6 +50,28 @@ def command(startTime):
 
         # rate.sleep()
 
+def plot(startTime):
+
+    time.sleep(5)
+
+    # Read data
+    header_list = ["t", "x", "y", "z", "p", "q", "r", "altitude"]
+    log = pd.read_csv('/tmp/DirectKinematicsLog.csv', names = header_list, skiprows = 2)
+
+    # limit data to time range where commands are sent
+    # ?? 5 seconds delay. Needs investigation
+    indexNames = log[log['t'] < startTime + 5].index
+    log.drop(indexNames, inplace = True)
+    indexNames = log[log['t'] > rospy.get_time() + 5].index
+    log.drop(indexNames, inplace = True)
+
+    # save dropped dataframe to csv
+    log.to_csv('/tmp/DirectKinematicsLog.csv', index=False, header=True)
+
+    # plot
+    log.plot("t", ["x", "z", "q", "altitude"], subplots=True)
+    plt.show()
+
 if __name__ == '__main__':
     try:
         # start node
@@ -60,6 +82,11 @@ if __name__ == '__main__':
 
         # send command
         command(startTime)
+
+        # plot
+        plot(startTime)
+        print("\n\nRaw data is at /tmp/DirectKinematicsLog.csv")
+        print("Copy and save now or it will be overwritten later")
 
     except rospy.ROSInterruptException:
         pass
