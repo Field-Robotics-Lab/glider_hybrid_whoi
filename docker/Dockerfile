@@ -5,9 +5,10 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=3.0.0
+ARG version_dave=ff57e973b06fefedc75c3ed75c2cce248bd68180
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
+ARG version_uw_sensors_gazebo=2fc1111d326ccd8d89ad3c5c8e765f9187fe1fc0
 ARG acoustic_msgs_commit=e4c93b6f8169d45b103289faf4500c40ab705ac9
 ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
@@ -53,8 +54,10 @@ WORKDIR /glider_hybrid_whoi_deps/src
 
 ARG version_dave
 ENV VERSION_DAVE=$version_dave
-RUN curl -fsSL https://github.com/daewok/dave/archive/2d116f22230d1d563670e4d225eea94e275dc1f0.tar.gz | tar xz \
-    && curl -fsSL https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/v$VERSION_DAVE.tar.gz | tar xz
+ARG version_uw_sensors_gazebo
+ENV VERSION_UW_SENSORS_GAZEBO=$version_uw_sensors_gazebo
+RUN curl -fsSL https://github.com/Field-Robotics-Lab/dave/archive/$VERSION_DAVE.tar.gz | tar xz \
+    && curl -fsSL https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/$VERSION_UW_SENSORS_GAZEBO.tar.gz | tar xz
 
 ARG version_uuv_simulator
 ENV VERSION_UUV=$version_uuv_simulator
@@ -129,7 +132,7 @@ COPY --from=source-deps /tmp/install-script-for-deps /tmp/install-script-for-dep
 
 RUN apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
-       python-pip curl apt-utils software-properties-common xauth nvidia-cuda-toolkit \
+       python-pip curl apt-utils software-properties-common xauth \
     && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
     && curl -fsSL http://packages.osrfoundation.org/gazebo.key | apt-key add - \
     && apt-get update \
@@ -231,6 +234,8 @@ RUN apt-get update \
 # Carry forward the dependency versions
 ARG version_dave
 ENV VERSION_DAVE=$version_dave
+ARG version_uw_sensors_gazebo
+ENV VERSION_UW_SENSORS_GAZEBO=$version_uw_sensors_gazebo
 ARG version_uuv_simulator
 ENV VERSION_UUV_SIMULATOR=$version_uuv_simulator
 ARG version_uuv_manipulators
