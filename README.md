@@ -50,6 +50,9 @@ Kinematics control plugin for WHOI hybrid gliders
   ```
   roslaunch glider_hybrid_whoi_gazebo BuzzBay.launch
   ```
+  
+### Surface detection
+- If the glider reach the surface, the pitch value is set to zero and the position is kept on surface unless it's heading back down.
 
 ### Glider dynamic parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
