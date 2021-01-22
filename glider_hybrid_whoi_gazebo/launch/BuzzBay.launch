@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="paused" value="true"/>
+  <param name="use_sim_time" value="true"/>
+  <param name="gui" value="true"/>
+
+  <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(find glider_hybrid_whoi_gazebo)/worlds/BuzzBay.world --verbose -u -e ode -s libdsros_sensors.so" respawn="false" output="screen">
+      <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find glider_hybrid_whoi_gazebo)/models/BuzzBay/"/>
+
+  </node>
+
+  <arg name="set_timeout" default="false"/>
+  <arg name="timeout" default="0.0"/>
+
+  <include file="$(find uuv_assistants)/launch/publish_world_ned_frame.launch"/>
+
+  <group if="$(arg set_timeout)">
+      <include file="$(find uuv_assistants)/launch/set_simulation_timer.launch">
+          <arg name="timeout" value="$(arg timeout)"/>
+      </include>
+  </group>
+
+  <!-- Vehicle's initial position -->
+  <arg name="x" default="480381.43"/>
+  <arg name="y" default="56666.85"/>
+  <arg name="z" default="-5"/>
+  <arg name="roll" value="0"/>
+  <arg name="pitch" default="0"/>
+  <arg name="yaw" value="0"/>
+
+  <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
+    <arg name="x" value="$(arg x)"/>
+    <arg name="y" value="$(arg y)"/>
+    <arg name="z" value="$(arg z)"/>
+    <arg name="roll" value="$(arg roll)"/>
+    <arg name="pitch" value="$(arg yaw)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+  </include>
+
+</launch>

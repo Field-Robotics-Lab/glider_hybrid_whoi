@@ -14,7 +14,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>uuv_descriptions</exec_depend>
-  <exec_depend>hybrid_glider_gazebo_ros_plugins</exec_depend>
+  <exec_depend>direct_kinematics_ros_plugins</exec_depend>
   <exec_depend>uuv_sensor_ros_plugins</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>uuv_assistants</exec_depend>

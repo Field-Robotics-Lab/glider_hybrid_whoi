@@ -10,7 +10,7 @@
         /glider_hybrid_whoi/dp_controller/reference
         /glider_hybrid_whoi/pose_gt_ned
         /glider_hybrid_whoi/dp_controller/error
-        /hydrodynamics/current_velocity        
+        /hydrodynamics/current_velocity
         /glider_hybrid_whoi/wrench_perturbation
         /glider_hybrid_whoi/control_allocation/control_input
         /glider_hybrid_whoi/thrusters/0/thrust

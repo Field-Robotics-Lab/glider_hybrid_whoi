@@ -16,4 +16,9 @@
   <exec_depend>glider_hybrid_whoi_description</exec_depend>
   <exec_depend>glider_hybrid_whoi_control</exec_depend>
 
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_media_path="${prefix}"/>
+  </export>
+
 </package>
