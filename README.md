@@ -12,35 +12,29 @@ Kinematics control plugin for WHOI hybrid gliders
          1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
          2. Run the `build.bash` script located in the `docker` folder of this repository
              ```
-             ./build.bash .
+             ./build.bash
              ```
          3. Run the container with `run.bash` script
              ```
-             ./run.bash glider_kinematics
+             ./run.bash
              ```
          * Opening additional terminals
              ```
-             ./join.bash glider_kinematics
+             ./join.bash
+             source /opt/ros/melodic/setup.bash
+             source ~/glider_hybrid_whoi/install/setup.bash             
              ```
+        Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
+             
 ### Quickstart
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
         ```
-        roslaunch glider_hybrid_whoi_gazebo seafloor_underwater_world.launch
+        roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics.launch
         ```
-    2. Spawn glider into the gazebo world
+    2. Control glider with ROS
         ```
-        roslaunch glider_hybrid_whoi_gazebo start_demo_teleop_kinematics.launch joy_id:=0
-        ``` 
-    3. Control glider with ROS
-        ```
-        # Using test python script
         rosrun direct_kinematics_ros_plugins test_directKinematics.py
-        # Directly to the ros node
-        # Toward surface
-        rostopic pub /glider_hybrid_whoi/direct_kinematics/UwGlidCommand frl_vehicle_msgs/UwGliderCommand '{motor_cmd_type: 1, target_motor_cmd: 2, pitch_cmd_type: 2, target_pitch_value: -0.4, rudder_control_mode: 1, target_heading: 0.8}'
-        # Back to underwater
-        rostopic pub /glider_hybrid_whoi/direct_kinematics/UwGlidCommand frl_vehicle_msgs/UwGliderCommand '{motor_cmd_type: 1, target_motor_cmd: 2, pitch_cmd_type: 2, target_pitch_value: 0.4, rudder_control_mode: 1, target_heading: -0.8}'
         ```
     4. Glider status
         ```
