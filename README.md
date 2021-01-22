@@ -40,6 +40,11 @@ Kinematics control plugin for WHOI hybrid gliders
         ```
         rostopic echo /glider_hybrid_whoi/direct_kinematics/UwGliderStatus
         ```
+## Interface
+![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
+
+The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
+provided by https://gitlab.com/mit-mers/ros/slocum_glider
 
 ## Features
 
