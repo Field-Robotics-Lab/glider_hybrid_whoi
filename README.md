@@ -42,7 +42,15 @@ Kinematics control plugin for WHOI hybrid gliders
         ```
 
 ## Features
-* Organized based on support for [frl_vehicle_msgs](https://github.com/Field-Robotics-Lab/frl_msgs/tree/master/frl_vehicle_msgs/msg)
+
+### Bathymetry included
+- Buzzbay bathymetry is included
+  - Roughly 1500x1500 m tiles with 50 m overlap regions are included (almost 780 MB)
+  - Click the `play` button on the Gazebo window and wait for the first bathymetry to be spawned. Next bathymetry tile will be spawned and the previous tile will be removed automatically according to the glider position.
+  ```
+  roslaunch glider_hybrid_whoi_gazebo BuzzBay.launch
+  ```
+
 ### Glider dynamic parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
 #### Pitch control
