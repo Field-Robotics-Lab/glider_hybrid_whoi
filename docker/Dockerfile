@@ -5,11 +5,10 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=ff57e973b06fefedc75c3ed75c2cce248bd68180
+ARG version_dave=v3.1.0
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
-ARG version_uw_sensors_gazebo=2fc1111d326ccd8d89ad3c5c8e765f9187fe1fc0
-ARG acoustic_msgs_commit=e4c93b6f8169d45b103289faf4500c40ab705ac9
+ARG version_uw_sensors_gazebo=v3.1.0
 ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
 ARG frl_msgs_commit=f2eb86e1a82445006c9c49b3508bd44a0de54fd7
@@ -66,10 +65,6 @@ RUN curl -fsSL https://github.com/uuvsimulator/uuv_simulator/archive/$VERSION_UU
 ARG version_uuv_manipulators
 ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
 RUN curl -fsSL https://github.com/uuvsimulator/uuv_manipulators/archive/$VERSION_UUV_MANIPULATORS.tar.gz | tar xz
-
-ARG acoustic_msgs_commit
-ENV ACOUSTIC_MSGS_COMMIT=$acoustic_msgs_commit
-RUN curl -fsSL https://github.com/apl-ocean-engineering/acoustic_msgs/archive/$ACOUSTIC_MSGS_COMMIT.tar.gz | tar xz
 
 ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
@@ -240,8 +235,6 @@ ARG version_uuv_simulator
 ENV VERSION_UUV_SIMULATOR=$version_uuv_simulator
 ARG version_uuv_manipulators
 ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
-ARG acoustic_msgs_commit
-ENV ACOUSTIC_MSGS_COMMIT=$acoustic_msgs_commit
 ARG ds_msgs_commit
 ENV DS_MSGS_COMMIT=$ds_msgs_commit
 ARG ds_sim_commit
