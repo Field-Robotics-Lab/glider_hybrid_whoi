@@ -577,7 +577,11 @@ void DirectKinematicsROSPlugin::ConveyModelState()
   status_msg.roll = this->modelRPY.Z();
   status_msg.pitch = this->modelRPY.Y();
   status_msg.yaw = this->modelRPY.X();
-  status_msg.heading = this->modelRPY.X();
+  status_msg.heading = M_PI/2 - this->modelRPY.X();
+  if (status_msg.heading < 0)
+  {
+    status_msg.heading += 2 * M_PI;
+  }
   status_msg.depth = - this->modelXYZ.Z();
   status_msg.altitude = this->sensorAltitude;
   status_msg.motor_power = this->motorPower;
