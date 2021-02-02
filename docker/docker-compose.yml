@@ -50,7 +50,7 @@ services:
       - |
         stdbuf -o L roslaunch --wait \
                               slocum_glider_launch sim_driver.launch \
-                              data_dir:=$$(rospack find slocum_glider_sim_driver)/example_gliders/bear
+                              data_dir:=$$(rospack find slocum_glider_extctl_sim)/example_gliders/bear
 
 networks:
   ros: {}
