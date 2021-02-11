@@ -31,7 +31,7 @@ services:
       - roslaunch
       - --wait
       - glider_hybrid_whoi_gazebo
-      - BuzzBay.launch
+      - BuzzBay_stratified_current.launch
     privileged: true
     security_opt:
       - seccomp:unconfined
