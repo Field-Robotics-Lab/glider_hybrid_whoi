@@ -157,9 +157,12 @@
         <f_thruster_power_w2>1.4699</f_thruster_power_w2>
         <f_thruster_power_w3>0.97895</f_thruster_power_w3>
       </plugin>
+      <plugin name="dave_transient_current_plugin" filename="libdave_transient_current_plugin.so">
+        <base_link_name>${namespace}/base_link</base_link_name>
+      </plugin>
     </gazebo>
 
-     <gazebo>
+    <gazebo>
       <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
         <robotNamespace>/$(arg namespace)</robotNamespace>
         <robotParam>/$(arg namespace)/robot_description</robotParam>
