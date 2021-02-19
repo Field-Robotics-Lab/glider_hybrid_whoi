@@ -22,7 +22,7 @@
       inertial_reference_frame="${inertial_reference_frame}" />
 
     <!-- DVL sensor -->
-    <xacro:dvl_plugin_macro
+    <!-- <xacro:dvl_plugin_macro
       namespace="${namespace}"
       suffix=""
       parent_link="${namespace}/base_link"
@@ -33,7 +33,13 @@
       update_rate="7"
       reference_frame="world">
       <origin xyz="0.0 0.0 -0.0825" rpy="0 ${0.5*pi} 0" />
-    </xacro:dvl_plugin_macro>
+    </xacro:dvl_plugin_macro> -->
+
+  <xacro:include filename="$(find nps_uw_sensors_gazebo)/urdf/whoi_teledyne_whn.xacro"/>
+  <xacro:teledyne_whn_macro
+    name="dvl" namespace="dvl" xyz="0 0 0"
+    dvl_topic="dvl" ranges_topic="ranges"
+    robot_link="${namespace}/base_link" joint_xyz="0 0 0"/>
 
     <xacro:switchable_battery_consumer_macro
       link_name="${namespace}/dvl_link"
