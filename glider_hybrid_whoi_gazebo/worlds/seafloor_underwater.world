@@ -45,10 +45,10 @@
       <shadows>1</shadows>
     </scene>
 
-    <!-- x: 480381.43, y: 56666.85 which is Lon: -70.735, Lat: 41.51 calculated using epsg.io  -->
+    <!-- Setting this to origin of EPSG:26987 -->
     <spherical_coordinates>
-      <latitude_deg>-70.735</latitude_deg>
-      <longitude_deg>41.51</longitude_deg>
+      <longitude_deg>76.4334063</longitude_deg>
+      <latitude_deg>-40.8458253</latitude_deg>
     </spherical_coordinates>
 
     <!-- Global light source -->
