@@ -81,6 +81,7 @@ private:
   double reference_longitude_;
   double reference_heading_;
   double reference_altitude_;
+  int espg_projection_;
 
   double radius_north_;
   double radius_east_;

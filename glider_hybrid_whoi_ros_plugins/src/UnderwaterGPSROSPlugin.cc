@@ -26,10 +26,13 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //=================================================================================================
 
-// modified for underwater
+// modified for underwater with GDAL
 
 #include <glider_hybrid_whoi_ros_plugins/UnderwaterGPSROSPlugin.hh>
 #include <gazebo/physics/physics.hh>
+
+// Functionality from GDAL for projections
+#include <gdal/ogr_spatialref.h>
 
 // WGS84 constants
 static const double equatorial_radius = 6378137.0;
@@ -113,14 +116,20 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     velocity_topic_ = _sdf->GetElement("velocityTopicName")->GetValue()->GetAsString();
 
   if (_sdf->HasElement("referenceLatitude"))
-    _sdf->GetElement("referenceLatitude")->GetValue()->Get(reference_latitude_);
+    gzerr << "referenceLatitude not used for uw_gps_ros_plugin. use espg_projection instead" << std::endl;
+    // _sdf->GetElement("referenceLatitude")->GetValue()->Get(reference_latitude_);
 
   if (_sdf->HasElement("referenceLongitude"))
-    _sdf->GetElement("referenceLongitude")->GetValue()->Get(reference_longitude_);
+    gzerr << "referenceLongitude not used for uw_gps_ros_plugin. use espg_projection instead" << std::endl;
+    // _sdf->GetElement("referenceLongitude")->GetValue()->Get(reference_longitude_);
 
   if (_sdf->HasElement("referenceHeading"))
-    if (_sdf->GetElement("referenceHeading")->GetValue()->Get(reference_heading_))
-      reference_heading_ *= M_PI/180.0;
+  gzerr << "referenceHeading not used for uw_gps_ros_plugin. use espg_projection instead" << std::endl;
+  // if (_sdf->GetElement("referenceHeading")->GetValue()->Get(reference_heading_))
+  //   reference_heading_ *= M_PI/180.0;
+
+  if (_sdf->HasElement("espg_projection"))
+    _sdf->GetElement("espg_projection")->GetValue()->Get(espg_projection_);
 
   if (_sdf->HasElement("referenceAltitude"))
     _sdf->GetElement("referenceAltitude")->GetValue()->Get(reference_altitude_);
@@ -238,9 +247,24 @@ void GazeboRosGps::Update()
   fix_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
   velocity_.header.stamp = fix_.header.stamp;
 
+  // GDAL transform
+  OGRSpatialReference srs;
+  srs.importFromEPSG(espg_projection_);
+  OGRSpatialReference tsrs;
+  tsrs.importFromEPSG(4326);
+  OGRCoordinateTransformation *poCT;
+  poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
+  double sNorthing = position.Y();
+  double sEasting = position.X();
+  double tLat = sNorthing;
+  double tLon = sEasting;
+  poCT->Transform(1, &tLon, &tLat);
+
 #if (GAZEBO_MAJOR_VERSION >= 8)
-  fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.X() + sin(reference_heading_) * position.Y()) / radius_north_ * 180.0/M_PI;
-  fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.X() + cos(reference_heading_) * position.Y()) / radius_east_  * 180.0/M_PI;
+  fix_.latitude = tLat;
+  fix_.longitude = tLon;
+  // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.X() + sin(reference_heading_) * position.Y()) / radius_north_ * 180.0/M_PI;
+  // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.X() + cos(reference_heading_) * position.Y()) / radius_east_  * 180.0/M_PI;
   fix_.altitude  = reference_altitude_  + position.Z();
   velocity_.vector.x =  cos(reference_heading_) * velocity.X() + sin(reference_heading_) * velocity.Y();
   velocity_.vector.y = -sin(reference_heading_) * velocity.X() + cos(reference_heading_) * velocity.Y();
@@ -251,8 +275,10 @@ void GazeboRosGps::Update()
   fix_.position_covariance[4] = position_error_model_.drift.Y()*position_error_model_.drift.Y() + position_error_model_.gaussian_noise.Y()*position_error_model_.gaussian_noise.Y();
   fix_.position_covariance[8] = position_error_model_.drift.Z()*position_error_model_.drift.Z() + position_error_model_.gaussian_noise.Z()*position_error_model_.gaussian_noise.Z();
 #else
-  fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.x + sin(reference_heading_) * position.y) / radius_north_ * 180.0/M_PI;
-  fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.x + cos(reference_heading_) * position.y) / radius_east_  * 180.0/M_PI;
+  fix_.latitude = tLat;
+  fix_.longitude = tLon;
+  // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.x + sin(reference_heading_) * position.y) / radius_north_ * 180.0/M_PI;
+  // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.x + cos(reference_heading_) * position.y) / radius_east_  * 180.0/M_PI;
   fix_.altitude  = reference_altitude_  + position.z;
   velocity_.vector.x =  cos(reference_heading_) * velocity.x + sin(reference_heading_) * velocity.y;
   velocity_.vector.y = -sin(reference_heading_) * velocity.x + cos(reference_heading_) * velocity.y;

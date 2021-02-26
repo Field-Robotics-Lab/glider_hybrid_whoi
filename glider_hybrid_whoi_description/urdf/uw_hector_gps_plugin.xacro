@@ -16,8 +16,7 @@
         <gaussianNoise>0.0 0.0 0.0</gaussianNoise>
         <velocityDrift>0 0 0</velocityDrift>
         <velocityGaussianNoise>0.0 0.0 0.0</velocityGaussianNoise>
-        <referenceLongitude>76.4334063</referenceLongitude>
-        <referenceLatitude>-40.8458253</referenceLatitude>
+        <espg_projection>26987</espg_projection>
       </plugin>
     </gazebo>
   </xacro:macro>
