@@ -42,6 +42,23 @@
       power_load="25"
       topic="${namespace}/dvl/state"/>
 
+    <xacro:pressure_plugin_macro
+      namespace="${namespace}"
+      suffix=""
+      parent_link="${namespace}/base_link"
+      topic="pressure"
+      mass="0.015"
+      update_rate="10"
+      range="1362"
+      noise_sigma="3.0"
+      noise_amplitude="0.0"
+      estimateDepth="true"
+      standardPressure="101.325"
+      kPaPerM="9.80638">
+      <inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.00001" />
+      <origin xyz="0.0 0.0 -0.0825" rpy="0 ${0.5*pi} 0" />
+    </xacro:pressure_plugin_macro>
+
     <!-- IMU  -->
     <xacro:default_imu namespace="${namespace}" parent_link="${namespace}/base_link">
       <origin xyz="0 0 0" rpy="0 0 0"/>
