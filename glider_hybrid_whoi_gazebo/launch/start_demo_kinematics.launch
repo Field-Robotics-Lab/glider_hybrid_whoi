@@ -62,8 +62,8 @@
   <arg name="joy_id" default="0"/>
 
   <!-- Vehicle's initial position -->
-  <arg name="x" default="4"/>
-  <arg name="y" default="4"/>
+  <arg name="x" default="480381.43"/>
+  <arg name="y" default="56666.85"/>
   <arg name="z" default="-93"/>
   <arg name="roll" value="0"/>
   <arg name="pitch" default="0"/>
