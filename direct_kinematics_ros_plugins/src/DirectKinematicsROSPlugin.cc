@@ -307,6 +307,9 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
   // Update model state
   this->updateModelState();
 
+  // Apply ocean current
+  this->applyOceanCurrent();
+
   // Send status
   this->ConveyModelState();
 
@@ -545,7 +548,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
     double buoyancy_vel_z = vx*sin(target_pitch)+vz*cos(target_pitch);
     cmd_msg.request.model_state.twist.linear.x = buoyancy_vel_x*cos(target_yaw) + v_thrust*cos(target_pitch)*cos(target_yaw);
     cmd_msg.request.model_state.twist.linear.y = buoyancy_vel_x*sin(target_yaw) + v_thrust*cos(target_pitch)*sin(target_yaw);
-    cmd_msg.request.model_state.twist.linear.z = vx*sin(target_pitch)+vz*cos(target_pitch) - v_thrust*sin(target_pitch);;
+    cmd_msg.request.model_state.twist.linear.z = vx*sin(target_pitch)+vz*cos(target_pitch) - v_thrust*sin(target_pitch);
   }
   else
   {
@@ -555,6 +558,21 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
   }
   this->commandPublisher["Model"].call(cmd_msg);
   this->modelState = cmd_msg.request.model_state;
+
+  // Save model velocity right after commend published
+  this->modelVel = ignition::math::Vector3d(
+                    this->link->WorldLinearVel().X(),
+                    this->link->WorldLinearVel().Y(),
+                    this->link->WorldLinearVel().Z());
+}
+
+/////////////////////////////////////////////////
+void DirectKinematicsROSPlugin::applyOceanCurrent()
+{
+  this->link->SetLinearVel(ignition::math::Vector3d(
+            this->modelVel.X() + this->flowVelocity.Y(),
+            this->modelVel.Y() + this->flowVelocity.X(),
+            this->modelVel.Z() + this->flowVelocity.Z()));
 }
 
 /////////////////////////////////////////////////

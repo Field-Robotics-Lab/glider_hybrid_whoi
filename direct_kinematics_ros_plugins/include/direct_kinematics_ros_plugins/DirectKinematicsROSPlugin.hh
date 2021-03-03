@@ -134,6 +134,11 @@ namespace direct_kinematics_ros
     /// \brief ROS Subscriber from gazebo topic
     private: std::map<std::string, ros::ServiceClient> stateSubscriber;
 
+    /// \brief update ocean current
+    protected: virtual void applyOceanCurrent();
+    protected: bool stratifiedOceanCurrent;
+    protected: ignition::math::Vector3<double> modelVel;
+
     /// \brief update model state
     protected: virtual void updateModelState();
 
