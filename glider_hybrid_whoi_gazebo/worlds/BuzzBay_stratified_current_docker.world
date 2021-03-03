@@ -94,11 +94,11 @@
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
         <!-- Database tag can accept full path or filename for .csv within the uuv_dave/worlds folder  -->
-        <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath>
+        <!-- <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath> -->
         <!-- Absolute path in local machine -->
         <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
         <!-- Absolute path in docker environment -->
-        <!-- <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/Kolumbo_ocean_current/ocean_current_avg_dive_a_mean.csv</databasefilePath> -->
+        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/Kolumbo_ocean_current/ocean_current_avg_dive_a_mean.csv</databasefilePath>
       </transient_current>
     </plugin>
 
