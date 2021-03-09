@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!-- Copyright (c) 2016 The UUV Simulator Authors.
+     All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <!-- Import macro files -->
+  <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro" />
+  <xacro:include filename="$(find uuv_sensor_ros_plugins)/urdf/sensor_snippets.xacro"/>
+  <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
+
+  <!-- Properties -->
+  <xacro:property name="mass" value="56.0"/>
+  <xacro:property name="fluid_density" value="1024.0"/>
+  <xacro:property name="gravity" value="9.81"/>
+  <xacro:property name="cob" value="0 0 0"/>
+  <xacro:property name="cog" value="0 0 0.0054"/>
+
+  <xacro:property name="visual_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_asv/Wave Glider-Float.dae" />
+  <xacro:property name="collision_mesh_file" value="file://$(find glider_hybrid_whoi_description)/mesh/glider_asv/COLLISION-Wave Glider-float.dae" />
+
+  <xacro:macro name="glider_asv_base" params="namespace debug inertial_reference_frame">
+    <!-- Base_link of the model -->
+    <link name="${namespace}/base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${visual_mesh_file}" scale="1 1 1" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${collision_mesh_file}" scale="1 1 1" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <inertia ixx="0.3048" ixy="0" ixz="0" iyy="13.976" iyz="0" izz="13.976" />
+      </inertial>
+    </link>
+
+    <!-- Kinematics Plugin -->
+    <gazebo>
+      <plugin name="${namespace}_kinematics_plugin"
+              filename="libkinematics_ros_plugin.so">
+        <fluid_deisnty>${fluid_density}</fluid_deisnty>
+        <writeLog>false</writeLog>
+        <flow_velocity_topic>/hydrodynamics/current_velocity/${namespace}</flow_velocity_topic>
+        <use_global_ocean_current>true</use_global_ocean_current>
+        <espg_projection>26987</espg_projection>
+        <!-- Kinematics coefficients -->
+        <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
+        <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
+        <Area>0.0345</Area>
+        <C_D>0.2534</C_D>
+        <C_L>0.4160</C_L>
+        <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>
+        <f_thruster_voltage_v2>-1.995</f_thruster_voltage_v2>
+        <f_thruster_voltage_v3>1.8701</f_thruster_voltage_v3>
+        <f_thruster_power_w1>-0.020919</f_thruster_power_w1>
+        <f_thruster_power_w2>1.4699</f_thruster_power_w2>
+        <f_thruster_power_w3>0.97895</f_thruster_power_w3>
+      </plugin>
+      <plugin name="dave_transient_current_plugin" filename="libdave_transient_current_plugin.so">
+        <flow_velocity_topic>hydrodynamics/current_velocity/$(arg namespace)</flow_velocity_topic>
+        <base_link_name>$(arg namespace)/base_link</base_link_name>
+        <transient_current>
+          <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
+          <velocity_north>
+            <noiseAmp>0.3</noiseAmp>
+            <noiseFreq>0.0</noiseFreq>
+          </velocity_north>
+          <velocity_east>
+            <noiseAmp>0.3</noiseAmp>
+            <noiseFreq>0.0</noiseFreq>
+          </velocity_east>
+          <velocity_down>
+            <noiseAmp>0.3</noiseAmp>
+            <noiseFreq>0.0</noiseFreq>
+          </velocity_down>
+        </transient_current>
+        <tide_oscillation>true</tide_oscillation>
+      </plugin>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/$(arg namespace)</robotNamespace>
+        <robotParam>/$(arg namespace)/robot_description</robotParam>
+      </plugin>
+    </gazebo>
+
+    <!-- <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_asv_sensors_kinematics.xacro"/> -->
+  </xacro:macro>
+</robot>
