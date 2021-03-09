@@ -1,8 +1,8 @@
 ﻿# Information,,
 Information about this data can be written here (in one line without comma),,
 "# Data (North direction velocity [m/s], East direction velocity [m/s], Depth [m])",,
-0.0,0.0,0
-0.05,0.05,1
+0.09,0.05.0,0
+0.08,0.05,1
 0.1,0.1,2
 0.2,0.2,3
 0.2,0.2,4
