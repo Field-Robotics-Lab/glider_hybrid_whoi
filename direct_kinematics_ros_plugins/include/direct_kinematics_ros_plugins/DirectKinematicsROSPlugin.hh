@@ -178,6 +178,10 @@ namespace direct_kinematics_ros
     /// assigned current velocity
     protected: bool useGlobalCurrent;
 
+    /// \brief Flag for surface vehicle
+    /// assigned current velocity
+    protected: bool surfaceVehicle;
+
     /// \brief Flow velocity vector read from topic
     protected: ignition::math::Vector3d flowVelocity;
 

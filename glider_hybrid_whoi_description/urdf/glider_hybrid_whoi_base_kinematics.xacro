@@ -138,25 +138,6 @@
 
     <!-- Kinematics Plugin -->
     <gazebo>
-      <plugin name="${namespace}_direct_kinematics_plugin"
-              filename="libdirect_kinematics_ros_plugin.so">
-        <fluid_deisnty>${fluid_density}</fluid_deisnty>
-        <writeLog>false</writeLog>
-        <flow_velocity_topic>/hydrodynamics/current_velocity/${namespace}</flow_velocity_topic>
-        <use_global_ocean_current>true</use_global_ocean_current>
-        <!-- Kinematics coefficients -->
-        <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
-        <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
-        <Area>0.0345</Area>
-        <C_D>0.2534</C_D>
-        <C_L>0.4160</C_L>
-        <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>
-        <f_thruster_voltage_v2>-1.995</f_thruster_voltage_v2>
-        <f_thruster_voltage_v3>1.8701</f_thruster_voltage_v3>
-        <f_thruster_power_w1>-0.020919</f_thruster_power_w1>
-        <f_thruster_power_w2>1.4699</f_thruster_power_w2>
-        <f_thruster_power_w3>0.97895</f_thruster_power_w3>
-      </plugin>
       <plugin name="dave_transient_current_plugin" filename="libdave_transient_current_plugin.so">
         <flow_velocity_topic>hydrodynamics/current_velocity/${namespace}</flow_velocity_topic>
         <base_link_name>${namespace}/base_link</base_link_name>
@@ -176,6 +157,25 @@
           </velocity_down>
         </transient_current>
         <tide_oscillation>true</tide_oscillation>
+      </plugin>
+      <plugin name="${namespace}_direct_kinematics_plugin"
+              filename="libdirect_kinematics_ros_plugin.so">
+        <fluid_deisnty>${fluid_density}</fluid_deisnty>
+        <writeLog>false</writeLog>
+        <flow_velocity_topic>/hydrodynamics/current_velocity/$(arg namespace)</flow_velocity_topic>
+        <use_global_ocean_current>true</use_global_ocean_current>
+        <!-- Kinematics coefficients -->
+        <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
+        <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
+        <Area>0.0345</Area>
+        <C_D>0.2534</C_D>
+        <C_L>0.4160</C_L>
+        <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>
+        <f_thruster_voltage_v2>-1.995</f_thruster_voltage_v2>
+        <f_thruster_voltage_v3>1.8701</f_thruster_voltage_v3>
+        <f_thruster_power_w1>-0.020919</f_thruster_power_w1>
+        <f_thruster_power_w2>1.4699</f_thruster_power_w2>
+        <f_thruster_power_w3>0.97895</f_thruster_power_w3>
       </plugin>
     </gazebo>
 

@@ -97,6 +97,12 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   else
     this->useGlobalCurrent = false;
 
+  // If surface vehicle
+  if (_sdf->HasElement("surface_vehicle"))
+    this->surfaceVehicle = _sdf->Get<bool>("surface_vehicle");
+  else
+    this->surfaceVehicle = false;
+
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
   // bool service_ready = false;
@@ -814,28 +820,44 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
     this->lastPose = this->link->WorldPose();
 
   // Submerged vessel
-  if (z + height / 2 > 0 && z < 0)
+  if (!this->surfaceVehicle)
   {
-    this->isSubmerged = false;
-  }
-  else if (z + height / 2 < 0)
-  {
-    this->isSubmerged = true;
-  }
-
-  if (!this->isSubmerged)
-  {
-    if (prev_pitch < 0.0 || this->buoyancyForce.Z() > 0.0 || prev_pumpVol > 0.0)
+    if (z + height / 2 > 0 && z < 0)
     {
-      ignition::math::Quaterniond quat;
-      quat.Euler(0.0, 0.0, prev_yaw);
-      this->lastPose.Rot() = quat;
-      this->link->SetWorldPose(this->lastPose);
-      this->link->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
-      this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
-      this->link->ResetPhysicsStates();
+      this->isSubmerged = false;
+    }
+    else if (z + height / 2 < 0)
+    {
+      this->isSubmerged = true;
+    }
+
+    if (!this->isSubmerged)
+    {
+      if (prev_pitch < 0.0 || this->buoyancyForce.Z() > 0.0 || prev_pumpVol > 0.0)
+      {
+        ignition::math::Quaterniond quat;
+        quat.Euler(0.0, 0.0, prev_yaw);
+        this->lastPose.Rot() = quat;
+        this->link->SetWorldPose(this->lastPose);
+        this->link->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
+        this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
+        this->link->ResetPhysicsStates();
+      }
     }
     gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
+  }
+  else  // For surface vehicle
+  {
+    // Keep the vehicle on surface
+    double surfaceZ = + height/10;
+    this->lastPose.Pos().Z() = surfaceZ;
+
+    // set pitch and roll to zero
+    ignition::math::Quaterniond quat;
+    quat.Euler(0.0, 0.0, prev_yaw);
+    this->lastPose.Rot() = quat;
+    this->link->SetWorldPose(this->lastPose);
+    this->link->ResetPhysicsStates();
   }
 }
 
