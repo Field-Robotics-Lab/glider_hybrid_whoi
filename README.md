@@ -1,6 +1,12 @@
 # Kinematics plugin for WHOI hybrid gliders
 Kinematics control plugin for WHOI hybrid gliders
 
+## Requirements
+```diff
+- The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
+sudo apt-get install ros-melodic-hector-gazebo-plugins
+```
+
 ## How-to
 ### Installation
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
@@ -22,10 +28,10 @@ Kinematics control plugin for WHOI hybrid gliders
              ```
              ./join.bash
              source /opt/ros/melodic/setup.bash
-             source ~/glider_hybrid_whoi/install/setup.bash             
+             source ~/glider_hybrid_whoi/install/setup.bash
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
-             
+
 ### Quickstart
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
@@ -55,7 +61,7 @@ provided by https://gitlab.com/mit-mers/ros/slocum_glider
   ```
   roslaunch glider_hybrid_whoi_gazebo BuzzBay.launch
   ```
-  
+
 ### Surface detection
 - If the glider reach the surface, the pitch value is set to zero and the position is kept on surface unless it's heading back down.
 
@@ -70,7 +76,7 @@ provided by https://gitlab.com/mit-mers/ros/slocum_glider
 
 #### Thruster control
 | Voltage | Power |
-| ------------- | ------------- | 
+| ------------- | ------------- |
 | :heavy_check_mark:  | :heavy_check_mark: |
 - Thruster power is defined with 2nd-order fucntion with three coefficients (ax^2 + bx + c) for both voltage/power command values
 - coefficient name : `f_thruster_voltage_v1`, `f_thruster_voltage_v2`, `f_thruster_voltage_v3`, `f_thruster_power_w1`, `f_thruster_power_w2`, `f_thruster_power_w3`
@@ -79,7 +85,7 @@ provided by https://gitlab.com/mit-mers/ros/slocum_glider
 
 #### Rudder control
 | Heading | Angle (Center, Port, Stbd) | Angle (Direct) |
-| ------------- | ------------- | ------------- | 
+| ------------- | ------------- | ------------- |
 | :heavy_check_mark:  | :heavy_check_mark: | :heavy_check_mark: |
 - The size of the port and starboard angle is set to PI/6.
 
@@ -92,7 +98,7 @@ provided by https://gitlab.com/mit-mers/ros/slocum_glider
 - Calculated with Equations 24 and 28 from Eichhorn et al. paper.
 
 #### Glider status
-| Lat/Lon | Roll-Pitch-Yaw | Heading | Depth | Altitude | Power | Rudder angle | Battery position | Pumped Volume | nav_sat_fix | 
+| Lat/Lon | Roll-Pitch-Yaw | Heading | Depth | Altitude | Power | Rudder angle | Battery position | Pumped Volume | nav_sat_fix |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | :heavy_check_mark:*  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:* | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 - Lat/Lon is acquired from the GPS sensor and Altitude from the DVL sensor. Which is also sent through nav_sat_fix

@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2
   gazebo_dev
+  hector_gazebo_plugins
 )
 
 
@@ -25,6 +26,7 @@ catkin_package(
   geometry_msgs
   std_msgs
   visualization_msgs
+  hector_gazebo_plugins
 )
 
 include_directories(

@@ -19,6 +19,7 @@
   <depend>tf2_ros</depend>
   <depend>tf2</depend>
   <depend>gazebo_dev</depend>
+  <depend>hector_gazebo_plugins</depend>
 
   <test_depend>rosunit</test_depend>
   <test_depend>rostest</test_depend>
