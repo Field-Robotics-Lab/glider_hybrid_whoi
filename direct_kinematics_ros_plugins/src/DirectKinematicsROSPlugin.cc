@@ -99,21 +99,21 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
-  bool service_ready = false;
-  service_ready = ros::service::exists("/gazebo/get_model_state",true);
-  if (!service_ready)
-  {
-    ROS_INFO("get_model_state service does not exists");
-  }
-  this->stateSubscriber["Model"] =
-    this->rosNode->serviceClient
-    <gazebo_msgs::GetModelState>("/gazebo/get_model_state");
+  // bool service_ready = false;
+  // service_ready = ros::service::exists("/gazebo/get_model_state",true);
+  // if (!service_ready)
+  // {
+  //   ROS_INFO("get_model_state service does not exists");
+  // }
+  // this->stateSubscriber["Model"] =
+  //   this->rosNode->serviceClient
+  //   <gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 
-  // -- Convey command from outside to gazebo model -- //
-  // Advertise for command publisher
-  this->commandPublisher["Model"] =
-    this->rosNode->serviceClient
-    <gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+  // // -- Convey command from outside to gazebo model -- //
+  // // Advertise for command publisher
+  // this->commandPublisher["Model"] =
+  //   this->rosNode->serviceClient
+  //   <gazebo_msgs::SetModelState>("/gazebo/set_model_state");
 
   // Subscribe command from outside
   ros::SubscribeOptions so =
@@ -329,7 +329,16 @@ void DirectKinematicsROSPlugin::updateModelState()
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
   model_state_msg.request.relative_entity_name = "world";
-  this->stateSubscriber["Model"].call(model_state_msg);
+  // this->stateSubscriber["Model"].call(model_state_msg);
+
+
+  // ros::NodeHandle n;
+	// ros::ServiceClient client = n.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state", true);
+	// client.waitForExistence();
+  // client.call(model_state_msg);
+  // client.shutdown();
+  // n.shutdown();
+
   this->modelState.model_name = this->model->GetName();
   this->modelState.pose = model_state_msg.response.pose;
   this->modelState.twist = model_state_msg.response.twist;
@@ -556,7 +565,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
     cmd_msg.request.model_state.twist.linear.y = v_thrust*cos(target_pitch)*sin(target_yaw);
     cmd_msg.request.model_state.twist.linear.z = -v_thrust*tan(target_pitch);
   }
-  this->commandPublisher["Model"].call(cmd_msg);
+  // this->commandPublisher["Model"].call(cmd_msg);
   this->modelState = cmd_msg.request.model_state;
 
   // Save model velocity right after commend published
