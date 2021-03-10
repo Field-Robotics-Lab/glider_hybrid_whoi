@@ -220,6 +220,7 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->prev_pitch = 0.0;
   this->prev_yaw = 0.0;
   this->prev_motorPower = 0.0;
+  this->modelVel = ignition::math::Vector3d(0.0, 0.0, 0.0);
 
   // Free surface detection
   this->buoyancyFlag = true; // Initialize buoyancy engine
@@ -311,18 +312,15 @@ void KinematicsROSPlugin::updateModelState()
   model_state_msg.request.model_name = this->model->GetName();
   model_state_msg.request.relative_entity_name = "world";
   // this->stateSubscriber["Model"].call(model_state_msg);
-
-
-  // ros::NodeHandle n;
-	// ros::ServiceClient client = n.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state", true);
-	// client.waitForExistence();
-  // client.call(model_state_msg);
-  // client.shutdown();
-  // n.shutdown();
-
   this->modelState.model_name = this->model->GetName();
-  this->modelState.pose = model_state_msg.response.pose;
-  this->modelState.twist = model_state_msg.response.twist;
+  // this->modelState.pose = model_state_msg.response.pose;
+  this->modelState.pose.position.x = this->model->WorldPose().Pos().X();
+  this->modelState.pose.position.y = this->model->WorldPose().Pos().Y();
+  this->modelState.pose.position.z = this->model->WorldPose().Pos().Z();
+  this->modelState.pose.orientation.x = this->model->WorldPose().Rot().X();
+  this->modelState.pose.orientation.y = this->model->WorldPose().Rot().Y();
+  this->modelState.pose.orientation.z = this->model->WorldPose().Rot().Z();
+  this->modelState.pose.orientation.w = this->model->WorldPose().Rot().W();
 }
 
 /////////////////////////////////////////////////
@@ -547,6 +545,21 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
     cmd_msg.request.model_state.twist.linear.z = -v_thrust*tan(target_pitch);
   }
   // this->commandPublisher["Model"].call(cmd_msg);
+  ignition::math::Pose3d targetPose;
+  targetPose.Pos() = this->model->WorldPose().Pos();
+  targetPose.Rot().X() = cmd_msg.request.model_state.pose.orientation.x;
+  targetPose.Rot().Y() = cmd_msg.request.model_state.pose.orientation.y;
+  targetPose.Rot().Z() = cmd_msg.request.model_state.pose.orientation.z;
+  targetPose.Rot().W() = cmd_msg.request.model_state.pose.orientation.w;
+  this->model->SetWorldPose(targetPose);
+
+  ignition::math::v4::Vector3d targetLinearTwist;
+  targetLinearTwist.X() = cmd_msg.request.model_state.twist.linear.x;
+  targetLinearTwist.Y() = cmd_msg.request.model_state.twist.linear.y;
+  targetLinearTwist.Z() = cmd_msg.request.model_state.twist.linear.z;
+  ignition::math::v4::Vector3d targetAngularTwist(0.0, 0.0, 0.0);
+  this->model->SetWorldTwist(targetLinearTwist, targetAngularTwist);
+
   this->modelState = cmd_msg.request.model_state;
 
   // Save model velocity right after commend published
@@ -781,6 +794,7 @@ void KinematicsROSPlugin::CheckSubmergence()
       this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
       this->link->ResetPhysicsStates();
     }
+    gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
   }
 }
 
