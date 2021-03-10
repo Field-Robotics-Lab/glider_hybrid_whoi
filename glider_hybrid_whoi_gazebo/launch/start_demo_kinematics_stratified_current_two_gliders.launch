@@ -65,7 +65,7 @@
     <arg name="namespace" value="glider_1"/>
     <arg name="x" value="4"/>
     <arg name="y" value="4"/>
-    <arg name="z" value="-92"/>
+    <arg name="z" value="-90"/>
   </include>
 
   <!-- Initialize the recording fo the simulation according to the record flag  -->
