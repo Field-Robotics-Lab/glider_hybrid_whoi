@@ -843,8 +843,8 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
         this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
         this->link->ResetPhysicsStates();
       }
+      gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
     }
-    gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
   }
   else  // For surface vehicle
   {
@@ -857,7 +857,6 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
     quat.Euler(0.0, 0.0, prev_yaw);
     this->lastPose.Rot() = quat;
     this->link->SetWorldPose(this->lastPose);
-    this->link->ResetPhysicsStates();
   }
 }
 
