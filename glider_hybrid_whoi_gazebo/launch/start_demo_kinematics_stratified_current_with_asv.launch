@@ -60,49 +60,34 @@
   <arg name="use_ned_frame" default="false"/>
   <arg name="joy_id" default="0"/>
 
-  <!-- Glider's initial position -->
-  <arg name="x" default="4"/>
-  <arg name="y" default="4"/>
-  <arg name="z" default="-93"/>
-  <arg name="roll" value="0"/>
-  <arg name="pitch" default="0"/>
-  <arg name="yaw" value="0"/>
-
+  <!-- Glider 1 -->
   <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
     <arg name="namespace" value="glider_hybrid_whoi"/>
-    <arg name="x" value="$(arg x)"/>
-    <arg name="y" value="$(arg y)"/>
-    <arg name="z" value="$(arg z)"/>
-    <arg name="roll" value="$(arg roll)"/>
-    <arg name="pitch" value="$(arg yaw)"/>
-    <arg name="yaw" value="$(arg yaw)"/>
-  </include>
-
-  <include file="$(find glider_hybrid_whoi_control)/launch/start_auv_teleop.launch">
-    <arg name="joy_id" default="$(arg joy_id)"/>
-  </include>
-
-  <!-- ASV's initial position -->
-  <arg name="x_asv" default="4"/>
-  <arg name="y_asv" default="4"/>
-  <arg name="z_asv" default="2"/>
-  <arg name="roll_asv" value="0"/>
-  <arg name="pitch_asv" default="0"/>
-  <arg name="yaw_asv" value="0"/>
-
-  <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_asv_kinematics.launch">
-    <arg name="namespace" value="glider_asv"/>
-    <arg name="x" value="$(arg x_asv)"/>
-    <arg name="y" value="$(arg y_asv)"/>
-    <arg name="z" value="$(arg z_asv)"/>
-    <arg name="roll" value="$(arg roll_asv)"/>
-    <arg name="pitch" value="$(arg yaw_asv)"/>
-    <arg name="yaw" value="$(arg yaw_asv)"/>
+    <arg name="x" value="4"/>
+    <arg name="y" value="4"/>
+    <arg name="z" value="-92"/>
   </include>
 
   <!-- Initialize the recording fo the simulation according to the record flag  -->
   <include file="$(find glider_hybrid_whoi_gazebo)/launch/record_demo.launch">
     <arg name="record" value="$(arg record)"/>
+    <arg name="namespace" value="glider_hybrid_whoi"/>
+    <arg name="use_ned_frame" value="$(arg use_ned_frame)"/>
+    <arg name="bag_filename" value="$(arg bag_filename)"/>
+  </include>
+
+  <!-- ASV -->
+  <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_asv_kinematics.launch">
+    <arg name="namespace" value="glider_asv"/>
+    <arg name="x" value="4"/>
+    <arg name="y" value="4"/>
+    <arg name="z" value="0"/>
+  </include>
+
+  <!-- Initialize the recording fo the simulation according to the record flag  -->
+  <include file="$(find glider_hybrid_whoi_gazebo)/launch/record_demo.launch">
+    <arg name="record" value="$(arg record)"/>
+    <arg name="namespace" value="glider_asv"/>
     <arg name="use_ned_frame" value="$(arg use_ned_frame)"/>
     <arg name="bag_filename" value="$(arg bag_filename)"/>
   </include>
