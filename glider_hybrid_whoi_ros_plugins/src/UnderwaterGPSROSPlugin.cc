@@ -290,13 +290,24 @@ void GazeboRosGps::Update()
   fix_.position_covariance[8] = position_error_model_.drift.z*position_error_model_.drift.z + position_error_model_.gaussian_noise.z*position_error_model_.gaussian_noise.z;
 #endif
 
-  // only publish if z is >= -0.1
-  // if (fix_.altitude >= -0.1) {
-  //   fix_publisher_.publish(fix_);
-  //   velocity_publisher_.publish(velocity_);
-  // }
-  fix_publisher_.publish(fix_);
-  velocity_publisher_.publish(velocity_);
+  // Check Submergence
+  ignition::math::Box boundingBox = this->link->BoundingBox();
+  double height = boundingBox.ZLength();
+  double z = this->link->WorldPose().Pos().Z();
+  bool isSubmerged = true;
+
+  // Submerged vessel
+  if (z + height / 2 > 0 && z < 0)
+    isSubmerged = false;
+  else if (z + height / 2 < 0)
+    isSubmerged = true;
+
+  // Publish msg if on surface
+  if (!isSubmerged)
+  {
+    fix_publisher_.publish(fix_);
+    velocity_publisher_.publish(velocity_);
+  }
 }
 
 // Register this plugin with the simulator
