@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="glider_deadreckoning"
+	type="deadreckoning_estimator.py"
+	name="deadreckoning_estimator"
+	output="screen">
+    <param name="init_lat" value="41.5"/>
+    <param name="init_lon" value="-70.7"/>
+    <param name="angleofattack" value="-3.0"/>
+    <param name="update_rate" value="5.0"/>
+    <!-- Remap the inputs to application specific topics -->
+    <remap from="imu" to="/glider_hybrid_whoi/hector_imu" />
+    <remap from="fix" to="/glider_hybrid_whoi/hector_gps" />
+    <!-- TODO - Is there a FluidPressure message being published? -->
+    <remap from="pressure" to="/glider_hybrid_whoi/pressure" />
+
+  </node>
+</launch>
