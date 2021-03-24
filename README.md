@@ -23,7 +23,6 @@ sudo apt-get install ros-melodic-hector-gazebo-plugins
          3. Run the container with `run.bash` script
              ```
              ./run.bash
-             source /opt/ros/melodic/setup.bash
              source ~/glider_hybrid_whoi/install/setup.bash
              ```
          * Opening additional terminals
