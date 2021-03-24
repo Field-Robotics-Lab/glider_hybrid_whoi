@@ -94,7 +94,7 @@ def command(startTime):
 if __name__ == '__main__':
     try:
         # start node
-        pub = rospy.Publisher('/glider_hybrid_whoi/direct_kinematics/UwGliderCommand', UwGliderCommand, queue_size=10)
+        pub = rospy.Publisher('/glider_hybrid_whoi/kinematics/UwGliderCommand', UwGliderCommand, queue_size=10)
         rospy.init_node('commander', anonymous=True)
         rate = rospy.Rate(10) # 10hz
         startTime = rospy.get_time()

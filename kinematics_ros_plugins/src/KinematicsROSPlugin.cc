@@ -16,7 +16,7 @@
 */
 
 
-#include <direct_kinematics_ros_plugins/DirectKinematicsROSPlugin.hh>
+#include <kinematics_ros_plugins/KinematicsROSPlugin.hh>
 
 #include <gazebo/physics/Base.hh>
 #include <gazebo/physics/Model.hh>
@@ -25,15 +25,15 @@
 #include <gazebo/transport/TransportTypes.hh>
 #include <gazebo/transport/transport.hh>
 
-namespace direct_kinematics_ros
+namespace kinematics_ros
 {
 /////////////////////////////////////////////////
-DirectKinematicsROSPlugin::DirectKinematicsROSPlugin()
+KinematicsROSPlugin::KinematicsROSPlugin()
 {
 }
 
 /////////////////////////////////////////////////
-DirectKinematicsROSPlugin::~DirectKinematicsROSPlugin()
+KinematicsROSPlugin::~KinematicsROSPlugin()
 {
   this->rosNode->shutdown();
   this->updateConnection.reset();
@@ -43,7 +43,7 @@ DirectKinematicsROSPlugin::~DirectKinematicsROSPlugin()
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
+void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
                              sdf::ElementPtr _sdf)
 {
   if (!ros::isInitialized())
@@ -90,12 +90,18 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     gzmsg << "Subscribing to current velocity topic: " << flowTopic
           << std::endl;
     this->flowSubscriber = this->rosNode->subscribe<geometry_msgs::TwistStamped>
-          (flowTopic, 10 ,boost::bind(&DirectKinematicsROSPlugin::UpdateFlowVelocity, this, _1));
+          (flowTopic, 10 ,boost::bind(&KinematicsROSPlugin::UpdateFlowVelocity, this, _1));
   }
   if (_sdf->HasElement("use_global_ocean_current"))
     this->useGlobalCurrent = _sdf->Get<bool>("use_global_ocean_current");
   else
     this->useGlobalCurrent = false;
+
+  // Read projection coordinate for GDAL transform
+  if (_sdf->HasElement("espg_projection"))
+    _sdf->GetElement("espg_projection")->GetValue()->Get(this->espg_projection_);
+  else
+    this->espg_projection_ = 26987;
 
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
@@ -118,44 +124,19 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // Subscribe command from outside
   ros::SubscribeOptions so =
   ros::SubscribeOptions::create<frl_vehicle_msgs::UwGliderCommand>(
-      this->model->GetName() + "/direct_kinematics/UwGliderCommand",
+      this->model->GetName() + "/kinematics/UwGliderCommand",
       1,
-      boost::bind(&DirectKinematicsROSPlugin::ConveyCommands, this, _1),
+      boost::bind(&KinematicsROSPlugin::ConveyCommands, this, _1),
       ros::VoidPtr(), &this->commandSubQueue);
   this->commandSubscriber = this->rosNode->subscribe(so);
   // Spin up the queue helper thread.
   this->commandSubQueueThread = std::thread(std::bind(
-      &DirectKinematicsROSPlugin::commandSubThread, this));
-
-  // Sensor subscribings
-  this->sensorSubscribers["DVLOnOff"]=
-    this->rosNode->subscribe<std_msgs::Bool>(
-    this->model->GetName() + "/dvl/state", 10,
-    boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorOnOff,
-    this, _1));
-
-  this->sensorSubscribers["DVL"]=
-    this->rosNode->subscribe<uuv_sensor_ros_plugins_msgs::DVL>(
-    this->model->GetName() + "/dvl", 10,
-    boost::bind(&DirectKinematicsROSPlugin::UpdateDVLSensorData,
-    this, _1));
-
-  this->sensorSubscribers["GPSOnOff"]=
-    this->rosNode->subscribe<std_msgs::Bool>(
-    this->model->GetName() + "/gps/state", 10,
-    boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorOnOff,
-    this, _1));
-
-  this->sensorSubscribers["GPS"]=
-    this->rosNode->subscribe<sensor_msgs::NavSatFix>(
-    this->model->GetName() + "/gps", 10,
-    boost::bind(&DirectKinematicsROSPlugin::UpdateGPSSensorData,
-    this, _1));
+      &KinematicsROSPlugin::commandSubThread, this));
 
   // Publisher for glider status
   this->statePublisher =
       this->rosNode->advertise<frl_vehicle_msgs::UwGliderStatus>(
-        this->model->GetName() + "/direct_kinematics/UwGliderStatus", 10);
+        this->model->GetName() + "/kinematics/UwGliderStatus", 10);
 
   // Check dual props and advertize publishers for visual effects
   if (this->model->GetJoint(this->model->GetName() + "/thruster_1_joint"))
@@ -252,17 +233,17 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // Initiated
   gzmsg << std::endl;
   gzmsg << "##################################################" << std::endl;
-  gzmsg << "#######  DIRECT KINEMATICS CONTROL PLUGIN  #######" << std::endl;
+  gzmsg << "#######  KINEMATICS CONTROL PLUGIN  #######" << std::endl;
   gzmsg << "##################################################" << std::endl;
   gzmsg << "Vehicle Model name      : " << this->model->GetName() << std::endl;
   gzmsg << "Vehicle Base_link name  : " << this->base_link_name << std::endl;
   gzmsg << "--------------------------------------------------" << std::endl;
   gzmsg << "Command Topic (frl_msg type)" << std::endl;
   gzmsg << ":\t" + this->model->GetName()
-          + "/direct_kinematics/UwGliderCommand" << std::endl;
+          + "/kinematics/UwGliderCommand" << std::endl;
   gzmsg << "State Topic (frl_msg type)" << std::endl;
   gzmsg << ":\t" + this->model->GetName()
-          + "/direct_kinematics/UwGliderStatus" << std::endl;
+          + "/kinematics/UwGliderStatus" << std::endl;
   gzmsg << "##################################################" << std::endl;
   gzmsg << std::endl;
 
@@ -271,35 +252,35 @@ void DirectKinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   {
     this->writeLogFlag = _sdf->Get<bool>("writeLog");
     gzmsg << "World position of the base_link is saved at"
-        << "/tmp/DirectKinematicsLog.csv" << std::endl;
-    remove("/tmp/DirectKinematicsLog.csv");
+        << "/tmp/KinematicsLog.csv" << std::endl;
+    remove("/tmp/KinematicsLog.csv");
   }
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::Connect()
+void KinematicsROSPlugin::Connect()
 {
   // Connect the update event
   this->updateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
-      boost::bind(&DirectKinematicsROSPlugin::Update,
+      boost::bind(&KinematicsROSPlugin::Update,
                   this, _1));
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::Init()
+void KinematicsROSPlugin::Init()
 {
   // Nothing here
   this->writeCounter = 0;
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::Reset()
+void KinematicsROSPlugin::Reset()
 {
   // Nothing here
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
+void KinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
 {
   // Update time
   this->time = this->model->GetWorld()->SimTime();
@@ -324,7 +305,7 @@ void DirectKinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::updateModelState()
+void KinematicsROSPlugin::updateModelState()
 {
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
@@ -336,7 +317,7 @@ void DirectKinematicsROSPlugin::updateModelState()
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::commandSubThread()
+void KinematicsROSPlugin::commandSubThread()
 {
   static const double timeout = 0.01;
   while (this->rosNode->ok())
@@ -346,7 +327,7 @@ void DirectKinematicsROSPlugin::commandSubThread()
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ConveyCommands(
+void KinematicsROSPlugin::ConveyCommands(
   const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
   // Convey commands to functions
@@ -358,7 +339,7 @@ void DirectKinematicsROSPlugin::ConveyCommands(
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
+void KinematicsROSPlugin::ConveyKinematicsCommands(
              const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg)
 {
   // ---------------------------------------- //
@@ -567,7 +548,7 @@ void DirectKinematicsROSPlugin::ConveyKinematicsCommands(
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::applyOceanCurrent()
+void KinematicsROSPlugin::applyOceanCurrent()
 {
   this->link->SetLinearVel(ignition::math::Vector3d(
             this->modelVel.X() + this->flowVelocity.Y(),
@@ -576,7 +557,7 @@ void DirectKinematicsROSPlugin::applyOceanCurrent()
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::ConveyModelState()
+void KinematicsROSPlugin::ConveyModelState()
 {
   // Calculate pose
   this->modelXYZ =
@@ -588,26 +569,35 @@ void DirectKinematicsROSPlugin::ConveyModelState()
                                 this->modelState.pose.orientation.z,
                                 this->modelState.pose.orientation.w);
 
+  // Calculate Lat/Lon using GDAl tranform
+  OGRSpatialReference srs;
+  srs.importFromEPSG(this->espg_projection_);
+  OGRSpatialReference tsrs;
+  tsrs.importFromEPSG(4326);
+  OGRCoordinateTransformation *poCT;
+  poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
+  double sNorthing = this->modelXYZ.Y();
+  double sEasting = this->modelXYZ.X();
+  double tLat = sNorthing;
+  double tLon = sEasting;
+  poCT->Transform(1, &tLon, &tLat);
+
+  // Construct UwGliderStatus msg
   frl_vehicle_msgs::UwGliderStatus status_msg;
   status_msg.header.stamp = ros::Time::now();
-  status_msg.latitude = this->sensorLatitude;
-  status_msg.longitude = this->sensorLongitude;
+  status_msg.latitude = tLon;
+  status_msg.longitude = tLat;
   status_msg.roll = this->modelRPY.Z();
   status_msg.pitch = this->modelRPY.Y();
-  status_msg.yaw = this->modelRPY.X();
   status_msg.heading = M_PI/2 - this->modelRPY.X();
   if (status_msg.heading < 0)
   {
     status_msg.heading += 2 * M_PI;
   }
   status_msg.depth = - this->modelXYZ.Z();
-  status_msg.altitude = this->sensorAltitude;
+  status_msg.altitude = this->modelXYZ.Z();
   status_msg.motor_power = this->motorPower;
   status_msg.rudder_angle = this->rudderAngle;
-  status_msg.nav_sat_fix.status.status = this->GPSOnOff;
-  status_msg.nav_sat_fix.latitude = this->sensorLatitude;
-  status_msg.nav_sat_fix.longitude = this->sensorLongitude;
-  status_msg.nav_sat_fix.altitude = this->sensorAltitude;
   status_msg.pumped_volume = this->prev_pumpVol;
   status_msg.battery_position = this->battpos;
 
@@ -615,7 +605,7 @@ void DirectKinematicsROSPlugin::ConveyModelState()
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::writeCSVLog()
+void KinematicsROSPlugin::writeCSVLog()
 {
 // CSV log write stream
 if (this->writeLogFlag)
@@ -623,28 +613,28 @@ if (this->writeLogFlag)
   double time = this->time.Double();
   if (this->writeCounter == 0)
   {
-    writeLog.open("/tmp/DirectKinematicsLog.csv");
+    writeLog.open("/tmp/KinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
-    writeLog << "# t,x,y,z,p,q,r,altitude\n";
+    writeLog << "# t,x,y,z,p,q,r\n";
     writeLog.close();
     this->writeCounter = this->writeCounter + 1;
   }
   if (floor(time * 10) == time * 10)
   {
     int prec = std::numeric_limits<double>::digits10+2; // generally 17
-    writeLog.open("/tmp/DirectKinematicsLog.csv", std::ios_base::app);
+    writeLog.open("/tmp/KinematicsLog.csv", std::ios_base::app);
     writeLog << std::setprecision(prec) << time << ","
             << this->modelXYZ.X() << "," << this->modelXYZ.Y() << ","
             << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
             << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
-            << this->sensorAltitude << "\n";
+            << "\n";
     writeLog.close();
   }
 }
 }
 
 /////////////////////////////////////////////////
-ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY
+ignition::math::Vector3<double> KinematicsROSPlugin::calculateRPY
                                 (double x, double y, double z, double w)
 {
   ignition::math::Vector3<double> vR;
@@ -671,38 +661,7 @@ ignition::math::Vector3<double> DirectKinematicsROSPlugin::calculateRPY
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::UpdateDVLSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg)
-{
-  this->DVLOnOff = _msg->data;
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::UpdateDVLSensorData
-                      (const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg)
-{
-  if (this->DVLOnOff)
-    this->sensorAltitude = _msg->altitude;
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::UpdateGPSSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg)
-{
-  this->GPSOnOff = _msg->data;
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::UpdateGPSSensorData
-                      (const sensor_msgs::NavSatFix::ConstPtr &_msg)
-{
-  if (this->GPSOnOff)
-    this->sensorLatitude = _msg->latitude;
-    this->sensorLongitude = _msg->longitude;
-}
-
-/////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::PropRotate(double thrustPower)
+void KinematicsROSPlugin::PropRotate(double thrustPower)
 {
   uuv_gazebo_ros_plugins_msgs::FloatStamped input_message;
   input_message.header.stamp = ros::Time::now();
@@ -719,7 +678,7 @@ void DirectKinematicsROSPlugin::PropRotate(double thrustPower)
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::UpdateFlowVelocity
+void KinematicsROSPlugin::UpdateFlowVelocity
       (const geometry_msgs::TwistStamped::ConstPtr &_msg)
 {
   if (this->useGlobalCurrent)
@@ -731,7 +690,7 @@ void DirectKinematicsROSPlugin::UpdateFlowVelocity
 }
 
 /////////////////////////////////////////////////
-ignition::math::Vector3d DirectKinematicsROSPlugin::ToNED(ignition::math::Vector3d _vec)
+ignition::math::Vector3d KinematicsROSPlugin::ToNED(ignition::math::Vector3d _vec)
 {
   ignition::math::Vector3d output = _vec;
   output.Y() = -1.0 * output.Y();
@@ -740,13 +699,13 @@ ignition::math::Vector3d DirectKinematicsROSPlugin::ToNED(ignition::math::Vector
 }
 
 /////////////////////////////////////////////////
-ignition::math::Vector3d DirectKinematicsROSPlugin::FromNED(ignition::math::Vector3d _vec)
+ignition::math::Vector3d KinematicsROSPlugin::FromNED(ignition::math::Vector3d _vec)
 {
   return this->ToNED(_vec);
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value)
+void KinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value)
 {
   // 1 : voltage command, 2: power command
   if (cmd_type == 1)  // voltage command
@@ -782,7 +741,7 @@ void DirectKinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value
 }
 
 /////////////////////////////////////////////////
-void DirectKinematicsROSPlugin::CheckSubmergence()
+void KinematicsROSPlugin::CheckSubmergence()
 {
   double height = this->boundingBox.ZLength();
   double z = this->link->WorldPose().Pos().Z();
@@ -817,5 +776,5 @@ void DirectKinematicsROSPlugin::CheckSubmergence()
 }
 
 
-GZ_REGISTER_MODEL_PLUGIN(DirectKinematicsROSPlugin)
+GZ_REGISTER_MODEL_PLUGIN(KinematicsROSPlugin)
 }

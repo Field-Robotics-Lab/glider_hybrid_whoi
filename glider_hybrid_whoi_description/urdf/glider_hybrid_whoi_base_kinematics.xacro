@@ -138,12 +138,13 @@
 
     <!-- Kinematics Plugin -->
     <gazebo>
-      <plugin name="${namespace}_direct_kinematics_plugin"
-              filename="libdirect_kinematics_ros_plugin.so">
+      <plugin name="${namespace}_kinematics_plugin"
+              filename="libkinematics_ros_plugin.so">
         <fluid_deisnty>${fluid_density}</fluid_deisnty>
         <writeLog>false</writeLog>
         <flow_velocity_topic>/hydrodynamics/current_velocity/$(arg namespace)</flow_velocity_topic>
         <use_global_ocean_current>true</use_global_ocean_current>
+        <espg_projection>26987</espg_projection>
         <!-- Kinematics coefficients -->
         <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
         <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>

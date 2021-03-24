@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>direct_kinematics_ros_plugins</name>
+  <name>kinematics_ros_plugins</name>
   <version>0.0.1</version>
   <description>
-    Direct kinematics ROS plugin for ROS node to interface between gazebo model and outside world (e.g. backseat driver)
+    kinematics ROS plugin for ROS node to interface between gazebo model and outside world (e.g. backseat driver)
   </description>
 
   <maintainer email="woensug.choi.ks@nps.edu">Woensug Choi</maintainer>

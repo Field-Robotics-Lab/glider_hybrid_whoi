@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(direct_kinematics_ros_plugins)
+project(kinematics_ros_plugins)
 
 # Specify C++11 standard
 add_definitions(-std=c++11)
@@ -49,10 +49,10 @@ link_directories(
   ${EIGEN3_LIBRARY_DIRS}
 )
 
-add_library(direct_kinematics_ros_plugin src/DirectKinematicsROSPlugin.cc)
-target_link_libraries(direct_kinematics_ros_plugin ${catkin_LIBRARIES})
-add_dependencies(direct_kinematics_ros_plugin ${catkin_EXPORTED_TARGETS})
-list(APPEND hybrid_glider_GAZEBO_ROS_PLUGINS_LIST direct_kinematics_ros_plugin)
+add_library(kinematics_ros_plugin src/KinematicsROSPlugin.cc)
+target_link_libraries(kinematics_ros_plugin ${catkin_LIBRARIES})
+add_dependencies(kinematics_ros_plugin ${catkin_EXPORTED_TARGETS})
+list(APPEND hybrid_glider_GAZEBO_ROS_PLUGINS_LIST kinematics_ros_plugin)
 
 install(TARGETS ${hybrid_glider_GAZEBO_ROS_PLUGINS_LIST}
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

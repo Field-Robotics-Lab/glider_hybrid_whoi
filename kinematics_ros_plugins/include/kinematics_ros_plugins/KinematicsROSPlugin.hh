@@ -15,10 +15,10 @@
  *
 */
 
-/// \file Direct kinematics ROS plugin for a ROS node
+/// \file Kinematics ROS plugin for a ROS node
 
-#ifndef __DIRECT_KINEMATICS_ROS_PLUGIN_HH__
-#define __DIRECT_KINEMATICS_ROS_PLUGIN_HH__
+#ifndef __KINEMATICS_ROS_PLUGIN_HH__
+#define __KINEMATICS_ROS_PLUGIN_HH__
 
 #include <ros/ros.h>
 #include "ros/callback_queue.h"
@@ -33,6 +33,9 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
+
+// Functionality from GDAL for projections
+#include <gdal/ogr_spatialref.h>
 
 #include <std_msgs/Bool.h>
 #include <uuv_sensor_ros_plugins_msgs/DVL.h>
@@ -69,15 +72,15 @@ namespace Eigen
   typedef Eigen::Matrix<double, 6, 1> Vector6d;
 }
 
-namespace direct_kinematics_ros
+namespace kinematics_ros
 {
-  class DirectKinematicsROSPlugin : public gazebo::ModelPlugin
+  class KinematicsROSPlugin : public gazebo::ModelPlugin
   {
     /// \brief Constructor
-    public: DirectKinematicsROSPlugin();
+    public: KinematicsROSPlugin();
 
     /// \brief Destructor
-    public: virtual ~DirectKinematicsROSPlugin();
+    public: virtual ~KinematicsROSPlugin();
 
     /// \brief Load module and read parameters from SDF.
     public: void Load(gazebo::physics::ModelPtr _model,
@@ -213,42 +216,6 @@ namespace direct_kinematics_ros
     protected: double C_L;
 
     /// ============================================= ///
-    /// ===========-=== Sensor reading ======-======= ///
-    /// ============================================= ///
-
-    /// \brief Subscribers for sensor data
-    private: std::map<std::string, ros::Subscriber> sensorSubscribers;
-
-    /// \brief update DVL sensor state
-    protected: virtual void UpdateDVLSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg);
-
-    /// \brief flag for DVL OnOff status
-    private: bool DVLOnOff;
-
-    /// \brief DVL sensor data
-    private: double sensorAltitude;
-
-    /// \brief update DVL sensor data
-    protected: virtual void UpdateDVLSensorData(
-                          const uuv_sensor_ros_plugins_msgs::DVL::ConstPtr &_msg);
-
-    /// \brief update GPS sensor state
-    protected: virtual void UpdateGPSSensorOnOff
-                      (const std_msgs::Bool::ConstPtr &_msg);
-
-    /// \brief flag for GPS OnOff status
-    private: bool GPSOnOff;
-
-    /// \brief GPS sensor data
-    private: double sensorLatitude;
-    private: double sensorLongitude;
-
-    /// \brief update GPS sensor data
-    protected: virtual void UpdateGPSSensorData(
-                          const sensor_msgs::NavSatFix::ConstPtr &_msg);
-
-    /// ============================================= ///
     /// ===========-=== Visual Effects ======-======= ///
     /// ============================================= ///
 
@@ -267,6 +234,9 @@ namespace direct_kinematics_ros
     /// ============================================= ///
     /// ============== Other functions ============== ///
     /// ============================================= ///
+
+    /// \brief espg projection coordinate for GDAL transform
+    protected: int espg_projection_;
 
     /// \brief Convert vector to comply with the NED reference frame
     protected: ignition::math::Vector3d ToNED(ignition::math::Vector3d _vec);
@@ -393,4 +363,4 @@ inline ignition::math::Matrix3d Mat3dToGazebo(const Eigen::Matrix3d &_x)
 }
 }
 
-#endif  // __DIRECT_KINEMATICS_ROS_PLUGIN_HH__
+#endif  // __KINEMATICS_ROS_PLUGIN_HH__
