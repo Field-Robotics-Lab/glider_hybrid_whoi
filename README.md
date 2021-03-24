@@ -5,6 +5,8 @@ Kinematics control plugin for WHOI hybrid gliders
 ```diff
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
 sudo apt-get install ros-melodic-hector-gazebo-plugins
+- The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
+git clone https://github.com/Field-Robotics-Lab/frl_msgs
 ```
 
 ## How-to
