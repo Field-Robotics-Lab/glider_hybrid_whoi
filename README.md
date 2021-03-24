@@ -23,6 +23,8 @@ sudo apt-get install ros-melodic-hector-gazebo-plugins
          3. Run the container with `run.bash` script
              ```
              ./run.bash
+             source /opt/ros/melodic/setup.bash
+             source ~/glider_hybrid_whoi/install/setup.bash
              ```
          * Opening additional terminals
              ```
@@ -35,16 +37,20 @@ sudo apt-get install ros-melodic-hector-gazebo-plugins
 ### Quickstart
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
-        ```
-        roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics.launch
+        ```bash
+        roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
+        # or
+        roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
+        # if in docker environment
+        roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current_docker.launch
         ```
     2. Control glider with ROS
         ```
-        rosrun direct_kinematics_ros_plugins test_directKinematics.py
+        rosrun kinematics_ros_plugins test_directKinematics.py
         ```
     4. Glider status
         ```
-        rostopic echo /glider_hybrid_whoi/direct_kinematics/UwGliderStatus
+        rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
         ```
 ## Interface
 ![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
@@ -58,8 +64,10 @@ provided by https://gitlab.com/mit-mers/ros/slocum_glider
 - Buzzbay bathymetry is included
   - Roughly 1500x1500 m tiles with 50 m overlap regions are included (almost 780 MB)
   - Click the `play` button on the Gazebo window and wait for the first bathymetry to be spawned. Next bathymetry tile will be spawned and the previous tile will be removed automatically according to the glider position.
-  ```
-  roslaunch glider_hybrid_whoi_gazebo BuzzBay.launch
+  ```bash
+  roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
+  # if in docker environment
+  roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current_docker.launch
   ```
 
 ### Surface detection

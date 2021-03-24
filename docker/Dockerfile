@@ -8,7 +8,7 @@
 ARG version_dave=c521bfc09e5a06665e44f477e38585035a0801d6
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
-ARG version_uw_sensors_gazebo=v3.1.0
+ARG version_uw_sensors_gazebo=f0fe3de26961b9a4e3c7ebac78e7a48ef42cbb91
 ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
 ARG frl_msgs_commit=a41b1d3d192dacd32a7e0a717a9c1b0a30eaca64
