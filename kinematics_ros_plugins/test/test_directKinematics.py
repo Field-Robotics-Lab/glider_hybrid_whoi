@@ -39,7 +39,7 @@ def command(startTime):
             command.target_pitch_value = 0.01
             command.target_pumped_volume = -0.5
             command.rudder_control_mode = 1
-            command.target_heading = math.pi/2
+            command.target_heading = math.pi
             command.motor_cmd_type = 1
             command.target_motor_cmd = 0.01
             rospy.loginfo(command)

@@ -38,4 +38,7 @@
     <arg name="yaw" value="$(arg yaw)"/>
   </include>
 
+  <!-- Dead reckoning node -->
+  <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+
 </launch>

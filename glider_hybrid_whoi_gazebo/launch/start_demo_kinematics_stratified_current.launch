@@ -78,6 +78,9 @@
     <arg name="yaw" value="$(arg yaw)"/>
   </include>
 
+  <!-- Dead reckoning node -->
+  <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+
   <include file="$(find glider_hybrid_whoi_control)/launch/start_auv_teleop.launch">
     <arg name="joy_id" default="$(arg joy_id)"/>
   </include>
