@@ -6,7 +6,7 @@
   <maintainer email="briansbingham@gmail.com">bsb</maintainer>
   <license>TODO</license>
 
-  <depend>ropspy</depend>
+  <depend>rospy</depend>
 
   <buildtool_depend>catkin</buildtool_depend>
 
