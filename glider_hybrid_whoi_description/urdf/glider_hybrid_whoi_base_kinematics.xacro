@@ -176,6 +176,7 @@
             <noiseFreq>0.0</noiseFreq>
           </velocity_down>
         </transient_current>
+        <tide_oscillation>true</tide_oscillation>
       </plugin>
     </gazebo>
 
