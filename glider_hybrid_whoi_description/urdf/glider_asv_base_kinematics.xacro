@@ -34,20 +34,20 @@
     <!-- Base_link of the model -->
     <link name="${namespace}/base_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <geometry>
           <mesh filename="${visual_mesh_file}" scale="1 1 1" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <geometry>
           <mesh filename="${collision_mesh_file}" scale="1 1 1" />
         </geometry>
       </collision>
       <inertial>
         <mass value="${mass}"/>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 ${pi/2}" />
         <inertia ixx="0.3048" ixy="0" ixz="0" iyy="13.976" iyz="0" izz="13.976" />
       </inertial>
     </link>
@@ -62,6 +62,7 @@
         <use_global_ocean_current>true</use_global_ocean_current>
         <espg_projection>26987</espg_projection>
         <!-- Kinematics coefficients -->
+        <surface_vehicle>true</surface_vehicle>
         <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
         <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
         <Area>0.0345</Area>

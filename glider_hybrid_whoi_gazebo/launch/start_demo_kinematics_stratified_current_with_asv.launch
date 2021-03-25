@@ -8,6 +8,7 @@
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
       <arg name="world_name" value="$(find glider_hybrid_whoi_gazebo)/worlds/seafloor_underwater_stratified_current.world"/>
+      <arg name="extra_gazebo_args" value="-s libdsros_sensors.so"/>
       <arg name="paused" value="$(arg paused)"/>
       <arg name="use_sim_time" value="true"/>
       <arg name="gui" value="$(arg gui)"/>
