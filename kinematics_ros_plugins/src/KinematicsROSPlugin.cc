@@ -24,6 +24,7 @@
 #include <gazebo/physics/Link.hh>
 #include <gazebo/transport/TransportTypes.hh>
 #include <gazebo/transport/transport.hh>
+#include <gazebo/rendering/rendering.hh>
 
 namespace kinematics_ros
 {
@@ -203,6 +204,16 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   else
     this->f_thruster_power_w3 = 0.97895;
 
+  // Initiate variables
+  this->prev_pitch = 0.0;
+  this->prev_yaw = 0.0;
+  this->prev_motorPower = 0.0;
+
+  // Free surface detection
+  this->buoyancyFlag = true; // Initialize buoyancy engine
+  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
+  this->isSubmerged = true;
+
   // Coordinate transform functions : base_link
   this->nedTransform["base_link"].header.frame_id = this->model->GetName() + "/base_link";
   this->nedTransform["base_link"].child_frame_id = this->model->GetName() + "/base_link_ned";
@@ -215,17 +226,6 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->nedTransform["base_link"].transform.rotation.y = quat.y();
   this->nedTransform["base_link"].transform.rotation.z = quat.z();
   this->nedTransform["base_link"].transform.rotation.w = quat.w();
-
-  // Initiate variables
-  this->prev_pitch = 0.0;
-  this->prev_yaw = 0.0;
-  this->prev_motorPower = 0.0;
-
-  // Free surface detection
-  this->buoyancyFlag = true; // Initialize buoyancy engine
-  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
-  this->boundingBox = link->BoundingBox();
-  this->isSubmerged = true;
 
   // Connect the update event callback
   this->Connect();
@@ -743,7 +743,10 @@ void KinematicsROSPlugin::calcThrusterForce(int cmd_type, double cmd_value)
 /////////////////////////////////////////////////
 void KinematicsROSPlugin::CheckSubmergence()
 {
-  double height = this->boundingBox.ZLength();
+  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene();
+  gazebo::rendering::VisualPtr visual = scene->GetVisual(this->link->GetModel()->GetName());
+
+  double height = visual->BoundingBox().ZLength();
   double z = this->link->WorldPose().Pos().Z();
   bool previousState = this->isSubmerged;
 
