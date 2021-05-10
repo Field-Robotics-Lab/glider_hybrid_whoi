@@ -5,13 +5,13 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=1aad8d848bde63086b43875f7724fe4e4223af69
+ARG version_dave=e6f6aa517422ba2ce2e0a8db430462bd2d57cdf3
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
-ARG version_uw_sensors_gazebo=v3.1.0
+ARG version_uw_sensors_gazebo=b9083c054c48fc9553eddeadae5dec447058607a
 ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
 ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
-ARG frl_msgs_commit=f2eb86e1a82445006c9c49b3508bd44a0de54fd7
+ARG frl_msgs_commit=a41b1d3d192dacd32a7e0a717a9c1b0a30eaca64
 #------------------------------------------------------------------#
 
 #------------------------------------------------------------------#

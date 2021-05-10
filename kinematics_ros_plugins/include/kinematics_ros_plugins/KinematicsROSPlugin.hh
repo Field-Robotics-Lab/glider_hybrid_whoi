@@ -260,9 +260,6 @@ namespace kinematics_ros
     /// \brief Pointer to the base_link
     protected: gazebo::physics::LinkPtr link;
 
-    /// \brief Bounding box of the body
-    protected: ignition::math::Box boundingBox;
-
     /// \brief Is submerged flag
     protected: bool isSubmerged;
 
