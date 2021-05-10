@@ -30,7 +30,7 @@ def command(startTime):
             command.target_motor_cmd = 0.01
             rospy.loginfo(command)
             pub.publish(command)
-            time.sleep(25)
+            time.sleep(5)
 
             print("\n----- Descend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
             command = UwGliderCommand()
