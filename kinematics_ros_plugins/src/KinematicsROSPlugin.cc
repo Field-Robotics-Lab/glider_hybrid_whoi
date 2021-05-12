@@ -106,21 +106,21 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
 
   // -- Read model state from gazebo model -- //
   // Advertise for command publisher
-  bool service_ready = false;
-  service_ready = ros::service::exists("/gazebo/get_model_state",true);
-  if (!service_ready)
-  {
-    ROS_INFO("get_model_state service does not exists");
-  }
-  this->stateSubscriber["Model"] =
-    this->rosNode->serviceClient
-    <gazebo_msgs::GetModelState>("/gazebo/get_model_state");
+  // bool service_ready = false;
+  // service_ready = ros::service::exists("/gazebo/get_model_state",true);
+  // if (!service_ready)
+  // {
+  //   ROS_INFO("get_model_state service does not exists");
+  // }
+  // this->stateSubscriber["Model"] =
+  //   this->rosNode->serviceClient
+  //   <gazebo_msgs::GetModelState>("/gazebo/get_model_state");
 
-  // -- Convey command from outside to gazebo model -- //
-  // Advertise for command publisher
-  this->commandPublisher["Model"] =
-    this->rosNode->serviceClient
-    <gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+  // // -- Convey command from outside to gazebo model -- //
+  // // Advertise for command publisher
+  // this->commandPublisher["Model"] =
+  //   this->rosNode->serviceClient
+  //   <gazebo_msgs::SetModelState>("/gazebo/set_model_state");
 
   // Subscribe command from outside
   ros::SubscribeOptions so =
@@ -227,6 +227,18 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   this->nedTransform["base_link"].transform.rotation.z = quat.z();
   this->nedTransform["base_link"].transform.rotation.w = quat.w();
 
+  // Initiate variables
+  this->prev_pitch = 0.0;
+  this->prev_yaw = 0.0;
+  this->prev_motorPower = 0.0;
+  this->modelVel = ignition::math::Vector3d(0.0, 0.0, 0.0);
+
+  // Free surface detection
+  this->buoyancyFlag = true; // Initialize buoyancy engine
+  this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
+  // this->boundingBox = link->BoundingBox();
+  this->isSubmerged = true;
+
   // Connect the update event callback
   this->Connect();
 
@@ -310,10 +322,16 @@ void KinematicsROSPlugin::updateModelState()
   gazebo_msgs::GetModelState model_state_msg;
   model_state_msg.request.model_name = this->model->GetName();
   model_state_msg.request.relative_entity_name = "world";
-  this->stateSubscriber["Model"].call(model_state_msg);
+  // this->stateSubscriber["Model"].call(model_state_msg);
   this->modelState.model_name = this->model->GetName();
-  this->modelState.pose = model_state_msg.response.pose;
-  this->modelState.twist = model_state_msg.response.twist;
+  // this->modelState.pose = model_state_msg.response.pose;
+  this->modelState.pose.position.x = this->model->WorldPose().Pos().X();
+  this->modelState.pose.position.y = this->model->WorldPose().Pos().Y();
+  this->modelState.pose.position.z = this->model->WorldPose().Pos().Z();
+  this->modelState.pose.orientation.x = this->model->WorldPose().Rot().X();
+  this->modelState.pose.orientation.y = this->model->WorldPose().Rot().Y();
+  this->modelState.pose.orientation.z = this->model->WorldPose().Rot().Z();
+  this->modelState.pose.orientation.w = this->model->WorldPose().Rot().W();
 }
 
 /////////////////////////////////////////////////
@@ -537,7 +555,22 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
     cmd_msg.request.model_state.twist.linear.y = v_thrust*cos(target_pitch)*sin(target_yaw);
     cmd_msg.request.model_state.twist.linear.z = -v_thrust*tan(target_pitch);
   }
-  this->commandPublisher["Model"].call(cmd_msg);
+  // this->commandPublisher["Model"].call(cmd_msg);
+  ignition::math::Pose3d targetPose;
+  targetPose.Pos() = this->model->WorldPose().Pos();
+  targetPose.Rot().X() = cmd_msg.request.model_state.pose.orientation.x;
+  targetPose.Rot().Y() = cmd_msg.request.model_state.pose.orientation.y;
+  targetPose.Rot().Z() = cmd_msg.request.model_state.pose.orientation.z;
+  targetPose.Rot().W() = cmd_msg.request.model_state.pose.orientation.w;
+  this->model->SetWorldPose(targetPose);
+
+  ignition::math::v4::Vector3d targetLinearTwist;
+  targetLinearTwist.X() = cmd_msg.request.model_state.twist.linear.x;
+  targetLinearTwist.Y() = cmd_msg.request.model_state.twist.linear.y;
+  targetLinearTwist.Z() = cmd_msg.request.model_state.twist.linear.z;
+  ignition::math::v4::Vector3d targetAngularTwist(0.0, 0.0, 0.0);
+  this->model->SetWorldTwist(targetLinearTwist, targetAngularTwist);
+
   this->modelState = cmd_msg.request.model_state;
 
   // Save model velocity right after commend published
@@ -775,6 +808,7 @@ void KinematicsROSPlugin::CheckSubmergence()
       this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
       this->link->ResetPhysicsStates();
     }
+    gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
   }
 }
 
