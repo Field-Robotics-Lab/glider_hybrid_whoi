@@ -131,11 +131,8 @@ namespace kinematics_ros
     /// \brief ROS helper function that processes messages
     private: void commandSubThread();
 
-    // /// \brief ROS Publishers to gazebo_msgs topic
-    // private: std::map<std::string, ros::ServiceClient> commandPublisher;
-
-    // /// \brief ROS Subscriber from gazebo topic
-    // private: std::map<std::string, ros::ServiceClient> stateSubscriber;
+    /// \brief Flag for surface vehicle
+    protected: bool surfaceVehicle;
 
     /// \brief update ocean current
     protected: virtual void applyOceanCurrent();
