@@ -236,7 +236,7 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   // Free surface detection
   this->buoyancyFlag = true; // Initialize buoyancy engine
   this->link = this->model->GetLink(this->model->GetName() + "/" + this->base_link_name);
-  this->boundingBox = link->BoundingBox();
+  // this->boundingBox = link->BoundingBox();
   this->isSubmerged = true;
 
   // Connect the update event callback
