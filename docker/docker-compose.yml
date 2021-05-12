@@ -36,8 +36,8 @@ services:
     security_opt:
       - seccomp:unconfined
     user: "${UID:-1000}:${GID:-1000}"
-  glider_control_sim:
-    image: registry.gitlab.com/mit-mers/ros/slocum_glider:master
+  glider_extctl_sim:
+    image: registry.gitlab.com/sentinel-aug/ros/slocum_glider/extctl-sim:v0.1.1
     networks:
       - ros
     environment:
@@ -49,7 +49,7 @@ services:
       - -c
       - |
         stdbuf -o L roslaunch --wait \
-                              slocum_glider_launch sim_driver.launch \
+                              slocum_glider_extctl_sim sim_driver.launch \
                               data_dir:=$$(rospack find slocum_glider_extctl_sim)/example_gliders/bear
 
 networks:
