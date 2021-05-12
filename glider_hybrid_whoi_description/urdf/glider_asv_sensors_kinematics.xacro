@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- Copyright (c) 2016 The UUV Simulator Authors.
+     All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Mount a 3D pose sensor -->
+    <xacro:default_pose_3d_macro
+      namespace="${namespace}"
+      parent_link="${namespace}/base_link"
+      inertial_reference_frame="${inertial_reference_frame}" />
+
+    <!-- DVL -->
+    <xacro:include filename="$(find nps_uw_sensors_gazebo)/urdf/whoi_teledyne_whn_beams.xacro"/>
+    <xacro:teledyne_whn_macro
+      name="dvl" namespace="dvl" xyz="0 0 0"
+      dvl_topic="dvl" ranges_topic="ranges"
+      robot_link="${namespace}/base_link" joint_xyz="0 0 0" scale="0.25 0.25 0.25" ray_visual="0"/>
+
+    <!-- Hector IMU -->
+    <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/uw_hector_imu_plugin.xacro"/>
+
+    <xacro:switchable_battery_consumer_macro
+      link_name="${namespace}/imu_link"
+      battery_link="${namespace}/battery_link"
+      battery_name="${namespace}/battery"
+      power_load="20"
+      topic="${namespace}/imu/state"/>
+
+    <!-- Hector GPS -->
+    <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/uw_hector_gps_plugin.xacro"/>
+
+
+</robot>
