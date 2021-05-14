@@ -52,6 +52,11 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
              run initbuzz.mi
              run backse01.mi
              ```
+         3. Access log CSV file
+             ```
+             ./join.bash
+             tail -f /tmp/Kinematics KinematicsLog.csv
+             ```
 
 ### Quickstart
 * Running the simulator (Run each commands in separate terminal window)
