@@ -529,10 +529,11 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
   cmd_msg.request.model_state.pose.orientation.y = target_orientation.Y();
   cmd_msg.request.model_state.pose.orientation.z = target_orientation.Z();
   cmd_msg.request.model_state.pose.orientation.w = target_orientation.W();
+  double buoyancy_vel_x, buoyancy_vel_z;
   if (this->prev_pumpVol != 0.0)
   {
-    double buoyancy_vel_x = vx*cos(target_pitch)+vz*sin(target_pitch);
-    double buoyancy_vel_z = vx*sin(target_pitch)+vz*cos(target_pitch);
+    buoyancy_vel_x = vx*cos(target_pitch)+vz*sin(target_pitch);
+    buoyancy_vel_z = vx*sin(target_pitch)+vz*cos(target_pitch);
     cmd_msg.request.model_state.twist.linear.x = buoyancy_vel_x*cos(target_yaw) + v_thrust*cos(target_pitch)*cos(target_yaw);
     cmd_msg.request.model_state.twist.linear.y = buoyancy_vel_x*sin(target_yaw) + v_thrust*cos(target_pitch)*sin(target_yaw);
     cmd_msg.request.model_state.twist.linear.z = vx*sin(target_pitch)+vz*cos(target_pitch) - v_thrust*sin(target_pitch);
@@ -566,6 +567,15 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
                     this->link->WorldLinearVel().X(),
                     this->link->WorldLinearVel().Y(),
                     this->link->WorldLinearVel().Z());
+
+  // Save data for log
+  if (this->writeLogFlag)
+  {
+    this->thrusterVel = v_thrust;
+    this->buoyancyVel = ignition::math::Vector2d(buoyancy_vel_x, buoyancy_vel_z);
+    this->vehicleVel = this->modelVel;
+  }
+
 }
 
 /////////////////////////////////////////////////
@@ -623,6 +633,13 @@ void KinematicsROSPlugin::ConveyModelState()
   status_msg.battery_position = this->battpos;
 
   this->statePublisher.publish(status_msg);
+
+  // Save data for log
+  if (this->writeLogFlag)
+  {
+    this->lat = status_msg.latitude;
+    this->lon = status_msg.longitude;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -636,7 +653,9 @@ if (this->writeLogFlag)
   {
     writeLog.open("/tmp/KinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
-    writeLog << "# t,x,y,z,p,q,r\n";
+    writeLog << "# t,x,y,z,p,q,r,lat,lon,thrustPower,pumpVol"
+             << ",batPos,thrustVel,xBuoyancyVel,zBuoyancyVel,"
+             << ",xVehicleVel,yVehicleVel,zVehicleVel" << "\n";
     writeLog.close();
     this->writeCounter = this->writeCounter + 1;
   }
@@ -648,6 +667,11 @@ if (this->writeLogFlag)
             << this->modelXYZ.X() << "," << this->modelXYZ.Y() << ","
             << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
             << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
+            << this->lat << "," << this->lon << "," << this->motorPower
+            << "," << this->prev_pumpVol << "," << this->battpos << ","
+            << this->thrusterVel << "," << this->buoyancyVel.X() << ","
+            << this->buoyancyVel.Y()  << "," << this->vehicleVel.X()
+            << "," << this->vehicleVel.Y() << "," << this->vehicleVel.Z()
             << "\n";
     writeLog.close();
   }

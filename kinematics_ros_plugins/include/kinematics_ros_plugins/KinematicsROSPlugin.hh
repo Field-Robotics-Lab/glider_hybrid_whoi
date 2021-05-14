@@ -159,8 +159,21 @@ namespace kinematics_ros
     protected: ignition::math::Vector3<double> modelXYZ;
     protected: ignition::math::Vector3<double> modelRPY;
 
+    /// \brief Model Lat/Lon
+    protected: double lat;
+    protected: double lon;
+
     /// \brief Motor power
     protected: double motorPower;
+
+    /// \brief Velocity by thruster
+    protected: double thrusterVel;
+
+    /// \brief Velocity by buoyancy
+    protected: ignition::math::Vector2<double> buoyancyVel;
+
+    /// \brief Velocity by thruster
+    protected: ignition::math::Vector3<double> vehicleVel;
 
     /// \brief Rudder angle
     protected: double rudderAngle;
