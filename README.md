@@ -36,6 +36,22 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
              source ~/glider_hybrid_whoi/install/setup.bash
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
+    3. **Using docker-compose**
+         1. Run the `build.bash` script located in the `docker` folder of this repository
+             ```
+             ./build.bash
+             ```
+         2. Run the container
+             ```
+             docker-compose up
+             ```
+         2. Send mission commands from another terminal
+             ```
+             docker-compose exec glider_extctl_sim /ros_entrypoint.sh rosrun slocum_glider_extctl_sim slocum_glider_sim_console
+             # Ctrl+C to land on mission command terminal
+             run initbuzz.mi
+             run backse01.mi
+             ```
 
 ### Quickstart
 * Running the simulator (Run each commands in separate terminal window)
