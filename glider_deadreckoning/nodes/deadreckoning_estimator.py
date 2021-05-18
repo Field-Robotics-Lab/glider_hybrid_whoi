@@ -27,7 +27,7 @@ def decibars2depth_salt(decibars,latitude):
     return d
 
 def pascals2depth(pascals):
-    ''' 
+    '''
     Wrapper function with latitude hardcoded for now
     '''
     decibars = pascals/1.0e5
@@ -36,7 +36,7 @@ def pascals2depth(pascals):
 def  mdeglat(lat):
     '''
     Provides meters-per-degree latitude at a given latitude
-    From AlvinXY 
+    From AlvinXY
 
     Args:
       lat (float): latitude
@@ -60,23 +60,23 @@ def mdeglon(lat):
     Returns:
       float: meters per degree longitude
     '''
-    latrad = lat*2.0*pi/360.0 
+    latrad = lat*2.0*pi/360.0
     dx = 111415.13 * cos(latrad) \
          - 94.55 * cos(3.0*latrad) \
 	+ 0.12 * cos(5.0*latrad)
     return dx
 
 class Node():
-    def __init__(self, init_lat, init_lon, angleofattack_deg):
+    def __init__(self, init_lat, init_lon, angleofattack_deg, write_flag):
 
         # Current estimate
         self.dr_msg = NavSatFix()
         self.dr_msg.latitude = init_lat
         self.dr_msg.longitude = init_lon
-        
+
         # Fixec AOA
         self.angleofattack_rad = angleofattack_deg * pi/180.0
-        
+
         # Keep track of time and depth
         self.t0 = rospy.get_time()
         while self.t0 < 0.01:
@@ -91,7 +91,7 @@ class Node():
         self.imu_msg = Imu()
         self.pressure_msg = FluidPressure()
         self.gps_msg = NavSatFix()
-        
+
         # Pubs and subs
         self.sub_imu = rospy.Subscriber("imu", Imu, self.callback_imu)
         self.sub_pressure = rospy.Subscriber("pressure",
@@ -100,17 +100,17 @@ class Node():
         self.sub_gps = rospy.Subscriber("fix", NavSatFix, self.callback_gps)
         self.pub_fix = rospy.Publisher("deadreckon", NavSatFix, queue_size=1)
 
-        
+
     def callback_imu(self, data):
         self.imu_msg = data
-        
+
     def callback_pressure(self, data):
         self.pressure_msg = data
 
     def callback_gps(self, data):
         self.gps_msg = data
         self.new_gps = True
-        
+
     def update(self):
         '''
         Estimate
@@ -123,7 +123,7 @@ class Node():
                           %dt)
             return
         self.t0 = now
-                
+
         # Convert fluid pressure to depth
         depth = pascals2depth(self.pressure_msg.fluid_pressure)
 
@@ -139,40 +139,48 @@ class Node():
              self.imu_msg.orientation.w)
         rpy = tf.transformations.euler_from_quaternion(q)
 
-        # If we have GPS - just use that
-        if self.new_gps:
+        # If we have GPS (Surfaced) - just use that
+        gpsFix = False
+        if self.gps_msg.status.status == self.gps_msg.status.STATUS_SBAS_FIX:
             self.dr_msg.latitude = self.gps_msg.latitude
             self.dr_msg.longitude = self.gps_msg.longitude
             self.dr_msg.header.stamp = rospy.Time.now()
             self.pub_fix.publish(self.dr_msg)
-            return
-            
-        # Algo. from:
-        # https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/3
-        dz = depth - self.d0
-        self.d0 = depth
-        # Assume constant angle of attack
-        # Note that coordinates are in ENU
-        aoa = 4.0 * pi/180.0
-        glide_angle = rpy[1] + aoa
-        if abs(glide_angle) < pi/100.0:
-            v_x = 0.0
-            v_y = 0.0
-        else: 
-            v_x = dz/(dt*tan(glide_angle))*sin(rpy[2])
-            v_y = dz/(dt*tan(glide_angle))*cos(rpy[2])
-        dx = v_x * dt
-        dy = v_y * dt
+            gpsFix = True
 
-        # Increment lat/lon 
-        self.dr_msg.latitude += dy/mdeglat(self.dr_msg.latitude)
-        self.dr_msg.longitude += dx/mdeglat(self.dr_msg.latitude)
+        if gpsFix == False:
+          # Algo. from:
+          # https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/issues/3
+          dz = depth - self.d0
+          self.d0 = depth
+          # Assume constant angle of attack
+          # Note that coordinates are in ENU
+          aoa = 4.0 * pi/180.0
+          glide_angle = rpy[1] + aoa
+          if abs(glide_angle) < pi/100.0:
+              v_x = 0.0
+              v_y = 0.0
+          else:
+              v_x = dz/(dt*tan(glide_angle))*sin(rpy[2])
+              v_y = dz/(dt*tan(glide_angle))*cos(rpy[2])
+          dx = v_x * dt
+          dy = v_y * dt
 
-        # Publish
-        self.dr_msg.header.stamp = rospy.Time.now()
-        self.pub_fix.publish(self.dr_msg)
+          # Increment lat/lon
+          self.dr_msg.latitude += dy/mdeglat(self.dr_msg.latitude)
+          self.dr_msg.longitude += dx/mdeglat(self.dr_msg.latitude)
+
+          # Publish
+          self.dr_msg.header.stamp = rospy.Time.now()
+          self.pub_fix.publish(self.dr_msg)
+
+        # Write Log
+        if write_flag:
+          write_file = open("/tmp/DRLog.csv", "a")
+          write_file.write(repr(now) + "," + repr(self.dr_msg.latitude) + "," + repr(self.dr_msg.longitude) + "," + repr(gpsFix) + "\n")
+
         return
-    
+
 if __name__ == '__main__':
 
     # Start node
@@ -183,12 +191,18 @@ if __name__ == '__main__':
     init_lon = rospy.get_param('~init_lon', -70.71428)
     # Specified in degrees, positive is bow down
     angleofattack_deg = rospy.get_param('~angleofattack',  -4.0 )
-    
+
     # Update rate
     update_rate = rospy.get_param('~update_rate', 5.0)
-    
+
+    # Open a file to write log
+    write_flag = rospy.get_param('~writeLog', 0)
+    if write_flag:
+      write_file = open("/tmp/DRLog.csv", "w")
+      write_file.write("time,lat,lon,gpsBool\n")
+
     # Initiate node object
-    node=Node(init_lat, init_lon, angleofattack_deg)
+    node=Node(init_lat, init_lon, angleofattack_deg, write_flag)
 
     # Spin
     r = rospy.Rate(update_rate)
