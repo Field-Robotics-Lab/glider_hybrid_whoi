@@ -30,6 +30,7 @@
 
 #include <glider_hybrid_whoi_ros_plugins/UnderwaterGPSROSPlugin.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/rendering/rendering.hh>
 
 // Functionality from GDAL for projections
 #include <gdal/ogr_spatialref.h>
@@ -244,55 +245,11 @@ void GazeboRosGps::Update()
   // Note: Usually GNSS receivers have almost no drift in the velocity signal.
   position_error_model_.setCurrentDrift(position_error_model_.getCurrentDrift() + dt * velocity_error_model_.getCurrentDrift());
 
-  fix_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
-  velocity_.header.stamp = fix_.header.stamp;
-
-  // GDAL transform
-  OGRSpatialReference srs;
-  srs.importFromEPSG(espg_projection_);
-  OGRSpatialReference tsrs;
-  tsrs.importFromEPSG(4326);
-  OGRCoordinateTransformation *poCT;
-  poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
-  double sNorthing = position.Y();
-  double sEasting = position.X();
-  double tLat = sNorthing;
-  double tLon = sEasting;
-  poCT->Transform(1, &tLon, &tLat);
-
-#if (GAZEBO_MAJOR_VERSION >= 8)
-  fix_.latitude = tLat;
-  fix_.longitude = tLon;
-  // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.X() + sin(reference_heading_) * position.Y()) / radius_north_ * 180.0/M_PI;
-  // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.X() + cos(reference_heading_) * position.Y()) / radius_east_  * 180.0/M_PI;
-  fix_.altitude  = reference_altitude_  + position.Z();
-  velocity_.vector.x =  cos(reference_heading_) * velocity.X() + sin(reference_heading_) * velocity.Y();
-  velocity_.vector.y = -sin(reference_heading_) * velocity.X() + cos(reference_heading_) * velocity.Y();
-  velocity_.vector.z = velocity.Z();
-
-  fix_.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
-  fix_.position_covariance[0] = position_error_model_.drift.X()*position_error_model_.drift.X() + position_error_model_.gaussian_noise.X()*position_error_model_.gaussian_noise.X();
-  fix_.position_covariance[4] = position_error_model_.drift.Y()*position_error_model_.drift.Y() + position_error_model_.gaussian_noise.Y()*position_error_model_.gaussian_noise.Y();
-  fix_.position_covariance[8] = position_error_model_.drift.Z()*position_error_model_.drift.Z() + position_error_model_.gaussian_noise.Z()*position_error_model_.gaussian_noise.Z();
-#else
-  fix_.latitude = tLat;
-  fix_.longitude = tLon;
-  // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.x + sin(reference_heading_) * position.y) / radius_north_ * 180.0/M_PI;
-  // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.x + cos(reference_heading_) * position.y) / radius_east_  * 180.0/M_PI;
-  fix_.altitude  = reference_altitude_  + position.z;
-  velocity_.vector.x =  cos(reference_heading_) * velocity.x + sin(reference_heading_) * velocity.y;
-  velocity_.vector.y = -sin(reference_heading_) * velocity.x + cos(reference_heading_) * velocity.y;
-  velocity_.vector.z = velocity.z;
-
-  fix_.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
-  fix_.position_covariance[0] = position_error_model_.drift.x*position_error_model_.drift.x + position_error_model_.gaussian_noise.x*position_error_model_.gaussian_noise.x;
-  fix_.position_covariance[4] = position_error_model_.drift.y*position_error_model_.drift.y + position_error_model_.gaussian_noise.y*position_error_model_.gaussian_noise.y;
-  fix_.position_covariance[8] = position_error_model_.drift.z*position_error_model_.drift.z + position_error_model_.gaussian_noise.z*position_error_model_.gaussian_noise.z;
-#endif
 
   // Check Submergence
-  ignition::math::Box boundingBox = this->link->BoundingBox();
-  double height = boundingBox.ZLength();
+  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene();
+  gazebo::rendering::VisualPtr visual = scene->GetVisual(this->link->GetModel()->GetName());
+  double height = visual->BoundingBox().ZLength();
   double z = this->link->WorldPose().Pos().Z();
   bool isSubmerged = true;
 
@@ -305,9 +262,62 @@ void GazeboRosGps::Update()
   // Publish msg if on surface
   if (!isSubmerged)
   {
-    fix_publisher_.publish(fix_);
-    velocity_publisher_.publish(velocity_);
+
+    fix_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
+    velocity_.header.stamp = fix_.header.stamp;
+
+    // GDAL transform
+    OGRSpatialReference srs;
+    srs.importFromEPSG(espg_projection_);
+    OGRSpatialReference tsrs;
+    tsrs.importFromEPSG(4326);
+    OGRCoordinateTransformation *poCT;
+    poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
+    double sNorthing = position.Y();
+    double sEasting = position.X();
+    double tLat = sNorthing;
+    double tLon = sEasting;
+    poCT->Transform(1, &tLon, &tLat);
+
+  #if (GAZEBO_MAJOR_VERSION >= 8)
+    fix_.latitude = tLat;
+    fix_.longitude = tLon;
+    // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.X() + sin(reference_heading_) * position.Y()) / radius_north_ * 180.0/M_PI;
+    // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.X() + cos(reference_heading_) * position.Y()) / radius_east_  * 180.0/M_PI;
+    fix_.altitude  = reference_altitude_  + position.Z();
+    velocity_.vector.x =  cos(reference_heading_) * velocity.X() + sin(reference_heading_) * velocity.Y();
+    velocity_.vector.y = -sin(reference_heading_) * velocity.X() + cos(reference_heading_) * velocity.Y();
+    velocity_.vector.z = velocity.Z();
+
+    fix_.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+    fix_.position_covariance[0] = position_error_model_.drift.X()*position_error_model_.drift.X() + position_error_model_.gaussian_noise.X()*position_error_model_.gaussian_noise.X();
+    fix_.position_covariance[4] = position_error_model_.drift.Y()*position_error_model_.drift.Y() + position_error_model_.gaussian_noise.Y()*position_error_model_.gaussian_noise.Y();
+    fix_.position_covariance[8] = position_error_model_.drift.Z()*position_error_model_.drift.Z() + position_error_model_.gaussian_noise.Z()*position_error_model_.gaussian_noise.Z();
+  #else
+    fix_.latitude = tLat;
+    fix_.longitude = tLon;
+    // fix_.latitude  = reference_latitude_  + ( cos(reference_heading_) * position.x + sin(reference_heading_) * position.y) / radius_north_ * 180.0/M_PI;
+    // fix_.longitude = reference_longitude_ - (-sin(reference_heading_) * position.x + cos(reference_heading_) * position.y) / radius_east_  * 180.0/M_PI;
+    fix_.altitude  = reference_altitude_  + position.z;
+    velocity_.vector.x =  cos(reference_heading_) * velocity.x + sin(reference_heading_) * velocity.y;
+    velocity_.vector.y = -sin(reference_heading_) * velocity.x + cos(reference_heading_) * velocity.y;
+    velocity_.vector.z = velocity.z;
+
+    fix_.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+    fix_.position_covariance[0] = position_error_model_.drift.x*position_error_model_.drift.x + position_error_model_.gaussian_noise.x*position_error_model_.gaussian_noise.x;
+    fix_.position_covariance[4] = position_error_model_.drift.y*position_error_model_.drift.y + position_error_model_.gaussian_noise.y*position_error_model_.gaussian_noise.y;
+    fix_.position_covariance[8] = position_error_model_.drift.z*position_error_model_.drift.z + position_error_model_.gaussian_noise.z*position_error_model_.gaussian_noise.z;
+  #endif
+
+    fix_.status.status = sensor_msgs::NavSatStatus::STATUS_SBAS_FIX;
   }
+  else
+  {
+    fix_.status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+  }
+
+  fix_publisher_.publish(fix_);
+  velocity_publisher_.publish(velocity_);
 }
 
 // Register this plugin with the simulator
