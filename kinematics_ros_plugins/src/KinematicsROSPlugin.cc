@@ -609,15 +609,15 @@ void KinematicsROSPlugin::ConveyModelState()
   poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
   double sNorthing = this->modelXYZ.Y();
   double sEasting = this->modelXYZ.X();
-  double tLat = sEasting;
-  double tLon = sNorthing;
+  double tLat = sNorthing;
+  double tLon = sEasting;
   poCT->Transform(1, &tLon, &tLat);
 
   // Construct UwGliderStatus msg
   frl_vehicle_msgs::UwGliderStatus status_msg;
   status_msg.header.stamp = ros::Time::now();
-  status_msg.latitude = tLon;
-  status_msg.longitude = tLat;
+  status_msg.longitude = tLon;
+  status_msg.latitude = tLat;
   status_msg.roll = this->modelRPY.Z();
   status_msg.pitch = this->modelRPY.Y();
   status_msg.heading = M_PI/2 - this->modelRPY.X();
@@ -654,7 +654,7 @@ if (this->writeLogFlag)
     writeLog.open("/tmp/KinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
     writeLog << "# t,x,y,z,p,q,r,lat,lon,thrustPower,pumpVol"
-             << ",batPos,thrustVel,xBuoyancyVel,zBuoyancyVel,"
+             << ",batPos,thrustVel,xBuoyancyVel,zBuoyancyVel"
              << ",xVehicleVel,yVehicleVel,zVehicleVel" << "\n";
     writeLog.close();
     this->writeCounter = this->writeCounter + 1;
@@ -820,8 +820,8 @@ void KinematicsROSPlugin::CheckSubmergence()
         this->link->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
         this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
         this->link->ResetPhysicsStates();
+        gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
       }
-      gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
     }
   }
   else  // For surface vehicle
