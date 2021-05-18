@@ -14,6 +14,9 @@ from sensor_msgs.msg import Imu
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import FluidPressure
 
+# import GDAL
+# from osgeo import osr
+
 def decibars2depth_salt(decibars,latitude):
     '''
     From Seabird application note 69 (AN69).
@@ -33,6 +36,14 @@ def pascals2depth(pascals):
     decibars = pascals/1.0e5
     return decibars2depth_salt(decibars, 41.0)
 
+def kilopascals2depth(kilopascal):
+    '''
+    kilopascal per meter hardcoded
+    '''
+    standardPressure = 101.325
+    kPaPerM=9.80638
+    return (kilopascal-101.325)/kPaPerM
+
 def  mdeglat(lat):
     '''
     Provides meters-per-degree latitude at a given latitude
@@ -43,7 +54,7 @@ def  mdeglat(lat):
     Returns:
       float: meters-per-degree value
     '''
-    latrad = lat*2.0*pi/360.0 ;
+    latrad = lat*2.0*pi/360.0
 
     dy = 111132.09 - 566.05 * cos(2.0*latrad) \
          + 1.20 * cos(4.0*latrad) \
@@ -61,9 +72,10 @@ def mdeglon(lat):
       float: meters per degree longitude
     '''
     latrad = lat*2.0*pi/360.0
+
     dx = 111415.13 * cos(latrad) \
          - 94.55 * cos(3.0*latrad) \
-	+ 0.12 * cos(5.0*latrad)
+	       + 0.12 * cos(5.0*latrad)
     return dx
 
 class Node():
@@ -73,6 +85,14 @@ class Node():
         self.dr_msg = NavSatFix()
         self.dr_msg.latitude = init_lat
         self.dr_msg.longitude = init_lon
+
+        # # Transform using GDAL
+        # tsrs = osr.SpatialReference()
+        # tsrs.ImportFromEPSG(26987)
+        # srs = osr.SpatialReference()
+        # srs.ImportFromEPSG(4326)
+        # latlonTrans = osr.CoordinateTransformation(srs,tsrs)
+        # self.xCoord, self.yCoord, z = latlonTrans.TransformPoint(init_lon,init_lat)
 
         # Fixec AOA
         self.angleofattack_rad = angleofattack_deg * pi/180.0
@@ -125,7 +145,7 @@ class Node():
         self.t0 = now
 
         # Convert fluid pressure to depth
-        depth = pascals2depth(self.pressure_msg.fluid_pressure)
+        depth = kilopascals2depth(self.pressure_msg.fluid_pressure)
 
         # Need to intialize depth on first pass
         if self.d0 is None:
@@ -155,20 +175,34 @@ class Node():
           self.d0 = depth
           # Assume constant angle of attack
           # Note that coordinates are in ENU
-          aoa = 4.0 * pi/180.0
-          glide_angle = rpy[1] + aoa
+          aoa = self.angleofattack_rad
+          if rpy[1] < 0:
+            glide_angle = rpy[1] - aoa
+          else:
+            glide_angle = rpy[1] + aoa
+
           if abs(glide_angle) < pi/100.0:
               v_x = 0.0
               v_y = 0.0
           else:
-              v_x = dz/(dt*tan(glide_angle))*sin(rpy[2])
-              v_y = dz/(dt*tan(glide_angle))*cos(rpy[2])
+              v_x = dz/(dt*tan(glide_angle))*sin(pi/2.0-rpy[2])
+              v_y = dz/(dt*tan(abs(glide_angle)))*cos(pi/2.0-rpy[2])
           dx = v_x * dt
           dy = v_y * dt
 
           # Increment lat/lon
           self.dr_msg.latitude += dy/mdeglat(self.dr_msg.latitude)
-          self.dr_msg.longitude += dx/mdeglat(self.dr_msg.latitude)
+          self.dr_msg.longitude += dx/mdeglon(self.dr_msg.latitude)
+
+          # Transform using GDAL
+          # self.xCoord += dx
+          # self.yCoord += dy
+          # srs = osr.SpatialReference()
+          # srs.ImportFromEPSG(26987)
+          # tsrs = osr.SpatialReference()
+          # tsrs.ImportFromEPSG(4326)
+          # coordTrans = osr.CoordinateTransformation(srs,tsrs)
+          # self.dr_msg.longitude, self.dr_msg.latitude, dummy = coordTrans.TransformPoint(self.xCoord, self.yCoord)
 
           # Publish
           self.dr_msg.header.stamp = rospy.Time.now()
@@ -177,7 +211,7 @@ class Node():
         # Write Log
         if write_flag:
           write_file = open("/tmp/DRLog.csv", "a")
-          write_file.write(repr(now) + "," + repr(self.dr_msg.latitude) + "," + repr(self.dr_msg.longitude) + "," + repr(gpsFix) + "\n")
+          write_file.write(repr(now) + "," + repr(depth) + "," + repr(self.dr_msg.latitude) + "," + repr(self.dr_msg.longitude) + "," + repr(gpsFix) + "\n")
 
         return
 
@@ -199,7 +233,7 @@ if __name__ == '__main__':
     write_flag = rospy.get_param('~writeLog', 0)
     if write_flag:
       write_file = open("/tmp/DRLog.csv", "w")
-      write_file.write("time,lat,lon,gpsBool\n")
+      write_file.write("time,depth,lat,lon,gpsBool\n")
 
     # Initiate node object
     node=Node(init_lat, init_lon, angleofattack_deg, write_flag)
