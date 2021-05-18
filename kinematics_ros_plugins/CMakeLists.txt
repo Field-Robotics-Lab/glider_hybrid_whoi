@@ -71,6 +71,6 @@ install(DIRECTORY include/
    FILES_MATCHING PATTERN ".hh"
 )
 
-catkin_install_python(PROGRAMS test/test_directKinematics.py
+catkin_install_python(PROGRAMS scripts/test_directKinematics.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
