@@ -18,62 +18,62 @@ def command(startTime):
             pub.publish(command)
             time.sleep(1)
 
-            print("\n----- Ascend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
+            print("\n----- Descend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 1
-            command.target_pitch_value = -0.01
-            command.target_pumped_volume = -0.5
+            command.target_pitch_value = 0.4
+            command.target_pumped_volume = -100.0
             command.rudder_control_mode = 1
             command.target_heading = 0
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 0.01
+            command.target_motor_cmd = 0.0
             rospy.loginfo(command)
             pub.publish(command)
-            time.sleep(5)
-
-            print("\n----- Descend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
-            command = UwGliderCommand()
-            command.header.stamp = rospy.Time.now()
-            command.pitch_cmd_type = 1
-            command.target_pitch_value = 0.01
-            command.target_pumped_volume = -0.5
-            command.rudder_control_mode = 1
-            command.target_heading = math.pi/2
-            command.motor_cmd_type = 1
-            command.target_motor_cmd = 0.01
-            rospy.loginfo(command)
-            pub.publish(command)
-            time.sleep(5)
-
+            time.sleep(2)
 
             print("\n----- Ascend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 1
-            command.target_pitch_value = -0.01
-            command.target_pumped_volume = -0.5
+            command.target_pitch_value = -0.4
+            command.target_pumped_volume = 100.0
             command.rudder_control_mode = 1
-            command.target_heading = math.pi
+            command.target_heading = math.pi/2
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 0.01
+            command.target_motor_cmd = 0.0
             rospy.loginfo(command)
             pub.publish(command)
-            time.sleep(5)
+            time.sleep(1)
 
             print("\n----- Descend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
             command = UwGliderCommand()
             command.header.stamp = rospy.Time.now()
             command.pitch_cmd_type = 1
-            command.target_pitch_value = 0.01
-            command.target_pumped_volume = -0.5
+            command.target_pitch_value = -0.4
+            command.target_pumped_volume = -100.0
+            command.rudder_control_mode = 1
+            command.target_heading = math.pi
+            command.motor_cmd_type = 1
+            command.target_motor_cmd = 0.0
+            rospy.loginfo(command)
+            pub.publish(command)
+            time.sleep(2)
+
+            print("\n----- Ascend with Pitch control (Batt pos) + Buoyancy engine + Rudder control (angle)------")
+            command = UwGliderCommand()
+            command.header.stamp = rospy.Time.now()
+            command.pitch_cmd_type = 1
+            command.target_pitch_value = -0.4
+            command.target_pumped_volume = 100.0
             command.rudder_control_mode = 1
             command.target_heading = -math.pi/2
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 0.01
+            command.target_motor_cmd = 0.0
             rospy.loginfo(command)
             pub.publish(command)
-            time.sleep(5)
+            time.sleep(2)
+
 
             # Shutdown
             rospy.signal_shutdown('\n\nDONE!')
