@@ -4,8 +4,8 @@
 	type="deadreckoning_estimator.py"
 	name="deadreckoning_estimator"
 	output="screen">
-    <param name="init_lat" value="41.51"/>
-    <param name="init_lon" value="-70.735"/>
+    <param name="init_lat" value="41.5522"/>
+    <param name="init_lon" value="-70.6803"/>
     <param name="angleofattack" value="3.0"/>
     <param name="update_rate" value="5.0"/>
     <!-- Remap the inputs to application specific topics -->
