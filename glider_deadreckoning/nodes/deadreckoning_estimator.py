@@ -165,6 +165,7 @@ class Node():
             self.dr_msg.latitude = self.gps_msg.latitude
             self.dr_msg.longitude = self.gps_msg.longitude
             self.dr_msg.header.stamp = rospy.Time.now()
+            self.dr_msg.status.status = NavSatFix.status.STATUS_SBAS_FIX
             self.pub_fix.publish(self.dr_msg)
             gpsFix = True
 

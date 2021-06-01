@@ -254,9 +254,12 @@ void GazeboRosGps::Update()
   bool isSubmerged = true;
 
   // Submerged vessel
-  if (z + height / 2 > 0 && z < 0)
+  // double leastDistanceFromSurfaceForGPS = - height / 2;
+  double leastDistanceFromSurfaceForGPS = - 2.0;
+
+  if (z > leastDistanceFromSurfaceForGPS && z < 0)
     isSubmerged = false;
-  else if (z + height / 2 < 0)
+  else if (z < leastDistanceFromSurfaceForGPS)
     isSubmerged = true;
 
   // Publish msg if on surface
@@ -310,14 +313,14 @@ void GazeboRosGps::Update()
   #endif
 
     fix_.status.status = sensor_msgs::NavSatStatus::STATUS_SBAS_FIX;
+
+    fix_publisher_.publish(fix_);
+    velocity_publisher_.publish(velocity_);
   }
   else
   {
     fix_.status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
   }
-
-  fix_publisher_.publish(fix_);
-  velocity_publisher_.publish(velocity_);
 }
 
 // Register this plugin with the simulator
