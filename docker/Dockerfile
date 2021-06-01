@@ -46,7 +46,8 @@ RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && catkin_make
 
 # Install ROS dependencies that are not available via a package manager.
-RUN apt-get update \
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && apt-get update \
     && apt-get install -y --no-install-recommends --no-upgrade curl ca-certificates python-pip
 
 WORKDIR /glider_hybrid_whoi_deps/src
@@ -125,7 +126,8 @@ RUN addgroup --gid 1000 $group \
 
 COPY --from=source-deps /tmp/install-script-for-deps /tmp/install-script-for-deps
 
-RUN apt-get update \
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
        python-pip curl apt-utils software-properties-common xauth \
     && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
