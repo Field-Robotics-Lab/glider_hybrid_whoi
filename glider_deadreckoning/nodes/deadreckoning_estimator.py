@@ -11,7 +11,7 @@ from math import *
 import rospy
 import tf
 from sensor_msgs.msg import Imu
-from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatFix, NavSatStatus
 from sensor_msgs.msg import FluidPressure
 
 # import GDAL
@@ -104,13 +104,11 @@ class Node():
             rospy.sleep(0.5)
             self.t0 = rospy.get_time()
         self.d0 = None
-        # Flag for when we receive GPS updates
-        self.new_gps = False
 
         # Init messages
         self.imu_msg = Imu()
         self.pressure_msg = FluidPressure()
-        self.gps_msg = NavSatFix()
+        self.gps_msg = None
 
         # Pubs and subs
         self.sub_imu = rospy.Subscriber("imu", Imu, self.callback_imu)
@@ -129,7 +127,6 @@ class Node():
 
     def callback_gps(self, data):
         self.gps_msg = data
-        self.new_gps = True
 
     def update(self):
         '''
@@ -161,12 +158,14 @@ class Node():
 
         # If we have GPS (Surfaced) - just use that
         gpsFix = False
-        if self.gps_msg.status.status == self.gps_msg.status.STATUS_SBAS_FIX:
+        if self.gps_msg is not None \
+           and self.gps_msg.status.status == NavSatStatus.STATUS_SBAS_FIX:
             self.dr_msg.latitude = self.gps_msg.latitude
             self.dr_msg.longitude = self.gps_msg.longitude
             self.dr_msg.header.stamp = rospy.Time.now()
-            self.dr_msg.status.status = NavSatFix.status.STATUS_SBAS_FIX
+            self.dr_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
             self.pub_fix.publish(self.dr_msg)
+            self.gps_msg = None
             gpsFix = True
 
         if gpsFix == False:
