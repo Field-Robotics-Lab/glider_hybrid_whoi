@@ -15,8 +15,8 @@
   <world name="BuzzBay">
     <physics name="default_physics" default="true" type="ode">
       <max_step_size>0.1</max_step_size>
-      <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>10</real_time_update_rate>
+      <!-- <real_time_factor>1</real_time_factor> -->
+      <real_time_update_rate>0</real_time_update_rate>
       <ode>
         <solver>
           <type>quick</type>
@@ -145,11 +145,11 @@
 
         <!-- Starting time of the simulator in GMT  -->
         <world_start_time_GMT>
-          <day>4</day>
-          <month>3</month>
+          <day>10</day>
+          <month>4</month>
           <year>2021</year>
-          <hour>15</hour>
-          <minute>0</minute>
+          <hour>14</hour>
+          <minute>52</minute>
         </world_start_time_GMT>
       </tidal_oscillation>
     </plugin>
@@ -168,7 +168,7 @@
         <view_controller>ortho</view_controller>
         <projection_type>orthographic</projection_type>
         <clip>0.1 10000</clip>
-        <pose>480378.78 56669.9 -3.5375 0.0 0.47275 -0.996715</pose>
+        <pose>485042.687500 61510.050781 -21.703316 0.0 0.187488 2.103256</pose>
       </camera>
     </gui>
 

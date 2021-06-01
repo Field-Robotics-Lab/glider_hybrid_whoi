@@ -148,7 +148,7 @@
         <!-- Kinematics coefficients -->
         <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
         <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
-        <Area>0.0345</Area>
+        <Area>0.345</Area>
         <C_D>0.2534</C_D>
         <C_L>0.4160</C_L>
         <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>

@@ -621,10 +621,17 @@ void KinematicsROSPlugin::ConveyModelState()
   status_msg.roll = this->modelRPY.Z();
   status_msg.pitch = this->modelRPY.Y();
   status_msg.heading = M_PI/2 - this->modelRPY.X();
-  if (status_msg.heading < 0)
-  {
-    status_msg.heading += 2 * M_PI;
-  }
+  // if (abs(status_msg.heading) < M_PI)
+  // {
+  //   if status_msg.heading < 0
+  //   {
+  //     status_msg.heading += 2 * M_PI;
+  //   }
+  //   else
+  //   {
+  //     status_msg.heading -= 2 * M_PI;
+  //   }
+  // }
   status_msg.depth = - this->modelXYZ.Z();
   status_msg.altitude = this->modelXYZ.Z();
   status_msg.motor_power = this->motorPower;
@@ -653,7 +660,7 @@ if (this->writeLogFlag)
   {
     writeLog.open("/tmp/KinematicsLog.csv");
     writeLog << "# Hybrid Glider Plugin Log\n";
-    writeLog << "# t,x,y,z,p,q,r,lat,lon,thrustPower,pumpVol"
+    writeLog << "# t,x,y,altitude,roll,pitch,heading,lat,lon,thrustPower,pumpVol"
              << ",batPos,thrustVel,xBuoyancyVel,zBuoyancyVel"
              << ",xVehicleVel,yVehicleVel,zVehicleVel" << "\n";
     writeLog.close();
@@ -665,8 +672,8 @@ if (this->writeLogFlag)
     writeLog.open("/tmp/KinematicsLog.csv", std::ios_base::app);
     writeLog << std::setprecision(prec) << time << ","
             << this->modelXYZ.X() << "," << this->modelXYZ.Y() << ","
-            << this->modelXYZ.Z() << "," << this->modelRPY.X() << ","
-            << this->modelRPY.Y() << "," << this->modelRPY.Z() << ","
+            << this->modelXYZ.Z() << "," << this->modelRPY.Z() << ","
+            << this->modelRPY.Y() << "," << M_PI/2 - this->modelRPY.X() << ","
             << this->lat << "," << this->lon << "," << this->motorPower
             << "," << this->prev_pumpVol << "," << this->battpos << ","
             << this->thrusterVel << "," << this->buoyancyVel.X() << ","
