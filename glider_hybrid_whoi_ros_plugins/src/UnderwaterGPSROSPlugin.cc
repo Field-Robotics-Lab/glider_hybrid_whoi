@@ -98,6 +98,7 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   frame_id_ = "/world";
   fix_topic_ = "fix";
   velocity_topic_ = "fix_velocity";
+  signal_confirm_time_ = 0;
 
   reference_latitude_  = DEFAULT_REFERENCE_LATITUDE;
   reference_longitude_ = DEFAULT_REFERENCE_LONGITUDE;
@@ -129,8 +130,17 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // if (_sdf->GetElement("referenceHeading")->GetValue()->Get(reference_heading_))
   //   reference_heading_ *= M_PI/180.0;
 
+  if (_sdf->HasElement("update_rate"))
+    _sdf->GetElement("update_rate")->GetValue()->Get(update_rate_);
+
   if (_sdf->HasElement("espg_projection"))
     _sdf->GetElement("espg_projection")->GetValue()->Get(espg_projection_);
+
+  if (_sdf->HasElement("signal_delay"))
+    _sdf->GetElement("signal_delay")->GetValue()->Get(signal_delay_);
+
+  if (_sdf->HasElement("signal_max_depth"))
+    _sdf->GetElement("signal_max_depth")->GetValue()->Get(signal_max_depth_);
 
   if (_sdf->HasElement("referenceAltitude"))
     _sdf->GetElement("referenceAltitude")->GetValue()->Get(reference_altitude_);
@@ -182,7 +192,7 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   Reset();
 
   // connect Update function
-  updateTimer.setUpdateRate(4.0);
+  updateTimer.setUpdateRate(1.0/update_rate_);
   updateTimer.Load(world, _sdf);
   updateConnection = updateTimer.Connect(boost::bind(&GazeboRosGps::Update, this));
 }
@@ -251,21 +261,45 @@ void GazeboRosGps::Update()
   gazebo::rendering::VisualPtr visual = scene->GetVisual(this->link->GetModel()->GetName());
   double height = visual->BoundingBox().ZLength();
   double z = this->link->WorldPose().Pos().Z();
-  bool isSubmerged = true;
+  bool onSurface = true;
 
-  // Submerged vessel
-  // double leastDistanceFromSurfaceForGPS = - height / 2;
-  double leastDistanceFromSurfaceForGPS = - 2.0;
+  double leastDistanceFromSurfaceForGPS = 0;
+  if (signal_max_depth_ == 0)
+    leastDistanceFromSurfaceForGPS = - height / 2;
+  else
+    leastDistanceFromSurfaceForGPS = - signal_max_depth_;
 
   if (z > leastDistanceFromSurfaceForGPS && z < 0)
-    isSubmerged = false;
+    onSurface = true;
   else if (z < leastDistanceFromSurfaceForGPS)
-    isSubmerged = true;
+    onSurface = false;
+
+  // Signal confirmation with signal delay
+  bool signalConfirm = false;
+  if (onSurface)
+  {
+    if (signal_confirm_time_ == 0)
+    {
+      if (!onSurface_prev)
+      {
+        gzmsg << "Surface detected! Waiting for GPS signal confirmation..." << std::endl;
+        signal_confirm_time_ = sim_time.Double() + signal_delay_ - 1.0/update_rate_;
+      }
+    }
+    else
+    {
+      if (sim_time.Double() > signal_confirm_time_)
+        signalConfirm = true;
+    }
+  }
+  else
+    signal_confirm_time_ = 0;
+
+  onSurface_prev = onSurface;
 
   // Publish msg if on surface
-  if (!isSubmerged)
+  if (onSurface)
   {
-
     fix_.header.stamp = ros::Time(sim_time.sec, sim_time.nsec);
     velocity_.header.stamp = fix_.header.stamp;
 
@@ -313,13 +347,16 @@ void GazeboRosGps::Update()
   #endif
 
     fix_.status.status = sensor_msgs::NavSatStatus::STATUS_SBAS_FIX;
-
-    fix_publisher_.publish(fix_);
-    velocity_publisher_.publish(velocity_);
   }
   else
   {
     fix_.status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+  }
+
+  if (signalConfirm)
+  {
+    fix_publisher_.publish(fix_);
+    velocity_publisher_.publish(velocity_);
   }
 }
 

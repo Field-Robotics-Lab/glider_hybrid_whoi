@@ -17,6 +17,11 @@
         <velocityDrift>0 0 0</velocityDrift>
         <velocityGaussianNoise>0.0 0.0 0.0</velocityGaussianNoise>
         <espg_projection>26987</espg_projection>
+        <!-- signal delay when reached on surface in seconds -->
+        <signal_delay>10</signal_delay>
+        <!-- max distance from surface to receive the signal. -->
+        <!-- if zero, only when the visual model is less than half submerged -->
+        <signal_max_depth>0</signal_max_depth>
       </plugin>
     </gazebo>
   </xacro:macro>
