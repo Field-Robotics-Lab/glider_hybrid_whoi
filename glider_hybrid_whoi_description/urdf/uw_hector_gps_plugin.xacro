@@ -21,7 +21,7 @@
         <signal_delay>10</signal_delay>
         <!-- max distance from surface to receive the signal. -->
         <!-- if zero, only when the visual model is less than half submerged -->
-        <signal_max_depth>0</signal_max_depth>
+        <signal_max_depth>2</signal_max_depth>
       </plugin>
     </gazebo>
   </xacro:macro>
