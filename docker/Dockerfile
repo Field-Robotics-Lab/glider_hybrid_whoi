@@ -137,11 +137,6 @@ RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN add-apt-repository -y ppa:ubuntugis/ppa && sudo apt-get update \
-    && apt-get install -y gdal-bin && apt-get -y install libgdal-dev \
-    && export CPLUS_INCLUDE_PATH=/usr/include/gdal && export C_INCLUDE_PATH=/usr/include/gdal \
-    && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r GDAL
-
 #------------------------------------------------------------------#
 # source-deps-builder stage
 #------------------------------------------------------------------#
