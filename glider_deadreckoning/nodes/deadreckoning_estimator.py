@@ -186,7 +186,7 @@ class Node():
               v_y = 0.0
           else:
               v_x = dz/(dt*tan(glide_angle))*sin(pi/2.0-rpy[2])
-              v_y = dz/(dt*tan(abs(glide_angle)))*cos(pi/2.0-rpy[2])
+              v_y = dz/(dt*tan(glide_angle))*cos(pi/2.0-rpy[2])
           dx = v_x * dt
           dy = v_y * dt
 
