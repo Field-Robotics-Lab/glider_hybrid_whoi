@@ -5,7 +5,7 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=af2b92b644e4bbdb2119dcfde35a197c58822a86
+ARG version_dave=f3a289dd1f2a6f56daccae502299f7d87d9e0dca
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
 ARG version_uw_sensors_gazebo=b9083c054c48fc9553eddeadae5dec447058607a
@@ -136,6 +136,11 @@ RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E
     && sh /tmp/install-script-for-deps \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN add-apt-repository -y ppa:ubuntugis/ppa && sudo apt-get update \
+    && apt-get install -y gdal-bin && apt-get -y install libgdal-dev \
+    && export CPLUS_INCLUDE_PATH=/usr/include/gdal && export C_INCLUDE_PATH=/usr/include/gdal \
+    && pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r GDAL
 
 #------------------------------------------------------------------#
 # source-deps-builder stage
