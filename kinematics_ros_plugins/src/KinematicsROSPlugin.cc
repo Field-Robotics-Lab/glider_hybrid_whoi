@@ -248,6 +248,7 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   gzmsg << std::endl;
 
   // get writeLog Flag
+  this->controlMsgDetected = false;
   if (_sdf->HasElement("writeLog"))
   {
     this->writeLogFlag = _sdf->Get<bool>("writeLog");
@@ -339,9 +340,7 @@ void KinematicsROSPlugin::ConveyCommands(
   // Convey commands to functions
   this->ConveyKinematicsCommands(_msg);
 
-  // Print gzmsg
-  gzmsg << "Control msg detected! at "
-        << this->time << " s" << std::endl;
+  this->controlMsgDetected = true;
 }
 
 /////////////////////////////////////////////////
@@ -653,7 +652,7 @@ void KinematicsROSPlugin::ConveyModelState()
 void KinematicsROSPlugin::writeCSVLog()
 {
 // CSV log write stream
-if (this->writeLogFlag)
+if (this->writeLogFlag && this->controlMsgDetected)
 {
   double time = this->time.Double();
   if (this->writeCounter == 0)
@@ -662,7 +661,7 @@ if (this->writeLogFlag)
     writeLog << "# Hybrid Glider Plugin Log\n";
     writeLog << "# t,x,y,altitude,roll,pitch,heading,lat,lon,thrustPower,pumpVol"
              << ",batPos,thrustVel,xBuoyancyVel,zBuoyancyVel"
-             << ",xVehicleVel,yVehicleVel,zVehicleVel" << "\n";
+             << ",xVehicleVel,yVehicleVel,zVehicleVel,xOceanCurrent,yOceanCurrent,zOceanCurrent" << "\n";
     writeLog.close();
     this->writeCounter = this->writeCounter + 1;
   }
@@ -679,7 +678,8 @@ if (this->writeLogFlag)
             << this->thrusterVel << "," << this->buoyancyVel.X() << ","
             << this->buoyancyVel.Y()  << "," << this->vehicleVel.X()
             << "," << this->vehicleVel.Y() << "," << this->vehicleVel.Z()
-            << "\n";
+            << "," << this->flowVelocity.X() << "," << this->flowVelocity.Y()
+            << "," << this->flowVelocity.Z() << "\n";
     writeLog.close();
   }
 }
@@ -827,7 +827,6 @@ void KinematicsROSPlugin::CheckSubmergence()
         this->link->SetAngularVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
         this->link->SetLinearVel(ignition::math::Vector3d(0.0, 0.0, 0.0));
         this->link->ResetPhysicsStates();
-        gzmsg << this->model->GetName() << " : " << "surface detected" << std::endl;
       }
     }
   }
