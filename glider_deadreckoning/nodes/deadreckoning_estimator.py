@@ -136,8 +136,8 @@ class Node():
         now = rospy.get_time()
         dt = now - self.t0
         if dt < 1.0e-3:
-            rospy.logwarn("Timestep is too small (%f) - skipping this update"
-                          %dt)
+            # rospy.logwarn("Timestep is too small (%f) - skipping this update"
+            #               %dt)
             return
         self.t0 = now
 
