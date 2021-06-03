@@ -209,6 +209,9 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
+ARG user
+ARG group
+
 # Add fixuid so we can fixup file permissions at runtime. It's very sad we have
 # to resort to this and Docker doesn't have a better first-class solution.
 ARG fixuid_version=0.5
@@ -243,9 +246,6 @@ ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
 ARG frl_msgs_commit
 ENV FRL_MSGS_COMMIT=$frl_msgs_commit
-
-ARG user
-ARG group
 
 COPY --from=source-deps-builder --chown=$user:$group /home/$user/glider_hybrid_whoi_deps/install /home/$user/glider_hybrid_whoi_deps/install
 COPY --from=builder --chown=$user:$group /home/$user/glider_hybrid_whoi/install /home/$user/glider_hybrid_whoi/install
