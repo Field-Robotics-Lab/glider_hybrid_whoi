@@ -231,6 +231,9 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Install pyproj for spawning vehicle with lat/lon input
+RUN pip install --no-cache-dir -U pyproj
+
 # Carry forward the dependency versions
 ARG version_dave
 ENV VERSION_DAVE=$version_dave

@@ -22,17 +22,17 @@
   </group>
 
   <!-- Vehicle's initial position -->
-  <arg name="x" default="484959.36"/>
-  <arg name="y" default="61338.74"/>
-  <arg name="z" default="-0.1"/>
+  <arg name="latitude" value="41.5522"/>
+  <arg name="longitude" value="-70.6803"/>
+  <arg name="depth" value="1"/>
   <arg name="roll" value="0"/>
-  <arg name="pitch" default="0"/>
+  <arg name="pitch" value="0"/>
   <arg name="yaw" value="0"/>
 
   <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
-    <arg name="x" value="$(arg x)"/>
-    <arg name="y" value="$(arg y)"/>
-    <arg name="z" value="$(arg z)"/>
+    <arg name="latitude" value="$(arg latitude)"/>
+    <arg name="longitude" value="$(arg longitude)"/>
+    <arg name="depth" value="$(arg depth)"/>
     <arg name="roll" value="$(arg roll)"/>
     <arg name="pitch" value="$(arg yaw)"/>
     <arg name="yaw" value="$(arg yaw)"/>

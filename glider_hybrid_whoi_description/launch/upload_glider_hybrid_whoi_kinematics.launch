@@ -1,21 +1,14 @@
 <launch>
   <arg name="debug" default="0" doc="Sets the DEBUG flag for the uuv_simulator's plugins for verbose mode"/>
 
-  <arg name="x" default="0" doc="X coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="y" default="0" doc="Y coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="z" default="0" doc="Z coordinate of the initial position to spawn the model (in ENU)"/>
+  <arg name="use_geodetic" default="true"/>
+
+  <arg name="latitude" default="41.5522" doc="Initial Latitude"/>
+  <arg name="longitude" default="-70.6803" doc="Initial Longitude"/>
+  <arg name="depth" default="1" doc="Initial depth"/>
   <arg name="roll" default="0.0" doc="Roll angle of the initial orientation to spawn the model (in ENU)"/>
   <arg name="pitch" default="0.0" doc="Pitch angle of the initial orientation to spawn the model (in ENU)"/>
   <arg name="yaw" default="0.0" doc="Yaw angle of the initial orientation to spawn the model (in ENU)"/>
-
-  <arg name="use_geodetic" default="false"/>
-  <arg name="latitude" default="0"/>
-  <arg name="longitude" default="0"/>
-  <arg name="depth" default="0"/>
-
-  <arg name="latitude_ref" default="0"/>
-  <arg name="longitude_ref" default="0"/>
-  <arg name="altitude_ref" default="0"/>
 
   <arg name="use_ned_frame" default="true"/>
 
@@ -48,12 +41,12 @@
 
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
     <group if="$(arg use_geodetic)">
-      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
-            args="-urdf -latitude $(arg latitude) -longitude $(arg longitude) -depth $(arg depth) -latitude_ref $(arg latitude_ref) -longitude_ref $(arg longitude_ref) -altitude_ref $(arg altitude_ref) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+      <node name="urdf_spawner" pkg="glider_hybrid_whoi_description" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -latitude $(arg latitude) -longitude $(arg longitude) -depth $(arg depth) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
     </group>
 
     <group unless="$(arg use_geodetic)">
-      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
+      <node name="urdf_spawner" pkg="glider_hybrid_whoi_description" type="spawn_model" respawn="false" output="screen"
             args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
     </group>
 
