@@ -4,14 +4,13 @@
 	type="deadreckoning_estimator.py"
 	name="deadreckoning_estimator"
 	output="screen">
-    <param name="init_lat" value="41.51"/>
-    <param name="init_lon" value="-70.735"/>
     <param name="angleofattack" value="3.0"/>
     <param name="update_rate" value="5.0"/>
     <!-- Remap the inputs to application specific topics -->
     <remap from="imu" to="/glider_hybrid_whoi/hector_imu" />
     <remap from="fix" to="/glider_hybrid_whoi/hector_gps" />
     <remap from="pressure" to="/glider_hybrid_whoi/pressure" />
+    <remap from="status" to="/glider_hybrid_whoi/kinematics/UwGliderStatus" />
 
     <param name="writeLog" value="true"/>
 

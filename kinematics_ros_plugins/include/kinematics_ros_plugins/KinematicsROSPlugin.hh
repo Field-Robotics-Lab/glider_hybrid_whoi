@@ -262,6 +262,7 @@ namespace kinematics_ros
     protected: u_int64_t writeCounter;
     protected: bool writeLogFlag;
     protected: virtual void writeCSVLog();
+    protected: bool controlMsgDetected;
 
     private: std::map<std::string, geometry_msgs::TransformStamped> nedTransform;
     private: std::map<std::string, tf2_ros::TransformBroadcaster> tfBroadcaster;

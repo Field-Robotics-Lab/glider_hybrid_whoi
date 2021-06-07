@@ -95,9 +95,9 @@
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
         <!-- Database tag can accept full path or filename for .csv within the uuv_dave/worlds folder  -->
-        <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath>
+        <!-- <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath> -->
         <!-- Absolute path in local machine -->
-        <!--  <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath>  -->
+         <databasefilePath>/home/woensug/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_zero.csv</databasefilePath>
         <!-- Absolute path in docker environment -->
         <!-- <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
       </transient_current>
@@ -145,11 +145,11 @@
 
         <!-- Starting time of the simulator in GMT  -->
         <world_start_time_GMT>
-          <day>4</day>
-          <month>3</month>
+          <day>10</day>
+          <month>4</month>
           <year>2021</year>
-          <hour>15</hour>
-          <minute>0</minute>
+          <hour>14</hour>
+          <minute>52</minute>
         </world_start_time_GMT>
       </tidal_oscillation>
     </plugin>
@@ -168,9 +168,12 @@
         <view_controller>ortho</view_controller>
         <projection_type>orthographic</projection_type>
         <clip>0.1 10000</clip>
-        <pose>480378.78 56669.9 -3.5375 0.0 0.47275 -0.996715</pose>
+        <pose>485042.687500 61510.050781 -21.703316 0.0 0.187488 2.103256</pose>
       </camera>
     </gui>
 
   </world>
 </sdf>
+
+
+

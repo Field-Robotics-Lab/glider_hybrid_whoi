@@ -11,8 +11,9 @@ from math import *
 import rospy
 import tf
 from sensor_msgs.msg import Imu
-from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatFix, NavSatStatus
 from sensor_msgs.msg import FluidPressure
+from frl_vehicle_msgs.msg import UwGliderStatus
 
 # import GDAL
 # from osgeo import osr
@@ -79,12 +80,12 @@ def mdeglon(lat):
     return dx
 
 class Node():
-    def __init__(self, init_lat, init_lon, angleofattack_deg, write_flag):
+    def __init__(self, angleofattack_deg, write_flag):
 
         # Current estimate
         self.dr_msg = NavSatFix()
-        self.dr_msg.latitude = init_lat
-        self.dr_msg.longitude = init_lon
+        self.dr_msg.latitude = 0.0
+        self.dr_msg.longitude = 0.0
 
         # # Transform using GDAL
         # tsrs = osr.SpatialReference()
@@ -103,14 +104,14 @@ class Node():
             rospy.logwarn("Waiting for ROS tme to be received")
             rospy.sleep(0.5)
             self.t0 = rospy.get_time()
+            self.t0_init = self.t0
         self.d0 = None
-        # Flag for when we receive GPS updates
-        self.new_gps = False
 
         # Init messages
         self.imu_msg = Imu()
         self.pressure_msg = FluidPressure()
-        self.gps_msg = NavSatFix()
+        self.gps_msg = None
+        self.sim_msg = UwGliderStatus()
 
         # Pubs and subs
         self.sub_imu = rospy.Subscriber("imu", Imu, self.callback_imu)
@@ -129,7 +130,6 @@ class Node():
 
     def callback_gps(self, data):
         self.gps_msg = data
-        self.new_gps = True
 
     def update(self):
         '''
@@ -139,8 +139,8 @@ class Node():
         now = rospy.get_time()
         dt = now - self.t0
         if dt < 1.0e-3:
-            rospy.logwarn("Timestep is too small (%f) - skipping this update"
-                          %dt)
+            # rospy.logwarn("Timestep is too small (%f) - skipping this update"
+            #               %dt)
             return
         self.t0 = now
 
@@ -150,6 +150,12 @@ class Node():
         # Need to intialize depth on first pass
         if self.d0 is None:
             self.d0 = depth
+            # Need to intialize lat/lon on first pass
+            self.sim_msg = rospy.wait_for_message("status", UwGliderStatus)
+            self.dr_msg.latitude = self.sim_msg.latitude
+            self.dr_msg.longitude = self.sim_msg.longitude
+            print("DR estimation started. Initial lat/lon = " + \
+                  repr(self.dr_msg.latitude) + "/" + repr(self.dr_msg.longitude))
             return
 
         # Convert IMU attitude to Euler
@@ -161,11 +167,14 @@ class Node():
 
         # If we have GPS (Surfaced) - just use that
         gpsFix = False
-        if self.gps_msg.status.status == self.gps_msg.status.STATUS_SBAS_FIX:
+        if self.gps_msg is not None \
+           and self.gps_msg.status.status == NavSatStatus.STATUS_SBAS_FIX:
             self.dr_msg.latitude = self.gps_msg.latitude
             self.dr_msg.longitude = self.gps_msg.longitude
             self.dr_msg.header.stamp = rospy.Time.now()
+            self.dr_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
             self.pub_fix.publish(self.dr_msg)
+            self.gps_msg = None
             gpsFix = True
 
         if gpsFix == False:
@@ -181,12 +190,12 @@ class Node():
           else:
             glide_angle = rpy[1] + aoa
 
-          if abs(glide_angle) < pi/100.0:
+          if abs(rpy[1]) < pi/100.0:
               v_x = 0.0
               v_y = 0.0
           else:
               v_x = dz/(dt*tan(glide_angle))*sin(pi/2.0-rpy[2])
-              v_y = dz/(dt*tan(abs(glide_angle)))*cos(pi/2.0-rpy[2])
+              v_y = dz/(dt*tan(glide_angle))*cos(pi/2.0-rpy[2])
           dx = v_x * dt
           dy = v_y * dt
 
@@ -220,9 +229,6 @@ if __name__ == '__main__':
     # Start node
     rospy.init_node('deadreckoning_estimator')
 
-    # Initial lat/lon.  Default is in Buzzard's Bay
-    init_lat = rospy.get_param('~init_lat', 41.5501)
-    init_lon = rospy.get_param('~init_lon', -70.71428)
     # Specified in degrees, positive is bow down
     angleofattack_deg = rospy.get_param('~angleofattack',  -4.0 )
 
@@ -236,7 +242,7 @@ if __name__ == '__main__':
       write_file.write("time,depth,lat,lon,gpsBool\n")
 
     # Initiate node object
-    node=Node(init_lat, init_lon, angleofattack_deg, write_flag)
+    node=Node(angleofattack_deg, write_flag)
 
     # Spin
     r = rospy.Rate(update_rate)

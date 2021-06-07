@@ -5,7 +5,7 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=e6f6aa517422ba2ce2e0a8db430462bd2d57cdf3
+ARG version_dave=1a10ab918582a46e7e3258311532adb1fe559968
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
 ARG version_uw_sensors_gazebo=b9083c054c48fc9553eddeadae5dec447058607a
@@ -46,7 +46,8 @@ RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && catkin_make
 
 # Install ROS dependencies that are not available via a package manager.
-RUN apt-get update \
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && apt-get update \
     && apt-get install -y --no-install-recommends --no-upgrade curl ca-certificates python-pip
 
 WORKDIR /glider_hybrid_whoi_deps/src
@@ -125,7 +126,8 @@ RUN addgroup --gid 1000 $group \
 
 COPY --from=source-deps /tmp/install-script-for-deps /tmp/install-script-for-deps
 
-RUN apt-get update \
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
        python-pip curl apt-utils software-properties-common xauth \
     && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
@@ -207,6 +209,9 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
+ARG user
+ARG group
+
 # Add fixuid so we can fixup file permissions at runtime. It's very sad we have
 # to resort to this and Docker doesn't have a better first-class solution.
 ARG fixuid_version=0.5
@@ -241,9 +246,6 @@ ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
 ARG frl_msgs_commit
 ENV FRL_MSGS_COMMIT=$frl_msgs_commit
-
-ARG user
-ARG group
 
 COPY --from=source-deps-builder --chown=$user:$group /home/$user/glider_hybrid_whoi_deps/install /home/$user/glider_hybrid_whoi_deps/install
 COPY --from=builder --chown=$user:$group /home/$user/glider_hybrid_whoi/install /home/$user/glider_hybrid_whoi/install

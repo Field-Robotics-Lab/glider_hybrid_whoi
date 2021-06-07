@@ -22,9 +22,9 @@
   </group>
 
   <!-- Vehicle's initial position -->
-  <arg name="x" default="480381.43"/>
-  <arg name="y" default="56666.85"/>
-  <arg name="z" default="-5"/>
+  <arg name="x" default="484959.36"/>
+  <arg name="y" default="61338.74"/>
+  <arg name="z" default="-0.1"/>
   <arg name="roll" value="0"/>
   <arg name="pitch" default="0"/>
   <arg name="yaw" value="0"/>
