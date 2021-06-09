@@ -254,6 +254,8 @@ COPY --from=source-deps-builder --chown=$user:$group /home/$user/glider_hybrid_w
 COPY --from=builder --chown=$user:$group /home/$user/glider_hybrid_whoi/install /home/$user/glider_hybrid_whoi/install
 
 ENV GLIDER_HYBRID_WHOI_USER=$user
-COPY docker/docker-entrypoint.sh /ros_entrypoint.sh
+RUN curl -fsSL https://raw.githubusercontent.com/Field-Robotics-Lab/glider_hybrid_whoi/master/docker/docker-entrypoint.sh > docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
+#COPY /docker/docker-entrypoint.sh /ros_entrypoint.sh
 
 USER $user:$group
