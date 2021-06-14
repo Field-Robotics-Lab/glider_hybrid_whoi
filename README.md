@@ -83,7 +83,7 @@ For view/edit : [Google Drawing Raw file link](https://docs.google.com/drawings/
 
 
 The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
-provided by https://gitlab.com/mit-mers/ros/slocum_glider
+provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.com/sentinel-aug/ros/slocum_glider)
 
 ## Features
 
