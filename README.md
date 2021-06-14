@@ -77,7 +77,10 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
         rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
         ```
 ## Interface
-![alt text](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/uw_glider_interface.png?raw=true)
+For view/edit : [Google Drawing Raw file link](https://docs.google.com/drawings/d/1pj5O0DZ_2o480-9z-qvqAat_yXFckzXrrgTLxbgDyxo/edit?usp=sharing)
+![resources](https://docs.google.com/drawings/d/e/2PACX-1vTMQxfsQmqEMxr5fZ30UBqPzI6ULpPdf2XNiF2ak633ty7KP532fMXOgHIJEqI7Z-o-Ok6vdjtgwYdC/pub?w=960&h=720)
+
+
 
 The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
 provided by https://gitlab.com/mit-mers/ros/slocum_glider
