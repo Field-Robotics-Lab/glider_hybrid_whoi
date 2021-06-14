@@ -5,7 +5,7 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=1a10ab918582a46e7e3258311532adb1fe559968
+ARG version_dave=c0275a000bb895b8d5a3b0f7a56cf54cded6bfd4
 ARG version_uuv_simulator=0.6.13
 ARG version_uuv_manipulators=0.6.1
 ARG version_uw_sensors_gazebo=b9083c054c48fc9553eddeadae5dec447058607a

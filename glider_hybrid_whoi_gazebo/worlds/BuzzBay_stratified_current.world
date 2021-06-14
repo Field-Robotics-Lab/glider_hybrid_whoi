@@ -63,7 +63,7 @@
     </include> -->
 
 
-    <plugin name="underwater_current_plugin" filename="libdave_underwater_current_ros_plugin.so">
+    <plugin name="underwater_current_plugin" filename="libdave_ocean_current_plugin.so">
       <namespace>hydrodynamics</namespace>
       <constant_current>
         <topic>current_velocity</topic>

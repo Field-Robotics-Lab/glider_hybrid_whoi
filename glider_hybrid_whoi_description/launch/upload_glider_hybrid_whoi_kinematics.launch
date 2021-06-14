@@ -1,10 +1,13 @@
 <launch>
   <arg name="debug" default="0" doc="Sets the DEBUG flag for the uuv_simulator's plugins for verbose mode"/>
 
-  <arg name="use_geodetic" default="true"/>
+  <arg name="use_geodetic" default="false"/>
 
   <arg name="latitude" default="41.5522" doc="Initial Latitude"/>
   <arg name="longitude" default="-70.6803" doc="Initial Longitude"/>
+  <arg name="x" default="0" doc="Initial x (ENU)"/>
+  <arg name="y" default="0" doc="Initial y (ENU)"/>
+  <arg name="z" default="-5" doc="Initial z (ENU)"/>
   <arg name="depth" default="1" doc="Initial depth"/>
   <arg name="roll" default="0.0" doc="Roll angle of the initial orientation to spawn the model (in ENU)"/>
   <arg name="pitch" default="0.0" doc="Pitch angle of the initial orientation to spawn the model (in ENU)"/>
