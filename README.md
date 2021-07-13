@@ -3,8 +3,8 @@ Kinematics control plugin for WHOI hybrid gliders
 
 ## Requirements
 ```diff
-- It's using specific dave repo branch : tidal_current_fix_before_reorg (May,11, 2021)
-- https://github.com/Field-Robotics-Lab/DAVE/tree/tidal_current_fix_before_reorg
+- It's using specific dave repo branch : v3.1_reorganization
+- https://github.com/Field-Robotics-Lab/DAVE/tree/v3.1_reorganization
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
 sudo apt-get install ros-melodic-hector-gazebo-plugins
 - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
