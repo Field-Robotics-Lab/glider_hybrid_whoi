@@ -448,7 +448,7 @@ void KinematicsROSPlugin::ConveyDynamicsCommands(
 
     default:
       gzmsg << "WRONG PITCH COMMAND TYPE "
-          << " For dynamics only (1 : battery position) can be used"
+          << " For dynamics, only (1 : battery position) can be used"
           << std::endl;
       break;
   }
@@ -812,10 +812,12 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
   {
     case frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_BATT_POS:
     {
-      this->battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
-      double target_pitch_rad
-                = this->f_pitch_battpos_cal_m * this->battpos + this->f_pitch_battpos_cal_b;
-      target_pitch = target_pitch_rad;
+      // Commented out : Use dynamics flag for battery position command
+      gzmsg << "USE DYNAMICS for battery position command " << std::endl;
+      // this->battpos = _msg->target_pitch_value/39.3701*1000;  // [m to inch]
+      // double target_pitch_rad
+      //           = this->f_pitch_battpos_cal_m * this->battpos + this->f_pitch_battpos_cal_b;
+      // target_pitch = target_pitch_rad;
       break;
     }
 
