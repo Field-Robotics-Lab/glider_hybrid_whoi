@@ -157,6 +157,33 @@
         <f_thruster_power_w1>-0.020919</f_thruster_power_w1>
         <f_thruster_power_w2>1.4699</f_thruster_power_w2>
         <f_thruster_power_w3>0.97895</f_thruster_power_w3>
+
+        <!-- Dynamics properties -->
+        <use_dynamics>true</use_dynamics>
+        <hard_code_input>true</hard_code_input>
+        <dynamics>
+          <hull_mass>48.2</hull_mass>
+          <hull_length>2.0</hull_length>
+          <hull_radius>0.105</hull_radius>
+          <shifter_mass>7.8</shifter_mass>
+          <ballast_radius>0.07</ballast_radius>
+          <default_mass_position>0.4</default_mass_position>
+          <default_ballast_position>0.711</default_ballast_position>
+          <initial_mass_position>-0.018</initial_mass_position>
+          <initial_ballast_position>-0.01024</initial_ballast_position>
+          <max_mass_position>0.03</max_mass_position>
+          <max_ballast_volume>2.4e-04</max_ballast_volume>
+          <center_of_buoyancy>0 0 0</center_of_buoyancy>
+          <center_of_gravity>0 0 0.0054</center_of_gravity>
+          <linear_damping>
+            0       0       0       0       0       0
+            0       0       0       0       0       0
+            0       0       -14     0       0       0
+            0       0       0       0       0       0
+            0       0       0       0       -12     0
+            0       0       0       0       0       0
+          </linear_damping>
+        </dynamics>
       </plugin>
       <plugin name="{namespace}_dave_ocean_current_plugin" filename="libdave_ocean_current_model_plugin.so">
         <flow_velocity_topic>hydrodynamics/current_velocity/${namespace}</flow_velocity_topic>
@@ -176,7 +203,7 @@
             <noiseFreq>0.0</noiseFreq>
           </velocity_down>
         </transient_current>
-        <tide_oscillation>true</tide_oscillation>
+        <tide_oscillation>false</tide_oscillation>
       </plugin>
     </gazebo>
 
