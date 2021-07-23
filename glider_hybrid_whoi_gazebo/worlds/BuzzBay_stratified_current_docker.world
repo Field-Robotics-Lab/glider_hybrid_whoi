@@ -99,7 +99,7 @@
         <!-- Absolute path in local machine -->
         <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
         <!-- Absolute path in docker environment -->
-        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath>
+        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_test.csv</databasefilePath>
       </transient_current>
 
       <!-- transient current database CSV file (North direction value) is used as a depth variation -->
@@ -110,8 +110,8 @@
         <!-- Absolute path in local machine -->
         <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/ACT1951_1_Annual_2021.csv</databasefilePath> -->
         <!-- Absolute path in docker environment -->
-        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/ACT1951_1_Annual_2021.csv</databasefilePath>
 
+        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/ACT1951_1_Annual_2021.csv</databasefilePath>
         <!-- Method 2: harmonic constituents from -->
         <!-- https://tidesandcurrents.noaa.gov/harcon.html?unit=0&timezone=0&id=8447685&name=Chappaquoit+Point&state=MA -->
         <!-- Harmonic Constituents calculated in meters and GMT -->
