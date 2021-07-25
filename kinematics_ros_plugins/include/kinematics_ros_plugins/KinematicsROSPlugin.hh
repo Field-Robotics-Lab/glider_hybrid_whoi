@@ -225,6 +225,10 @@ namespace kinematics_ros
     protected: double C_D;
     protected: double C_L;
 
+    /// \brief Kinematics Flight model AoA
+    protected: double AoA_Dive;
+    protected: double AoA_Climb;
+
     /// ============================================= ///
     /// ===========-=== Visual Effects ======-======= ///
     /// ============================================= ///

@@ -167,6 +167,14 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->C_L = _sdf->Get<double>("C_L");
   else
     this->C_L = 0.4160;
+  if (_sdf->HasElement("AoA_Dive"))
+    this->AoA_Dive = _sdf->Get<double>("AoA_Dive");
+  else
+    this->AoA_Dive = -3.0;
+  if (_sdf->HasElement("AoA_Climb"))
+    this->AoA_Climb = _sdf->Get<double>("AoA_Climb");
+  else
+    this->AoA_Climb = 3.0;
   if (_sdf->HasElement("f_thruster_voltage_v1"))
     this->f_thruster_voltage_v1 = _sdf->Get<double>("f_thruster_voltage_v1");
   else
@@ -489,13 +497,54 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
   {
     m_0 = this->prev_pumpVol/1000000.0*this->fluidDensity;
 
+    // double flowVelEffect = - (this->modelVel.X() * this->flowVelocity.X()
+    //                   + this->modelVel.Y() * this->flowVelocity.Y())
+    //                   /sqrt(pow(this->modelVel.Y(),2) + pow(this->modelVel.X(),2))
+    //                   /sqrt(pow(this->flowVelocity.Y(),2) + pow(this->flowVelocity.X(),2));
+
+    alpha = atan(this->modelVel.Z()/sqrt(this->modelVel.X()*this->modelVel.X() + this->modelVel.Y()*this->modelVel.Y()));
+
+    alpha = 3.0/180.0*M_PI;
+    xi = target_pitch - alpha;
+
+    double K_L_1 = 219.43;
+    double K_D_0 = 3.8;
+    double K_D_2 = 573.32;
+
+    double K_D = K_D_0 + K_D_2 * pow(alpha,2);
+    double K_L = K_L_1 * alpha;
+    double rhoA = this->fluidDensity*Area;
+
+    double C_D_ = K_D*2.0/rhoA;
+    double C_L_ = K_L*2.0/rhoA;
+
+    double flowVelAngleCos = (this->modelVel.X() * this->flowVelocity.X()
+                      + this->modelVel.Y() * this->flowVelocity.Y())
+                      /sqrt(pow(this->modelVel.Y(),2) + pow(this->modelVel.X(),2))
+                      /sqrt(pow(this->flowVelocity.Y(),2) + pow(this->flowVelocity.X(),2));
+
+    double alpha_current = atan(this->modelVel.Z()
+          /sqrt(this->flowVelocity.X()*this->flowVelocity.X() + this->flowVelocity.Y()*this->flowVelocity.Y())
+          /flowVelAngleCos);
+
+    double alpha_temp = atan(this->modelVel.Z()/sqrt(this->modelVel.X()*this->modelVel.X() + this->modelVel.Y()*this->modelVel.Y()));
+
+
     if (target_pitch > 0.0)
     {
-      alpha = -3.0/180.0*M_PI;
+      // alpha = this->AoA_Dive*(2.0+flowVelEffect*3)/180.0*M_PI;
+      // alpha = this->AoA_Dive/180.0*M_PI;
+      // alpha = atan(this->modelVel.Z()/(this->modelVel.X() + this->flowVelocity.X()));
+      alpha = (alpha_temp + alpha_current)/180.0*M_PI;
+      // alpha = -3.0/180.0*M_PI;
     }
     else
     {
-      alpha = +3.0/180.0*M_PI;
+      // alpha = this->AoA_Climb*(2.0+flowVelEffect*3)/180.0*M_PI;
+      // alpha = this->AoA_Climb/180.0*M_PI;
+      // alpha = atan(this->modelVel.Z()/(this->modelVel.X() + this->flowVelocity.X()));
+      alpha = (alpha_temp + alpha_current)/180.0*M_PI;
+      // alpha = 3.0/180.0*M_PI;
     }
 
     xi = target_pitch - alpha;
@@ -517,6 +566,11 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
       else
         vx = 0.0;
     }
+
+    // gzmsg << vz << std::endl;
+    // gzmsg << vx << std::endl;
+    // gzmsg << "==================================" << std::endl;
+
   }
 
   // -------------------------------------- //

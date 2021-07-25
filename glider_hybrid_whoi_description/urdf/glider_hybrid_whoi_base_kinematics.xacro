@@ -148,9 +148,23 @@
         <!-- Kinematics coefficients -->
         <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
         <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
-        <Area>0.345</Area>
+        <Area>0.245</Area>
+        <C_D>0.2534</C_D>
+        <C_L>0.3560</C_L>
+        <!-- <AoA_Climb>-3</AoA_Climb> -->
+        <!-- <Area>0.245</Area>
+        <C_D>0.2534</C_D>
+        <C_L>0.3560</C_L>
+        <AoA_Dive>-8</AoA_Dive>
+        <AoA_Climb>8</AoA_Climb> -->
+        <!-- <AoA_Dive>-3</AoA_Dive>
+        <AoA_Climb>3</AoA_Climb> -->
+
+        <!--  <Area>0.345</Area>
         <C_D>0.2534</C_D>
         <C_L>0.4160</C_L>
+        <AoA_Dive>-12</AoA_Dive>
+        <AoA_Climb>12</AoA_Climb> -->
         <f_thruster_voltage_v1>1.8953</f_thruster_voltage_v1>
         <f_thruster_voltage_v2>-1.995</f_thruster_voltage_v2>
         <f_thruster_voltage_v3>1.8701</f_thruster_voltage_v3>
@@ -176,7 +190,7 @@
             <noiseFreq>0.0</noiseFreq>
           </velocity_down>
         </transient_current>
-        <tide_oscillation>false</tide_oscillation>
+        <tide_oscillation>true</tide_oscillation>
       </plugin>
     </gazebo>
 

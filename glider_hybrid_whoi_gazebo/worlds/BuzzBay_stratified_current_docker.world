@@ -99,7 +99,7 @@
         <!-- Absolute path in local machine -->
         <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
         <!-- Absolute path in docker environment -->
-        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_test.csv</databasefilePath>
+        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_test_tides.csv</databasefilePath>
       </transient_current>
 
       <!-- transient current database CSV file (North direction value) is used as a depth variation -->
