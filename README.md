@@ -11,6 +11,9 @@ sudo apt-get install ros-melodic-hector-gazebo-plugins
 git clone https://github.com/Field-Robotics-Lab/frl_msgs
 ```
 
+## Utility guide (live document)
+* https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing
+
 ## How-to
 ### Installation
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
@@ -59,6 +62,7 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
              ```
 
 ### Quickstart
+
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
         ```bash
