@@ -552,11 +552,11 @@ void KinematicsROSPlugin::ConveyKinematicsCommands(
   targetPose.Rot().W() = cmd_msg.request.model_state.pose.orientation.w;
   this->model->SetWorldPose(targetPose);
 
-  ignition::math::v4::Vector3d targetLinearTwist;
+  ignition::math::Vector3d targetLinearTwist;
   targetLinearTwist.X() = cmd_msg.request.model_state.twist.linear.x;
   targetLinearTwist.Y() = cmd_msg.request.model_state.twist.linear.y;
   targetLinearTwist.Z() = cmd_msg.request.model_state.twist.linear.z;
-  ignition::math::v4::Vector3d targetAngularTwist(0.0, 0.0, 0.0);
+  ignition::math::Vector3d targetAngularTwist(0.0, 0.0, 0.0);
   this->model->SetWorldTwist(targetLinearTwist, targetAngularTwist);
 
   this->modelState = cmd_msg.request.model_state;
