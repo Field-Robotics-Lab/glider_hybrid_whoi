@@ -291,10 +291,12 @@ namespace kinematics_ros
     /// \brief Last timestamp (in seconds)
     protected: double lastTime;
 
-    /// \brief Last body-fixed relative velocity (nu_R in Fossen's equations)
+    /// \brief Dynamics post/vel variables
+    protected: Eigen::Vector6d eta, eta_last, eta_dot, eta_dot_last;
+    protected: Eigen::Vector6d nu, nu_last, nu_dot, nu_dot_last;
     protected: Eigen::Vector6d lastVelRel;
-    protected: Eigen::Vector3d targetLinearVel_prev;
-    protected: Eigen::Vector3d targetAngularVel_prev;
+    // protected: Eigen::Vector3d targetLinearVel_prev;
+    // protected: Eigen::Vector3d targetAngularVel_prev;
 
     /// \brief Get parameters (read matrix form defenitions)
     protected: void GetParam(std::string _tag, std::vector<double>& _output);
@@ -470,6 +472,23 @@ inline ignition::math::Matrix3d Mat3dToGazebo(const Eigen::Matrix3d &_x)
   return ignition::math::Matrix3d(_x(0, 0), _x(0, 1), _x(0, 2),
      _x(1, 0), _x(1, 1), _x(1, 2),
      _x(2, 0), _x(2, 1), _x(2, 2));
+}
+
+inline Eigen::Matrix6d Jacobian(const double &phi,
+                                const double &theta,
+                                const double &psi)
+{
+    Eigen::Matrix6d out;
+    out << cos(psi)*cos(theta),
+    -sin(psi)*cos(phi)+cos(psi)*sin(theta)*sin(phi),
+    sin(psi)*sin(phi)+cos(psi)*cos(phi)*sin(theta), 0, 0, 0,
+    sin(psi)*cos(theta), cos(psi)*cos(phi)+sin(psi)*sin(theta)*sin(phi),
+    -cos(psi)*sin(phi)+sin(psi)*sin(theta)*cos(phi), 0, 0, 0,
+    -sin(theta), cos(theta)*sin(phi), cos(theta)*cos(phi), 0, 0, 0,
+    0, 0, 0, 1, sin(phi)*tan(theta), cos(phi)*tan(theta),
+    0, 0, 0, 0, cos(phi), -sin(phi),
+    0, 0, 0, 0, sin(phi)/cos(theta), cos(phi)/cos(theta);
+    return out;
 }
 }
 

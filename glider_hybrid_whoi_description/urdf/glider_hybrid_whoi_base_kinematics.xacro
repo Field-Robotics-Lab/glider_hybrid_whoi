@@ -160,7 +160,7 @@
 
         <!-- Dynamics properties -->
         <use_dynamics>true</use_dynamics>
-        <hard_code_input>false</hard_code_input>
+        <hard_code_input>true</hard_code_input>
         <dynamics>
           <hull_mass>48.2</hull_mass>
           <hull_length>2.0</hull_length>
@@ -177,11 +177,11 @@
           <center_of_gravity>0 0 0.0054</center_of_gravity>
           <linear_damping>
             0       0       0       0       0       0
-            0       0       0       0       0       0
-            0       0       -14     0       0       0
+            0       -50     0       0       0       0
+            0       0       -50     0       0       0
             0       0       0       0       0       0
             0       0       0       0       -12     0
-            0       0       0       0       0       0
+            0       0       0       0       0       -12
           </linear_damping>
         </dynamics>
       </plugin>
