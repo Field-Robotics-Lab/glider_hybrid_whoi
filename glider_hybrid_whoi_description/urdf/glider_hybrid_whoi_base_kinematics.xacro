@@ -160,7 +160,7 @@
 
         <!-- Dynamics properties -->
         <use_dynamics>true</use_dynamics>
-        <hard_code_input>true</hard_code_input>
+        <hard_code_input>false</hard_code_input>
         <dynamics>
           <hull_mass>48.2</hull_mass>
           <hull_length>2.0</hull_length>

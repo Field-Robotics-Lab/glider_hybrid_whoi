@@ -292,11 +292,8 @@ namespace kinematics_ros
     protected: double lastTime;
 
     /// \brief Dynamics post/vel variables
-    protected: Eigen::Vector6d eta, eta_last, eta_dot, eta_dot_last;
-    protected: Eigen::Vector6d nu, nu_last, nu_dot, nu_dot_last;
-    protected: Eigen::Vector6d lastVelRel;
-    // protected: Eigen::Vector3d targetLinearVel_prev;
-    // protected: Eigen::Vector3d targetAngularVel_prev;
+    protected: Eigen::Vector6d eta, eta_last, eta_dot;
+    protected: Eigen::Vector6d nu, nu_last, nu_dot;
 
     /// \brief Get parameters (read matrix form defenitions)
     protected: void GetParam(std::string _tag, std::vector<double>& _output);
@@ -306,20 +303,6 @@ namespace kinematics_ros
     /// only calls the update function at the beginning or at the end of a
     /// iteration of the physics engine
     protected: Eigen::Vector6d filteredAcc;
-
-    /// \brief Computes the added-mass Coriolis matrix Ca.
-    protected: void ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
-                                             Eigen::Matrix6d &_Ma,
-                                             Eigen::Matrix6d &_Ca) const;
-
-    /// \brief Updates the damping matrix for the current velocity
-    protected: void ComputeDampingMatrix(const Eigen::Vector6d& _vel,
-                                       Eigen::Matrix6d &_D) const;
-
-    /// \brief Filter acceleration (fix due to the update structure of Gazebo)
-    protected: void ComputeAcc(Eigen::Vector6d _velRel,
-                            double _time,
-                            double _alpha = 0.3);
 
     /// \brief Convey commands to calculate dynamics
     protected: virtual void ConveyDynamicsCommands

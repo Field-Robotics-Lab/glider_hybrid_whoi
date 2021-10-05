@@ -229,11 +229,9 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
     this->eta.setZero();
     this->eta_last.setZero();
     this->eta_dot.setZero();
-    this->eta_dot_last.setZero();
     this->nu.setZero();
     this->nu_last.setZero();
     this->nu_dot.setZero();
-    this->nu_dot_last.setZero();
 
     if (_sdf->HasElement("hard_code_input"))
       this->hardCodeInput = _sdf->Get<bool>("hard_code_input");
@@ -473,35 +471,32 @@ void KinematicsROSPlugin::ConveyDynamicsCommands(
   double target_yaw = 1000.0;
   switch(_msg->rudder_control_mode)
   {
-    case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_HEADING:
-      target_yaw = M_PI/2 - _msg->target_heading;
-      break;
+    // TODO : No control algorithm included yet for target heading
+    // case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_HEADING:
+    //   target_yaw = M_PI/2 - _msg->target_heading;
+    //   break;
 
     case frl_vehicle_msgs::UwGliderCommand::RUDDER_CONTROL_ANGLE:
     {
       double rudderAngleZero = 0.0;
-      double rudderAnglePort = M_PI/6.0;
-      double rudderAngleStbd = -M_PI/6.0;
-      ignition::math::Pose3d model_pose = this->model->WorldPose();
-      ignition::math::Vector3<double> model_RPY =
-          calculateRPY(model_pose.Rot().X(), model_pose.Rot().Y(),
-                      model_pose.Rot().Z(), model_pose.Rot().W());
+      double rudderAnglePort = M_PI/6.0; // 30 degree
+      double rudderAngleStbd = -M_PI/6.0; // 30 degree
       switch(_msg->rudder_angle)
       {
         case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_CENTER:
-          target_yaw = model_RPY.Z() + rudderAngleZero;
+          target_yaw = rudderAngleZero;
           break;
 
         case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_PORT:
-          target_yaw = model_RPY.Z() + rudderAnglePort;
+          target_yaw = rudderAnglePort;
           break;
 
         case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_STBD:
-          target_yaw = model_RPY.Z() + rudderAngleStbd;
+          target_yaw = rudderAngleStbd;
           break;
 
         case frl_vehicle_msgs::UwGliderCommand::RUDDER_ANGLE_DIRECT:
-          target_yaw = model_RPY.Z() + _msg->target_rudder_angle;
+          target_yaw = -_msg->target_rudder_angle; // positive turn stbd
           break;
 
         default:
@@ -517,12 +512,12 @@ void KinematicsROSPlugin::ConveyDynamicsCommands(
 
     default:
       gzmsg << "WRONG RUDDER COMMAND TYPE "
-          << "(1 : control heading, 2: control angle)"
+          << "For dynamics, only 2: control angle is available"
           << std::endl;
       break;
   }
 
-  // Assign target yaw orientation if msg received (kinematics way)
+  // Assign target yaw orientation if msg received
   if (target_yaw != 1000.0)
     this->prev_yaw = target_yaw;
 }
@@ -536,12 +531,12 @@ void KinematicsROSPlugin::CalculateDynamics(
     double hardInputPumpVol, hardInputMassPos;
     double hardInputYaw, hardInputThrustPower;
     double _time = this->time.Double();
-    double Period = 50.0;
+    double Period = 400.0;
 
-    hardInputPumpVol = 1.0e-04; //-1.0e-03 * cos(_time/Period);
-    hardInputMassPos = 0.0; //-2.0e-02 * cos(_time/Period);
-    hardInputYaw = 60.0/180.0*M_PI;
-    hardInputThrustPower = 1.0;
+    hardInputPumpVol = 1.0e-04 * cos(_time/Period);
+    hardInputMassPos = 1.0e-03 * cos(_time/Period);
+    hardInputYaw = 30.0/180.0*M_PI;
+    hardInputThrustPower = 0.5;
 
     // Max value limiter
     if (hardInputMassPos > x_s_o_max)
@@ -603,23 +598,6 @@ void KinematicsROSPlugin::CalculateDynamics(
   C_RB << Eigen::Matrix3d::Zero(), Sa,
          Sa, -1.0 * CrossProductOperator(ab.tail<3>());
 
-  // gzerr << "nu_last" << std::endl << nu_last << std::endl;
-  // gzerr << "I_xx" << std::endl << I_xx << std::endl;
-  // gzerr << "I_yy" << std::endl << I_yy << std::endl;
-  // gzerr << "I_zz" << std::endl << I_zz << std::endl;
-  // gzerr << "m" << std::endl << this->m << std::endl;
-  // gzerr << "COG" << std::endl << this->cog << std::endl;
-  // gzerr << "M_RB" << std::endl << M_RB << std::endl;
-  // gzerr << "C_RB" << std::endl << C_RB << std::endl;
-
-
-  // this->link->GetInertial()->SetCoG((this->cog).X(),(this->cog).Y(),(this->cog).Z());
-  // this->link->GetInertial()->SetIXX(I_xx);
-  // this->link->GetInertial()->SetIYY(I_yy);
-  // this->link->GetInertial()->SetIZZ(I_zz);
-  // this->link->GetInertial()->SetMass(m);
-
-
   // ---- Added mass matrix calculation ----- //
   // computed according to the procedure in Fossen p. 41
   double e = 1.0-std::pow(b/a,2);
@@ -658,9 +636,6 @@ void KinematicsROSPlugin::CalculateDynamics(
   Sa = -1.0 * CrossProductOperator(ab.head<3>());
   C_A << Eigen::Matrix3d::Zero(), Sa,
          Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-
-  // gzerr << "M_A" << std::endl << M_A << std::endl;
-  // gzerr << "C_A" << std::endl << C_A << std::endl;
 
   // ---- Hydrostatic restoring forces ----- //
   double W = this->m*this->gravity; // Gravitational force acting on center of gravity
@@ -722,188 +697,7 @@ void KinematicsROSPlugin::CalculateDynamics(
   // Solve for nu_dot
   this->nu_dot = (M_tot).colPivHouseholderQr().solve(tau_H-(C_tot)*nu_last-(D_tot)*nu_last-tau_R);
 
-
-  // gzerr << "M_tot" << std::endl << M_tot << std::endl;
-  // gzerr << "C_tot" << std::endl << C_tot << std::endl;
-  // gzerr << "D_tot" << std::endl << D_tot << std::endl;
-  // gzerr << "tau_H" << std::endl << tau_H << std::endl;
-  // gzerr << "tau_H_h" << std::endl << tau_H_h << std::endl;
-  // gzerr << "alpha_r" << std::endl << alpha_r << std::endl;
-  // gzerr << "tau_H_r" << std::endl << tau_H_r << std::endl;
-  // gzerr << "nu_dot" << std::endl << nu_dot << std::endl;
-
-
-
-  // this->Ma = M_A;
-
-  // // Link's pose
-  // ignition::math::Pose3d pose;
-  // pose = this->link->WorldPose();
-
-  // // Compute the relative velocity
-  // ignition::math::Vector3d linVel, angVel;
-  // linVel = this->link->RelativeLinearVel();
-  // angVel = this->link->RelativeAngularVel();
-
-  // // TODO  Only the pitch is calculated dynamics manner
-  // // - Heading/Rudder control is done in Kinamatics way
-  // // - Roll, Yaw in dinamics calculation fixed to zero
-  // linVel.Y() = 0.0; angVel.X() = 0.0; angVel.Z() = 0.0;
-
-  // Eigen::Vector6d velRel = EigenStack(this->ToNED(linVel), this->ToNED(angVel));
-
-  // // Update added Coriolis matrix
-  // this->ComputeAddedCoriolisMatrix(velRel, this->Ma, this->Ca);
-
-  // // Update damping matrix
-  // this->ComputeDampingMatrix(velRel, this->D);
-
-  // // Filter acceleration
-  // this->ComputeAcc(velRel, this->time.Double(), 0.3);
-
-  // gzerr << "Time  " << this->time.Double() << std::endl;
-  // gzerr << "Ma " << this->Ma << std::endl;
-  // gzerr << "Ca " << this->Ca << std::endl;
-  // gzerr << "D  " << this->D << std::endl;
-
-
-
-  // // We can now compute the additional forces/torques due to this dynamic
-  // // effects based on Eq. 8.136 on p.222 of Fossen: Handbook of Marine Craft ...
-
-  // // Damping forces and torques
-  // Eigen::Vector6d damping = -this->D * velRel;
-
-  // // Added-mass forces and torques
-  // Eigen::Vector6d added = -this->Ma * this->filteredAcc;
-
-  // // Added Coriolis term
-  // Eigen::Vector6d cor = -this->Ca * velRel;
-
-  // // // --- Calculate Rigid Body Diagonal terms --- //
-  // // // Rigid Body mass diagonal term
-  // // Eigen::Matrix3d m_S_r_cg = this->m * CrossProductOperator(cog);
-  // // Eigen::Matrix6d M_RB = Eigen::Matrix6d::Identity() * this->m;
-  // // M_RB(3,3) = I_xx; M_RB(4,4) = I_yy; M_RB(5,5) = I_zz;
-  // // Eigen::Matrix6d M_RB_NoDiag = M_RB;
-  // // M_RB(0,3) = -m_S_r_cg(0,0); M_RB(0,4) = -m_S_r_cg(0,1); M_RB(0,5) = -m_S_r_cg(0,2);
-  // // M_RB(1,3) = -m_S_r_cg(1,0); M_RB(1,4) = -m_S_r_cg(1,1); M_RB(1,5) = -m_S_r_cg(1,2);
-  // // M_RB(2,3) = -m_S_r_cg(2,0); M_RB(2,4) = -m_S_r_cg(2,1); M_RB(2,5) = -m_S_r_cg(2,2);
-  // // M_RB(3,0) = m_S_r_cg(0,0); M_RB(3,1) = m_S_r_cg(0,1); M_RB(3,2) = m_S_r_cg(0,2);
-  // // M_RB(4,0) = m_S_r_cg(1,0); M_RB(4,1) = m_S_r_cg(1,1); M_RB(4,2) = m_S_r_cg(1,2);
-  // // M_RB(5,0) = m_S_r_cg(2,0); M_RB(5,1) = m_S_r_cg(2,1); M_RB(5,2) = m_S_r_cg(2,2);
-  // // Rigid Body Coriolis diagonal term
-  // Eigen::Matrix6d C_RB = Eigen::Matrix6d::Zero();
-  // Eigen::Vector6d ab = M_RB * velRel;
-  // Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  // C_RB << Eigen::Matrix3d::Zero(), Sa,
-  //        Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-  // Eigen::Matrix6d C_RB_NoDiag = Eigen::Matrix6d::Zero();
-  // ab = M_RB_NoDiag * velRel;
-  // Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  // C_RB_NoDiag << Eigen::Matrix3d::Zero(), Sa,
-  //        Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-
-  // gzerr << "M_RB  " << M_RB << std::endl;
-  // gzerr << "C_RB  " << C_RB << std::endl;
-  // gzerr << "M_RB~~  " << M_RB-M_RB_NoDiag << std::endl;
-  // gzerr << "C_RB~~  " << C_RB-C_RB_NoDiag << std::endl;
-  // gzerr << "Acc " << this->filteredAcc << std::endl;
-  // gzerr << "velRel " << velRel << std::endl<< std::endl<< std::endl;
-
-
-  // // Calculate diagonal effect as RHS force
-  // Eigen::Vector6d rigid_diag = -(M_RB-M_RB_NoDiag)*this->filteredAcc - (C_RB-C_RB_NoDiag)*velRel;
-
-  // // --- Calculate hull hydrodynamic force (Graver) --- //
-  // //angle of attack of hull
-  // double alpha_h;
-  // if (abs(velRel(0)) > 0.0)
-  //     alpha_h = atan(velRel(2)/velRel(0));
-  // else
-  //     alpha_h = 0.0;
-  // // Graver hydrodynamic forces for hull
-  // double A_h = M_PI*this->r_h*this->r_h;
-  // double C_D_h = 0.214 + 32.3*alpha_h*alpha_h;
-  // double C_L_h = 11.76*alpha_h + 4.6 * alpha_h*alpha_h;
-  // double C_M_h = 0.63*alpha_h;
-  // double F_h_kernel = std::pow(std::pow(velRel(0)*velRel(0)+velRel(2)*velRel(2),0.5),2);
-  // double F_D_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_D_h;
-  // double F_L_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_L_h;
-  // double F_M_h = 0.5*this->fluidDensity*A_h*F_h_kernel*C_M_h;
-  // Eigen::Vector6d hull_hydro; hull_hydro << F_L_h*sin(alpha_h)-F_D_h*cos(alpha_h), 0.0, -F_L_h*cos(alpha_h)-F_D_h*sin(alpha_h), 0.0, F_M_h, 0.0;
-
-  // // --- Calculate Buoyancy force (Hydrostatic restoring force, Fossen (2.168)) --- //
-  // // Get world pos eta(p,q,r)
-  // ignition::math::Vector3<double> vR(0.0, 0.0, 0.0);
-  // ignition::math::Vector4<double> q(0.0, 0.0, 0.0, 0.0);
-
-  // // TODO  Only the pitch is calculated dynamics manner
-  // // - Heading/Rudder control is done in Kinamatics way
-  // // - Roll, Yaw in dinamics calculation fixed to zero
-  // ignition::math::Vector3<double> pose_RPY =
-  //     calculateRPY(pose.Rot().X(), pose.Rot().Y(),
-  //                 pose.Rot().Z(), pose.Rot().W());
-  // ignition::math::Quaterniond orientation_rel;
-  // orientation_rel.Euler(0.0, pose_RPY.Y(), 0.0);
-  // q.X() = orientation_rel.X();
-  // q.Y() = orientation_rel.Y();
-  // q.Z() = orientation_rel.Z();
-  // q.W() = orientation_rel.W();
-
-  // // roll (x-axis rotation)
-  // double sinr_cosp = 2.0 * (q.X() * q.Y() + q.Z() * q.W());
-  // double cosr_cosp = 1.0 - 2.0 * (q.Y() * q.Y() + q.Z() * q.Z());
-  // vR.X() = std::atan2(sinr_cosp, cosr_cosp);
-  // // pitch (y-axis rotation)
-  // double sinp = 2.0 * (q.X() * q.Z() - q.W() * q.Y());
-  // if (std::abs(sinp) >= 1.0)
-  //   vR.Y() = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-  // else
-  //   vR.Y() = std::asin(sinp);
-  // // yaw (z-axis rotation)
-  // double siny_cosp = 2.0 * (q.X() * q.W() + q.Y() * q.Z());
-  // double cosy_cosp = 1.0 - 2.0 * (q.Z() * q.Z() + q.W() * q.W());
-  // vR.Z() = std::atan2(siny_cosp, cosy_cosp);
-
-  // // Hydrostatic restoring forces from Fossen (2.168)
-  // double W = this->m*this->gravity; // Gravitational force acting on center of gravity
-  // double B = (this->m_h+this->m_s)*this->gravity; // Buoyancy force acting on center of buoyancy
-  // ignition::math::Vector3d buoyancyForce, buoyancyTorque;
-  // this->buoyancyForce = ignition::math::Vector3d(
-  //     (W-B)*sin(vR.Y()), -(W-B)*cos(vR.Y())*sin(vR.X()) , -(W-B)*cos(vR.Y())*cos(vR.X())
-  // );
-  // buoyancyTorque = ignition::math::Vector3d(
-  //     -((this->cog).Y()*W-(this->cob).Y()*B)*cos(vR.Y())*cos(vR.X())+((this->cog).Z()*W-(this->cob).Z()*B)*cos(vR.Y())*sin(vR.X()),
-  //     ((this->cog).Z()*W-(this->cob).Z()*B)*sin(vR.Y())+((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*cos(vR.X()),
-  //     -((this->cog).X()*W-(this->cob).X()*B)*cos(vR.Y())*sin(vR.X())-((this->cog).Y()*W-(this->cob).Y()*B)*sin(vR.Y())
-  // );
-
-  // Eigen::Vector6d hydrostatic;
-  // hydrostatic << this->buoyancyForce.X(), this->buoyancyForce.Y(), this->buoyancyForce.Z(), buoyancyTorque.X(), buoyancyTorque.Y(), buoyancyTorque.Z();
-
-  // // All additional (compared to standard rigid body) Fossen terms combined.
-  // Eigen::Vector6d tau;
-  // Eigen::Vector6d thruster; thruster << _thrustPower, 0.0, 0.0, 0.0, 0.0, 0.0;
-
-  // tau = damping + added + cor + thruster + rigid_diag + hull_hydro - hydrostatic;
-
-  // Eigen::Vector6d Acc = (M_RB).colPivHouseholderQr().solve(tau-(C_RB)*velRel);
-
-  // // TODO  Only the pitch is calculated dynamics manner
-  // // - Heading/Rudder control is done in Kinamatics way
-  // // - Roll, Yaw in dinamics calculation fixed to zero
-  // ignition::math::Pose3d model_pose = this->model->WorldPose();
-  // ignition::math::Vector3<double> model_RPY =
-  //     calculateRPY(model_pose.Rot().X(), model_pose.Rot().Y(),
-  //                 model_pose.Rot().Z(), model_pose.Rot().W());
-  // // ignition::math::Quaterniond target_orientation;
-  // // target_orientation.Euler(0.0, model_RPY.Y(), this->prev_yaw);
-  // // model_pose.Rot() = target_orientation;
-
-  // this->eta_last << model_pose.Pos().X(), model_pose.Pos().Y(), model_pose.Pos().Z(),
-  //             model_RPY.X(), model_RPY.Y(), model_RPY.Z();
-
+  // --- Update vehicle position --- //
   // Caculate position
   double dt = this->time.Double() - this->lastTime;
   this->nu = this->nu_last + dt*this->nu_dot;
@@ -914,9 +708,7 @@ void KinematicsROSPlugin::CalculateDynamics(
   double dx = this->flowVelocity.X() * dt;
   double dy = this->flowVelocity.Y() * dt;
   double dz = this->flowVelocity.Z() * dt;
-  eta(0) += dx;
-  eta(1) += dy;
-  eta(2) += dz;
+  eta(0) += dx; eta(1) += dy; eta(2) += dz;
 
   // Update pose
   ignition::math::Pose3d model_pose;
@@ -927,23 +719,6 @@ void KinematicsROSPlugin::CalculateDynamics(
   target_orientation.Euler(eta(3), eta(4), eta(5));
   model_pose.Rot() = target_orientation;
   this->model->SetWorldPose(model_pose);
-
-  // GZ_ASSERT(!std::isnan(tau.norm()), "Hydrodynamic forces vector is nan");
-
-  // if (!std::isnan(tau.norm()))
-  // {
-  //   Eigen::Vector3d targetLinearVel = this->targetLinearVel_prev + Eigen::Vector3d(Acc(0), -Acc(1), -Acc(2))*dt;
-  //   Eigen::Vector3d targetAngularVel = this->targetAngularVel_prev + Eigen::Vector3d(Acc(3), -Acc(4), -Acc(5))*dt;
-  //   this->targetLinearVel_prev = targetLinearVel;
-  //   this->targetAngularVel_prev = targetAngularVel;
-  //   targetLinearVel(1) = 0.0; targetAngularVel(0) = 0.0; targetAngularVel(2) = 0.0;
-  //   ignition::math::Vector3d targetLinearVel_F = pose.Rot().RotateVector(Vec3dToGazebo(targetLinearVel));
-  //   ignition::math::Vector3d targetAngularVel_F = pose.Rot().RotateVector(Vec3dToGazebo(targetAngularVel));
-  //   this->model->SetWorldTwist(targetLinearVel_F, targetAngularVel_F);
-  // }
-
-  // gzerr << "dt" << std::endl << dt << std::endl;
-  // gzerr << "eta" << std::endl << eta << std::endl;
 
   // update time and variables
   this->lastTime = this->time.Double();
@@ -1454,61 +1229,6 @@ void KinematicsROSPlugin::CheckSubmergence()
     this->link->SetWorldPose(this->lastPose);
   }
 }
-
-/////////////////////////////////////////////////
-void KinematicsROSPlugin::ComputeAddedCoriolisMatrix(const Eigen::Vector6d& _vel,
-                                          Eigen::Matrix6d &_Ma,
-                                          Eigen::Matrix6d &_Ca) const
-{
-  // This corresponds to eq. 6.43 on p. 120 in
-  // Fossen, Thor, "Handbook of Marine Craft and Hydrodynamics and Motion
-  // Control", 2011
-  Eigen::Vector6d ab = _Ma * _vel;
-  Eigen::Matrix3d Sa = -1.0 * CrossProductOperator(ab.head<3>());
-  _Ca << Eigen::Matrix3d::Zero(), Sa,
-         Sa, -1.0 * CrossProductOperator(ab.tail<3>());
-}
-
-/////////////////////////////////////////////////
-void KinematicsROSPlugin::ComputeDampingMatrix(const Eigen::Vector6d& _vel,
-                                    Eigen::Matrix6d &_D) const
-{
-  // From Antonelli 2014: the viscosity of the fluid causes
-  // the presence of dissipative drag and lift forces on the
-  // body. A common simplification is to consider only linear
-  // and quadratic damping terms and group these terms in a
-  // matrix Drb
-
-  _D.setZero();
-
-  // Simplified only to consider DLin here.
-  _D = -1.0 * this->DLin;
-}
-
-/////////////////////////////////////////////////
-void KinematicsROSPlugin::ComputeAcc(Eigen::Vector6d _velRel, double _time,
-                                  double _alpha)
-{
-  // Compute Fossen's nu-dot numerically. We have to do this for now since
-  // Gazebo reports angular accelerations that are off by orders of magnitude.
-  double dt = _time - this->lastTime;
-
-  if (dt <= 0.0)  // Extra caution to prevent division by zero
-    return;
-
-  Eigen::Vector6d acc = (_velRel - this->lastVelRel) / dt;
-  // TODO  We only have access to the acceleration of the previous simulation
-  //       step. The added mass will induce a strong force/torque counteracting
-  //       it in the current simulation step. This can lead to an oscillating
-  //       system.
-  //       The most accurate solution would probably be to first compute the
-  //       latest acceleration without added mass and then use this to compute
-  //       added mass effects. This is not how gazebo works, though.
-  this->filteredAcc = (1.0 - _alpha) * this->filteredAcc + _alpha * acc;
-  this->lastVelRel = _velRel;
-}
-
-
 
 GZ_REGISTER_MODEL_PLUGIN(KinematicsROSPlugin)
 }
