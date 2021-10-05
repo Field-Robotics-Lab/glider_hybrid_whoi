@@ -724,6 +724,9 @@ void KinematicsROSPlugin::CalculateDynamics(
   this->lastTime = this->time.Double();
   this->nu_last = this->nu;
   this->eta_last = this->eta;
+
+  // Eliminate Gazebo physics
+  this->link->ResetPhysicsStates();
 }
 
 
