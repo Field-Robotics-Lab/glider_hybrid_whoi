@@ -701,22 +701,22 @@ void KinematicsROSPlugin::CalculateDynamics(
   // Caculate position
   double dt = this->time.Double() - this->lastTime;
   this->nu = this->nu_last + dt*this->nu_dot;
-  this->eta_dot = Jacobian(eta(3),eta(4),eta(5))*this->nu;
+  this->eta_dot = Jacobian(this->eta_last(3),this->eta_last(4),this->eta_last(5))*this->nu;
   this->eta = this->eta_last + dt*this->eta_dot;
 
   // Apply ocean current
-  double dx = this->flowVelocity.X() * dt;
-  double dy = this->flowVelocity.Y() * dt;
-  double dz = this->flowVelocity.Z() * dt;
-  eta(0) += dx; eta(1) += dy; eta(2) += dz;
+  double dx = this->flowVelocity.Y() * dt;
+  double dy = this->flowVelocity.X() * dt;
+  double dz = -this->flowVelocity.Z() * dt;
+  this->eta(0) += dx; this->eta(1) += dy; this->eta(2) += dz;
 
   // Update pose
   ignition::math::Pose3d model_pose;
-  model_pose.Pos().X() = eta(0);
-  model_pose.Pos().Y() = eta(1);
-  model_pose.Pos().Z() = eta(2);
+  model_pose.Pos().X() = this->eta(0);
+  model_pose.Pos().Y() = this->eta(1);
+  model_pose.Pos().Z() = this->eta(2);
   ignition::math::Quaterniond target_orientation;
-  target_orientation.Euler(eta(3), eta(4), eta(5));
+  target_orientation.Euler(this->eta(3), this->eta(4), this->eta(5));
   model_pose.Rot() = target_orientation;
   this->model->SetWorldPose(model_pose);
 
@@ -969,7 +969,7 @@ void KinematicsROSPlugin::applyOceanCurrent()
   this->link->SetLinearVel(ignition::math::Vector3d(
             this->modelVel.X() + this->flowVelocity.Y(),
             this->modelVel.Y() + this->flowVelocity.X(),
-            this->modelVel.Z() + this->flowVelocity.Z()));
+            this->modelVel.Z() - this->flowVelocity.Z()));
 }
 
 /////////////////////////////////////////////////
