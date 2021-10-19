@@ -608,9 +608,9 @@ void KinematicsROSPlugin::ConveyModelState()
   poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
   double sNorthing = this->modelXYZ.Y();
   double sEasting = this->modelXYZ.X();
-  double tLat = sNorthing;
-  double tLon = sEasting;
-  poCT->Transform(1, &tLon, &tLat);
+  double tLon = sNorthing;
+  double tLat = sEasting;
+  poCT->Transform(1, &tLat, &tLon);
 
   // Construct UwGliderStatus msg
   frl_vehicle_msgs::UwGliderStatus status_msg;

@@ -312,9 +312,9 @@ void GazeboRosGps::Update()
     poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
     double sNorthing = position.Y();
     double sEasting = position.X();
-    double tLat = sNorthing;
-    double tLon = sEasting;
-    poCT->Transform(1, &tLon, &tLat);
+    double tLon = sNorthing;
+    double tLat = sEasting;
+    poCT->Transform(1, &tLat, &tLon);
 
   #if (GAZEBO_MAJOR_VERSION >= 8)
     fix_.latitude = tLat;
