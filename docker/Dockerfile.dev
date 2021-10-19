@@ -2,19 +2,18 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=1a10ab918582a46e7e3258311532adb1fe559968
-ARG version_uuv_simulator=0.6.13
-ARG version_uuv_manipulators=0.6.1
+ARG version_dave=649c3798520c63c3801123e94a73a66e7253c590
+ARG version_uuv_simulator=34df13305db69f29b29b6cba5388435485226e1e
+ARG version_uuv_manipulators=466f103887acde9d4db648368f65fe11cb621034
 ARG version_uw_sensors_gazebo=b9083c054c48fc9553eddeadae5dec447058607a
-ARG acoustic_msgs_commit=e4c93b6f8169d45b103289faf4500c40ab705ac9
-ARG ds_sim_commit=36835b85c30f5e063384378992f6ea60b5410d66
-ARG ds_msgs_commit=4a7d4a5002d17631e67eb01c45b974293fe5f3c2
+ARG ds_sim_commit=55194a96de0b490c9c51eae1510d7d44039be533
+ARG ds_msgs_commit=179631d46871b31fad28a21f81d865e3c73446d3
 ARG frl_msgs_commit=a41b1d3d192dacd32a7e0a717a9c1b0a30eaca64
 #------------------------------------------------------------------#
 
 #------------------------------------------------------------------#
 # Other arguments
-ARG ros_distro=melodic
+ARG ros_distro=noetic
 ARG user=ros
 ARG group=ros
 #------------------------------------------------------------------#
@@ -43,9 +42,75 @@ WORKDIR /glider_hybrid_whoi_deps
 RUN . "/opt/ros/$ROS_DISTRO/setup.bash" \
     && catkin_make
 
-# Install ROS dependencies that are not available via a package manager.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-upgrade curl ca-certificates python-pip
+# Required utilities from https://github.com/Field-Robotics-Lab/dockwater/blob/main/noetic/Dockerfile
+RUN apt update \
+ && apt install -y --no-install-recommends\
+        build-essential \
+        cmake \
+        cppcheck \
+        curl \
+        git \
+        gnupg \
+        libeigen3-dev \
+        libgles2-mesa-dev \
+        lsb-release \
+        pkg-config \
+        protobuf-compiler \
+        python3-dbg \
+        python3-pip \
+        python3-venv \
+        qtbase5-dev \
+        ruby \
+        software-properties-common \
+        sudo \
+        wget \
+ && apt clean
+
+# Get ROS and Gazebo from https://github.com/Field-Robotics-Lab/dockwater/blob/main/noetic/Dockerfile
+RUN /bin/sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros1-latest.list' \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+ && /bin/sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable focal main" > /etc/apt/sources.list.d/gazebo-stable.list' \
+ && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743 \
+ && apt update \
+ && apt install -y --no-install-recommends \
+    gazebo11 \
+    libgazebo11-dev \
+    python3-catkin-tools \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-vcstool \
+    ros-noetic-gazebo-plugins \
+    ros-noetic-gazebo-ros \
+    ros-noetic-gazebo-ros-control \
+    ros-noetic-gazebo-ros-pkgs \
+    ros-noetic-effort-controllers \
+    ros-noetic-geographic-info \
+    ros-noetic-hector-gazebo-plugins \
+    ros-noetic-joint-state-controller \
+    ros-noetic-joint-state-publisher \
+    ros-noetic-joy \
+    ros-noetic-joy-teleop \
+    ros-noetic-kdl-parser-py \
+    ros-noetic-key-teleop \
+    ros-noetic-move-base \
+    ros-noetic-robot-localization \
+    ros-noetic-robot-state-publisher \
+    ros-noetic-ros-base \
+    ros-noetic-rqt \
+    ros-noetic-rqt-common-plugins \
+    ros-noetic-rqt-robot-plugins \
+    ros-noetic-rviz \
+    ros-noetic-teleop-tools \
+    ros-noetic-teleop-twist-joy \
+    ros-noetic-teleop-twist-keyboard \
+    ros-noetic-tf2-geometry-msgs \
+    ros-noetic-tf2-tools \
+    ros-noetic-urdfdom-py \
+    ros-noetic-velodyne-gazebo-plugins \
+    ros-noetic-velodyne-simulator \
+    ros-noetic-xacro \
+ && apt clean
 
 WORKDIR /glider_hybrid_whoi_deps/src
 
@@ -58,23 +123,19 @@ RUN curl -fsSL https://github.com/Field-Robotics-Lab/dave/archive/$VERSION_DAVE.
 
 ARG version_uuv_simulator
 ENV VERSION_UUV=$version_uuv_simulator
-RUN curl -fsSL https://github.com/uuvsimulator/uuv_simulator/archive/$VERSION_UUV.tar.gz | tar xz
+RUN curl -fsSL https://github.com/Field-Robotics-Lab/uuv_simulator/archive/$VERSION_UUV.tar.gz | tar xz
 
 ARG version_uuv_manipulators
 ENV VERSION_UUV_MANIPULATORS=$version_uuv_manipulators
-RUN curl -fsSL https://github.com/uuvsimulator/uuv_manipulators/archive/$VERSION_UUV_MANIPULATORS.tar.gz | tar xz
-
-ARG acoustic_msgs_commit
-ENV ACOUSTIC_MSGS_COMMIT=$acoustic_msgs_commit
-RUN curl -fsSL https://github.com/apl-ocean-engineering/acoustic_msgs/archive/$ACOUSTIC_MSGS_COMMIT.tar.gz | tar xz
+RUN curl -fsSL https://github.com/Field-Robotics-Lab/uuv_manipulators/archive/$VERSION_UUV_MANIPULATORS.tar.gz | tar xz
 
 ARG ds_sim_commit
 ENV DS_SIM_COMMIT=$ds_sim_commit
-RUN curl -fsSL https://bitbucket.org/daewok/ds_sim/get/$DS_SIM_COMMIT.tar.gz | tar xz
+RUN curl -fsSL https://github.com/Field-Robotics-Lab/ds_sim/archive/$DS_SIM_COMMIT.tar.gz | tar xz
 
 ARG ds_msgs_commit
 ENV DS_MSGS_COMMIT=$ds_msgs_commit
-RUN curl -fsSL https://bitbucket.org/whoidsl/ds_msgs/get/$DS_MSGS_COMMIT.tar.gz | tar xz
+RUN curl -fsSL https://github.com/Field-Robotics-Lab/ds_msgs/archive/$DS_MSGS_COMMIT.tar.gz | tar xz
 
 ARG frl_msgs_commit
 ENV FRL_MSGS_COMMIT=$frl_msgs_commit
@@ -129,11 +190,54 @@ COPY --from=source-deps /tmp/install-script-for-deps /tmp/install-script-for-dep
 
 RUN apt-get update \
     && apt-get install -y --no-upgrade --no-install-recommends \
-       python-pip curl apt-utils software-properties-common xauth \
+       python3-pip curl apt-utils software-properties-common xauth \
     && echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list \
     && curl -fsSL http://packages.osrfoundation.org/gazebo.key | apt-key add - \
     && apt-get update \
     && sh /tmp/install-script-for-deps \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Get ROS and Gazebo from https://github.com/Field-Robotics-Lab/dockwater/blob/main/noetic/Dockerfile
+RUN apt-get update \
+    && apt-get -y --no-upgrade --no-install-recommends install \
+    gazebo11 \
+    libgazebo11-dev \
+    python3-catkin-tools \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-vcstool \
+    ros-noetic-gazebo-plugins \
+    ros-noetic-gazebo-ros \
+    ros-noetic-gazebo-ros-control \
+    ros-noetic-gazebo-ros-pkgs \
+    ros-noetic-effort-controllers \
+    ros-noetic-geographic-info \
+    ros-noetic-hector-gazebo-plugins \
+    ros-noetic-joint-state-controller \
+    ros-noetic-joint-state-publisher \
+    ros-noetic-joy \
+    ros-noetic-joy-teleop \
+    ros-noetic-kdl-parser-py \
+    ros-noetic-key-teleop \
+    ros-noetic-move-base \
+    ros-noetic-robot-localization \
+    ros-noetic-robot-state-publisher \
+    ros-noetic-ros-base \
+    ros-noetic-rqt \
+    ros-noetic-rqt-common-plugins \
+    ros-noetic-rqt-robot-plugins \
+    ros-noetic-rviz \
+    ros-noetic-teleop-tools \
+    ros-noetic-teleop-twist-joy \
+    ros-noetic-teleop-twist-keyboard \
+    ros-noetic-tf2-geometry-msgs \
+    ros-noetic-tf2-tools \
+    ros-noetic-urdfdom-py \
+    ros-noetic-velodyne-gazebo-plugins \
+    ros-noetic-velodyne-simulator \
+    ros-noetic-xacro \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

@@ -1,12 +1,24 @@
 # Kinematics plugin for WHOI hybrid gliders
 Kinematics control plugin for WHOI hybrid gliders
 
+## Update (10/19/2021)
+- Now supports ROS Noetic and Gazebo 11 on Ubuntu 20.04
+- Base repo versions
+  - uuv_simulator : https://github.com/Field-Robotics-Lab/uuv_simulator/pull/6
+  - uuv_manipulator : https://github.com/Field-Robotics-Lab/uuv_manipulators/pull/7
+  - ds_sim / ds_msgs : Uses the forked version at https://github.com/Field-Robotics-Lab/ds_sim/pull/4 and https://github.com/Field-Robotics-Lab/ds_msgs (includes https://github.com/Field-Robotics-Lab/ds_msgs/commit/179631d46871b31fad28a21f81d865e3c73446d3)
+  - nps_uw_sensors_gazebo : https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/pull/50
+  - dave : https://github.com/Field-Robotics-Lab/dave/pull/158
+
+
 ## Requirements
 ```diff
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
-sudo apt-get install ros-melodic-hector-gazebo-plugins
+sudo apt-get install ros-noetic-hector-gazebo-plugins
 - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
 git clone https://github.com/Field-Robotics-Lab/frl_msgs
+- nps_uw_sensors_gazebo repository is required
+git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
 ```
 
 ## Utility guide (live document)
@@ -17,8 +29,8 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
 * Then choose from one of the following two installation options:
     1. **Directly on Host**
-         1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Melodic, Gazebo 9, UUV Simulator and DAVE directly on your host machine.
-         2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv` directory.
+         1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
+         2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
     2. **Using Docker**
          1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
          2. Run the `build.bash` script located in the `docker` folder of this repository
@@ -33,7 +45,7 @@ git clone https://github.com/Field-Robotics-Lab/frl_msgs
          * Opening additional terminals
              ```
              ./join.bash
-             source /opt/ros/melodic/setup.bash
+             source /opt/ros/noetic/setup.bash
              source ~/glider_hybrid_whoi/install/setup.bash
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
