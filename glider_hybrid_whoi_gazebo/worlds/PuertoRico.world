@@ -12,7 +12,7 @@
      limitations under the License.
 -->
 <sdf version="1.4">
-  <world name="BuzzBay">
+  <world name="PuertoRico">
     <physics name="default_physics" default="true" type="ode">
       <max_step_size>0.1</max_step_size>
       <!-- <real_time_factor>1</real_time_factor> -->
@@ -26,6 +26,12 @@
       </ode>
     </physics>
     <gravity>0 0 0</gravity>
+
+    <!-- Somewhere near the Puerto Rico (! Should match with launch file !)-->
+    <spherical_coordinates>
+      <latitude_deg>17.9</latitude_deg>
+      <longitude_deg>-67.2</longitude_deg>
+    </spherical_coordinates>
 
     <!-- Global light source -->
     <light type="directional" name="sun1">
@@ -88,23 +94,12 @@
 
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
-        <!-- Database tag can accept full path or filename for .csv within the uuv_dave/worlds folder  -->
-        <!-- <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath> -->
-        <!-- Absolute path in local machine -->
-        <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
-        <!-- Absolute path in docker environment -->
-        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath>
+         <databasefilePath>/home/woensug/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_zero.csv</databasefilePath>
       </transient_current>
 
       <!-- transient current database CSV file (North direction value) is used as a depth variation -->
       <tidal_oscillation>
-        <!-- Method 1: databse file https://tidesandcurrents.noaa.gov/noaacurrents/Annual?id=ACT1951_1 -->
-        <!-- Database tag can accept full path or filename for .csv within the uuv_dave/worlds folder  -->
-        <!-- <databasefilePath>ACT1951_1_Annual_2021.csv</databasefilePath> -->
-        <!-- Absolute path in local machine -->
-        <!-- <databasefilePath>/home/glider-sim/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/ACT1951_1_Annual_2021.csv</databasefilePath> -->
-        <!-- Absolute path in docker environment -->
-        <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/ACT1951_1_Annual_2021.csv</databasefilePath>
+        <databasefilePath>ACT1951_1_Annual_2021.csv</databasefilePath>
 
         <!-- Method 2: harmonic constituents from -->
         <!-- https://tidesandcurrents.noaa.gov/harcon.html?unit=0&timezone=0&id=8447685&name=Chappaquoit+Point&state=MA -->
@@ -152,7 +147,7 @@
 
     <plugin name="dave_bathymetry_plugin" filename="libdave_bathymetry_world_plugin.so">
       <bathymetry>
-        <grid prefix="buzzBay" priority="1" epsg="3857" colmax="50" rowmax="50" anchor_lon="-70.70" anchor_lat="41.50" spacing_lon="0.01" spacing_lat="0.01" />
+        <grid prefix="puertoRico" priority="1" epsg="3857" colmax="50" rowmax="50" anchor_lon="-67.30" anchor_lat="17.90" spacing_lon="0.01" spacing_lat="0.01" />
       </bathymetry>
     </plugin>
 
@@ -160,8 +155,8 @@
       <camera name="user_camera">
         <view_controller>ortho</view_controller>
         <projection_type>orthographic</projection_type>
-        <clip>0.1 10000</clip>
-        <pose>484910.656250 61430.527344 -29.279902 0.0 0.187488 2.103256</pose>
+        <clip>0.1 5000</clip>
+        <pose>-7486239 2028187.6 -1.0 0 0.15729 1.981655</pose>
       </camera>
     </gui>
 

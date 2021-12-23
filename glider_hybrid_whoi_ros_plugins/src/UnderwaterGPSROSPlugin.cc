@@ -304,10 +304,8 @@ void GazeboRosGps::Update()
     velocity_.header.stamp = fix_.header.stamp;
 
     // GDAL transform
-    OGRSpatialReference srs;
-    srs.importFromEPSG(espg_projection_);
-    OGRSpatialReference tsrs;
-    tsrs.importFromEPSG(4326);
+    OGRSpatialReference srs; srs.importFromEPSG(3857);
+    OGRSpatialReference tsrs; tsrs.importFromEPSG(4326);
     OGRCoordinateTransformation *poCT;
     poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
     double sNorthing = position.Y();
