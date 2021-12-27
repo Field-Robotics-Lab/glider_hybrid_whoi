@@ -245,6 +245,9 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pynmea2
+
 #------------------------------------------------------------------#
 # source-deps-builder stage
 #------------------------------------------------------------------#
