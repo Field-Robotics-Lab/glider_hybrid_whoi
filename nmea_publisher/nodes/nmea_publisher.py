@@ -91,6 +91,10 @@ class Node():
         # Subscribe UwGliderStatus                        
         self.sub_imu = rospy.Subscriber("status", UwGliderStatus, self.callback_UwGliderStatus)
 
+        # Print msg
+        rospy.loginfo("NMEA msg publisher for Fledermaus is to = " + \
+                repr(self.UDP_IP) + " with port " + repr(self.UDP_PORT))
+
     def callback_UwGliderStatus(self, data):
         self.sim_msg = data
 
