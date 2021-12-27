@@ -70,9 +70,6 @@ class Node():
         self.sock = socket.socket(socket.AF_INET, # Internet
                                   socket.SOCK_DGRAM) # UDP
 
-    def callback_gps(self, data):
-        self.gps_msg = data
-
     def publish_NMEA(self):
         # Timing
         now = rospy.get_time()
