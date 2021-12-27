@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>nmea_publisher</name>
+  <version>0.0.0</version>
+  <description>The nmea_publisher package</description>
+  <maintainer email="woensug.choi@gmail.com">Woensug Choi</maintainer>
+  <license>TODO</license>
+
+  <depend>rospy</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>

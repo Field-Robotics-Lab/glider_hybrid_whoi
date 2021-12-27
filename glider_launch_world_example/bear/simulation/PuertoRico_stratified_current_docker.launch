@@ -42,4 +42,7 @@
   <!-- Dead reckoning node -->
   <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
 
+  <!-- NMEA publisher node -->
+  <include file="$(find nmea_publisher)/launch/nmea_publisher.launch"/>
+
 </launch>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="nmea_publisher"
+	type="nmea_publisher.py"
+	name="nmea_publisher"
+	output="screen">
+    <param name="update_rate" value="5.0"/>
+    <!-- Remap the inputs to application specific topics -->
+    <remap from="status" to="/glider_hybrid_whoi/kinematics/UwGliderStatus" />
+
+  </node>
+</launch>
