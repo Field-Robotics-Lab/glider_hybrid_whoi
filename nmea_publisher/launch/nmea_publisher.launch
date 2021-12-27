@@ -1,10 +1,17 @@
 <?xml version="1.0"?>
+
 <launch>
+
+<arg name="host_ip" default="128.128.62.4" doc="host machine network ip"/>
+<arg name="port" default="30362" doc="host machine networking port"/>
+
   <node pkg="nmea_publisher"
 	type="nmea_publisher.py"
 	name="nmea_publisher"
 	output="screen">
-    <param name="update_rate" value="5.0"/>
+    <param name="update_rate" value="1.0"/>
+    <param name="host_ip" value="$(arg host_ip)"/>
+    <param name="port" value="$(arg port)"/>
     <!-- Remap the inputs to application specific topics -->
     <remap from="status" to="/glider_hybrid_whoi/kinematics/UwGliderStatus" />
 
