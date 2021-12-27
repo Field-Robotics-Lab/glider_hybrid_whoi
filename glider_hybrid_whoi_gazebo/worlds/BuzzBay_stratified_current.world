@@ -89,9 +89,9 @@
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
         <!-- Database tag can accept full path or filename for .csv within the uuv_dave/worlds folder  -->
-        <!-- <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath> -->
+        <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath>
         <!-- Absolute path in local machine -->
-         <databasefilePath>/home/woensug/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_zero.csv</databasefilePath>
+         <!-- <databasefilePath>/home/woensug/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_zero.csv</databasefilePath> -->
         <!-- Absolute path in docker environment -->
         <!-- <databasefilePath>/home/ros/glider_hybrid_whoi/install/share/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase.csv</databasefilePath> -->
       </transient_current>

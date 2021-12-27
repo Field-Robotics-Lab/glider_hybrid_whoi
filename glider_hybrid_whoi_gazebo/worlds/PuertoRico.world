@@ -88,7 +88,7 @@
 
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
-         <databasefilePath>/home/woensug/uuv_ws/src/glider_hybrid_whoi/glider_hybrid_whoi_gazebo/worlds/transientOceanCurrentDatabase_zero.csv</databasefilePath>
+         <databasefilePath>transientOceanCurrentDatabase_zero.csv</databasefilePath>
       </transient_current>
 
       <!-- transient current database CSV file (North direction value) is used as a depth variation -->
