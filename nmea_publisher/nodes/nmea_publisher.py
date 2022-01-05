@@ -88,7 +88,7 @@ class Node():
         self.sock = socket.socket(socket.AF_INET, # Internet
                                   socket.SOCK_DGRAM) # UDP
 
-        # Subscribe UwGliderStatus                        
+        # Subscribe UwGliderStatus
         self.sub_imu = rospy.Subscriber("status", UwGliderStatus, self.callback_UwGliderStatus)
 
         # Print msg
@@ -102,7 +102,7 @@ class Node():
         #print("Closing server socket:", self.sock)
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
-        
+
     def publish_NMEA(self):
         # Timing
         now = rospy.get_time()
@@ -128,11 +128,11 @@ class Node():
         #     '1', '04', '', \
         #     str(depth), 'M', \
         #     '', 'M', '', '0000'))
-        
+
         msg = '$C&C,' + 'HYBRID_GLIDER,' + str(sTohhmmss2(sim_time)) + ',' \
             +  str(longitude) + ',' +  str(latitude) + ',' + str(heading) + ',' \
-            + str(-pitch) + ',' + str(roll) + ',' + str(-depth) + '0.0'
-        
+            + str(-pitch) + ',' + str(roll) + ',' + str(depth) + '0.0'
+
         MESSAGE = str(msg)
         self.sock.sendto(MESSAGE.encode(), (self.UDP_IP, self.UDP_PORT))
 
