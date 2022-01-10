@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="paused" value="true"/>
+  <param name="use_sim_time" value="true"/>
+  <param name="gui" value="true"/>
+
+  <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(find glider_hybrid_whoi_gazebo)/worlds/PuertoRico.world --verbose -u -e ode -s libdsros_sensors.so" respawn="false" output="screen">
+      <env name="GAZEBO_MODEL_PATH" value="$(optenv GAZEBO_MODEL_PATH):$(find glider_hybrid_whoi_gazebo)/models/PuertoRico/"/>
+  </node>
+
+  <arg name="set_timeout" default="false"/>
+  <arg name="timeout" default="0.0"/>
+
+  <include file="$(find uuv_assistants)/launch/publish_world_ned_frame.launch"/>
+
+  <group if="$(arg set_timeout)">
+      <include file="$(find uuv_assistants)/launch/set_simulation_timer.launch">
+          <arg name="timeout" value="$(arg timeout)"/>
+      </include>
+  </group>
+
+  <!-- Vehicle's initial position and depth -->
+  <arg name="use_geodetic" default="true"/>
+  <arg name="latitude" default="17.92"/>
+  <arg name="longitude" default="-67.25"/>
+  <arg name="depth" default="1"/>
+  <arg name="roll" default="0"/>
+  <arg name="pitch" default="0"/>
+  <arg name="yaw" default="0"/>
+
+  <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
+    <arg name="use_geodetic" value="$(arg use_geodetic)"/>
+    <arg name="latitude" value="$(arg latitude)"/>
+    <arg name="longitude" value="$(arg longitude)"/>
+    <arg name="depth" value="$(arg depth)"/>
+    <arg name="roll" value="$(arg roll)"/>
+    <arg name="pitch" value="$(arg yaw)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
+  </include>
+
+  <!-- Dead reckoning node -->
+  <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+
+</launch>

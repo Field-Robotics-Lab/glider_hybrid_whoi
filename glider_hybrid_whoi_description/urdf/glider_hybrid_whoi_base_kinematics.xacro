@@ -144,7 +144,6 @@
         <writeLog>true</writeLog>
         <flow_velocity_topic>/hydrodynamics/current_velocity/${namespace}</flow_velocity_topic>
         <use_global_ocean_current>true</use_global_ocean_current>
-        <espg_projection>26987</espg_projection>
         <!-- Kinematics coefficients -->
         <f_pitch_battpos_cal_m>1.2565</f_pitch_battpos_cal_m>
         <f_pitch_battpos_cal_b>-0.055</f_pitch_battpos_cal_b>
@@ -207,5 +206,6 @@
       update_rate="2.0"/>
 
     <xacro:include filename="$(find glider_hybrid_whoi_description)/urdf/glider_hybrid_whoi_sensors_kinematics.xacro"/>
+
   </xacro:macro>
 </robot>

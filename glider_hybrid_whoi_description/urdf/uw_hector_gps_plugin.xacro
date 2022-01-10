@@ -16,7 +16,6 @@
         <gaussianNoise>0.0 0.0 0.0</gaussianNoise>
         <velocityDrift>0 0 0</velocityDrift>
         <velocityGaussianNoise>0.0 0.0 0.0</velocityGaussianNoise>
-        <espg_projection>26987</espg_projection>
         <!-- signal delay when reached on surface in seconds -->
         <signal_delay>10</signal_delay>
         <!-- max distance from surface to receive the signal. -->

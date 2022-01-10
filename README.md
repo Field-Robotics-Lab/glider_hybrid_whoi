@@ -1,16 +1,6 @@
 # Kinematics plugin for WHOI hybrid gliders
 Kinematics control plugin for WHOI hybrid gliders
 
-## Update (10/19/2021)
-- Now supports ROS Noetic and Gazebo 11 on Ubuntu 20.04
-- Base repo versions
-  - uuv_simulator : https://github.com/Field-Robotics-Lab/uuv_simulator/pull/6
-  - uuv_manipulator : https://github.com/Field-Robotics-Lab/uuv_manipulators/pull/7
-  - ds_sim / ds_msgs : Uses the forked version at https://github.com/Field-Robotics-Lab/ds_sim/pull/4 and https://github.com/Field-Robotics-Lab/ds_msgs (includes https://github.com/Field-Robotics-Lab/ds_msgs/commit/179631d46871b31fad28a21f81d865e3c73446d3)
-  - nps_uw_sensors_gazebo : https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/pull/50
-  - dave : https://github.com/Field-Robotics-Lab/dave/pull/158
-
-
 ## Requirements
 ```diff
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
@@ -95,7 +85,6 @@ For view/edit : [Google Drawing Raw file link](https://docs.google.com/drawings/
 ![resources](https://docs.google.com/drawings/d/e/2PACX-1vTMQxfsQmqEMxr5fZ30UBqPzI6ULpPdf2XNiF2ak633ty7KP532fMXOgHIJEqI7Z-o-Ok6vdjtgwYdC/pub?w=960&h=720)
 
 
-
 The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
 provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.com/sentinel-aug/ros/slocum_glider)
 
@@ -120,6 +109,7 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 
 ### Glider dynamic parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
+
 #### Pitch control
 | Battery position | Target once | Target servo |
 | ------------- | ------------- | ------------- |

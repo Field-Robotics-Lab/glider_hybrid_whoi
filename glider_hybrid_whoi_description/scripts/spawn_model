@@ -332,15 +332,11 @@ class SpawnModel():
             # enu_pos = pymap3d.geodetic2enu(
             #     self.initial_geo[0], self.initial_geo[1], self.initial_geo[2],
             #     self.ref_geo[0], self.ref_geo[1], self.ref_geo[2])
-            rospy.loginfo('pyProj is transforming lat/lon(epsg:4326) to' \
-                          + 'x/y(epsg:26987) for vehicle initial position')
-            # inProj = Proj(init='epsg:4326')
-            # outProj = Proj(init='epsg:26987')
-            lat,lon = self.initial_geo[1], self.initial_geo[0]
-            # x,y = transform(inProj,outProj,lat,lon)
-            
-            transformer = Transformer.from_crs(4326, 26987, always_xy=True)
-            x,y = transformer.transform(lat, lon)
+            rospy.loginfo('pyProj is transforming lat/lon(epsg:4326/WGS86) to' \
+                          + 'x/y(epsg:3857/UTM) for vehicle initial position')
+            lat, lon = self.initial_geo[1], self.initial_geo[0]
+            transformer = Transformer.from_crs(4326, 3857, always_xy=True)
+            x, y = transformer.transform(lat, lon)
 
             initial_pose.position.x = x
             initial_pose.position.y = y

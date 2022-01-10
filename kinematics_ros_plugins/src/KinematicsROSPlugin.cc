@@ -98,12 +98,6 @@ void KinematicsROSPlugin::Load(gazebo::physics::ModelPtr _model,
   else
     this->useGlobalCurrent = false;
 
-  // Read projection coordinate for GDAL transform
-  if (_sdf->HasElement("espg_projection"))
-    _sdf->GetElement("espg_projection")->GetValue()->Get(this->espg_projection_);
-  else
-    this->espg_projection_ = 26987;
-
   // If surface vehicle
   if (_sdf->HasElement("surface_vehicle"))
     this->surfaceVehicle = _sdf->Get<bool>("surface_vehicle");
@@ -600,10 +594,8 @@ void KinematicsROSPlugin::ConveyModelState()
                                 this->modelState.pose.orientation.w);
 
   // Calculate Lat/Lon using GDAl tranform
-  OGRSpatialReference srs;
-  srs.importFromEPSG(this->espg_projection_);
-  OGRSpatialReference tsrs;
-  tsrs.importFromEPSG(4326);
+  OGRSpatialReference srs; srs.importFromEPSG(3857);
+  OGRSpatialReference tsrs; tsrs.importFromEPSG(4326);
   OGRCoordinateTransformation *poCT;
   poCT = OGRCreateCoordinateTransformation(&srs, &tsrs);
   double sNorthing = this->modelXYZ.Y();
