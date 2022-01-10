@@ -107,6 +107,18 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 - https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/pull/31
 - Demo case : `roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current_two_gliders.launch`
 
+### Live Feed to Fledermaus
+- Live feeding to Fledermaus's Vessel Manager to visualize its location is now available using UDP connection with NMEA strings.
+  - Assumes you are running on WSL2 at Windows machine
+  - Uses custom NMEA msg format that can include not only lat/lon/depth but also roll/pitch/heading.
+  - Networking with WSL is tricky since the Windows and the Ubuntu in WSL recognize `localhost` differently. This is hacked by using the host window machine's public ip.
+    Maybe you have to add this to C:\Users/User/.wslconfig
+    ```
+    [wsl2]
+    localhostForwarding=true
+    ```
+    and restart the WSL by `wsl --shutdown` at cmd.
+
 ### Glider dynamic parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
 

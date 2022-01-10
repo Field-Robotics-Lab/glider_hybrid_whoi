@@ -29,6 +29,10 @@
   <arg name="roll" default="0"/>
   <arg name="pitch" default="0"/>
   <arg name="yaw" default="0"/>
+  
+  <!-- Fledermaus Vessel Manager connection -->
+  <arg name="host_ip" default="128.128.62.4"/>
+  <arg name="port" default="30362"/>
 
   <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
     <arg name="use_geodetic" value="$(arg use_geodetic)"/>
@@ -42,5 +46,11 @@
 
   <!-- Dead reckoning node -->
   <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+
+  <!-- NMEA publisher node -->
+  <include file="$(find nmea_publisher)/launch/nmea_publisher.launch">
+    <arg name="host_ip" value="$(arg host_ip)"/>
+    <arg name="port" value="$(arg port)"/>
+  </include>
 
 </launch>
