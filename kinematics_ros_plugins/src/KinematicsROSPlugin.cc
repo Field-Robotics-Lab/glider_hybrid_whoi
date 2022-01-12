@@ -295,8 +295,11 @@ void KinematicsROSPlugin::Update(const gazebo::common::UpdateInfo &)
   // CSV log write stream
   this->writeCSVLog();
 
-  this->nedTransform["base_link"].header.stamp = ros::Time::now();
-  this->tfBroadcaster["base_link"].sendTransform(this->nedTransform["base_link"]);
+  if (ros::Time::now() != this->nedTransform["base_link"].header.stamp)
+  {
+    this->nedTransform["base_link"].header.stamp = ros::Time::now();
+    this->tfBroadcaster["base_link"].sendTransform(this->nedTransform["base_link"]);
+  }
 }
 
 /////////////////////////////////////////////////
