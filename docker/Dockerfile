@@ -246,7 +246,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir pynmea2
+    pip install --no-cache-dir pynmea2 python3-gdal
 
 #------------------------------------------------------------------#
 # source-deps-builder stage
