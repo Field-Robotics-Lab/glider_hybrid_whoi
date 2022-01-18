@@ -185,7 +185,7 @@
         <robotParam>/${namespace}/robot_description</robotParam>
 
         <bathymetry>
-          <interval_s>5.0</interval_s>
+          <interval_s>1.0</interval_s>
         </bathymetry>
 
       </plugin>

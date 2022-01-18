@@ -5,6 +5,8 @@ Kinematics control plugin for WHOI hybrid gliders
 ```diff
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
 sudo apt-get install ros-noetic-hector-gazebo-plugins
+- The initial position setter requires python version of gdal
+pip3 install python3-gdal
 - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
 git clone https://github.com/Field-Robotics-Lab/frl_msgs
 - nps_uw_sensors_gazebo repository is required
@@ -69,8 +71,8 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
         roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
         # or
         roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
-        # if in docker environment
-        roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current_docker.launch
+        # Bathymetry for Buzzbay is included in this repo
+        # The range is (lat,lon) = (41.50, -70.70) to (41.56, -70.65)
         ```
     2. Control glider with ROS
         ```

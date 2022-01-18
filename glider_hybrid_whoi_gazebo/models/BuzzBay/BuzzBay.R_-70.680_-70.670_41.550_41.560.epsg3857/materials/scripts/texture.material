@@ -1,0 +1,18 @@
+material Bathymetry/BuzzBay.R_-70.680_-70.670_41.550_41.560
+{
+    technique
+    {
+        pass
+        {
+            ambient 0.5 0.5 0.5 1.0
+            diffuse 0.5 0.5 0.5 1.0
+            specular 0.2 0.2 0.2 1.0 12.5
+
+            texture_unit
+            {
+                texture ../textures/BuzzBay.R_-70.680_-70.670_41.550_41.560.epsg3857.texture.png
+                scale 1 1
+            }
+        }
+    }
+}
