@@ -87,12 +87,12 @@
 
       <transient_current>
         <topic_stratified_database>stratified_current_velocity_database</topic_stratified_database>
-        <databasefilePath>/local_glider_files/simulation/transientOceanCurrentDatabase.csv</databasefilePath>
+        <databasefilePath>transientOceanCurrentDatabase.csv</databasefilePath>
       </transient_current>
 
       <!-- transient current database CSV file (North direction value) is used as a depth variation -->
       <tidal_oscillation>
-        <databasefilePath>/local_glider_files/simulation/ACT1951_1_Annual_2021.csv</databasefilePath>
+        <databasefilePath>ACT1951_1_Annual_2021.csv</databasefilePath>
 
         <!-- Method 2: harmonic constituents from -->
         <!-- https://tidesandcurrents.noaa.gov/harcon.html?unit=0&timezone=0&id=8447685&name=Chappaquoit+Point&state=MA -->
@@ -140,16 +140,27 @@
 
     <plugin name="dave_bathymetry_plugin" filename="libdave_bathymetry_world_plugin.so">
       <bathymetry>
-        <grid prefix="buzzBay" priority="1" epsg="3857" colmax="50" rowmax="50" anchor_lon="-70.70" anchor_lat="41.50" spacing_lon="0.01" spacing_lat="0.01" />
+        <grid prefix="buzzBay" tiles_to_keep="2" priority="1" colmax="50" rowmax="50"
+              anchor_lon="-70.70" anchor_lat="41.50" spacing_lon="0.01" spacing_lat="0.01" />
       </bathymetry>
     </plugin>
 
     <gui>
       <camera name="user_camera">
-        <view_controller>ortho</view_controller>
         <projection_type>orthographic</projection_type>
-        <clip>0.1 10000</clip>
-        <pose>-7868160 5094187 -65.5 0 0.624 2.547379</pose>
+        <!-- <pose>-13559693 4411815 189.00 0 0.78 2.32</pose> -->
+        <clip>
+          <near>0.1</near>
+          <far>5000</far>
+        </clip>
+        <track_visual>
+          <use_model_frame>true</use_model_frame>
+          <name>glider_hybrid_whoi</name>
+          <static>true</static>
+          <min_dist>10.0</min_dist>
+          <max_dist>10.0</max_dist>
+          <xyz>10 -10 10</xyz>
+        </track_visual>
       </camera>
     </gui>
 

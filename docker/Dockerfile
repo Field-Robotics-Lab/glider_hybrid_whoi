@@ -83,6 +83,7 @@ RUN /bin/sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/
     python3-rosinstall \
     python3-rosinstall-generator \
     python3-vcstool \
+    python3-gdal \
     ros-noetic-gazebo-plugins \
     ros-noetic-gazebo-ros \
     ros-noetic-gazebo-ros-control \
@@ -212,6 +213,7 @@ RUN apt-get update \
     python3-rosinstall \
     python3-rosinstall-generator \
     python3-vcstool \
+    python3-gdal \
     ros-noetic-gazebo-plugins \
     ros-noetic-gazebo-ros \
     ros-noetic-gazebo-ros-control \
@@ -246,7 +248,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir pynmea2 python3-gdal
+    pip install --no-cache-dir pynmea2
 
 #------------------------------------------------------------------#
 # source-deps-builder stage

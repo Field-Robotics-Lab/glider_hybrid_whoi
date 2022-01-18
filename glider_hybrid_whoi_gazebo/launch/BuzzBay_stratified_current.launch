@@ -21,10 +21,10 @@
   </group>
 
   <!-- Vehicle's initial position -->
-  <arg name="robot_name" value="glider_hybrid_whoi"/>
-  <arg name="initial_latitude" value="41.5522"/>
-  <arg name="initial_longitude" value="-70.6803"/>
-  <arg name="initial_depth" value="-1"/>
+  <arg name="robot_name" default="glider_hybrid_whoi"/>
+  <arg name="initial_latitude" default="41.5522"/>
+  <arg name="initial_longitude" default="-70.6803"/>
+  <arg name="initial_depth" default="-1"/>
 
   <!-- Fledermaus Vessel Manager connection -->
   <arg name="host_ip" default="128.128.62.4"/>
