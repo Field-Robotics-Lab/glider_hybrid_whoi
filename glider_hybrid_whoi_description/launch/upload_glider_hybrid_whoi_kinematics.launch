@@ -4,6 +4,12 @@
   <arg name="debug" default="0" doc="Sets the DEBUG flag for the uuv_simulator's plugins for verbose mode"/>
   <arg name="use_geodetic" default="false"/>
   <arg name="init_pose" default="-x 0 -y 0 -z -1 -Y 3.14" />
+  <arg name="x" default="0" doc="Initial x (ENU)"/>
+  <arg name="y" default="0" doc="Initial y (ENU)"/>
+  <arg name="z" default="-5" doc="Initial z (ENU)"/>
+  <arg name="roll" default="0.0" doc="Roll angle of the initial orientation to spawn the model (in ENU)"/>
+  <arg name="pitch" default="0.0" doc="Pitch angle of the initial orientation to spawn the model (in ENU)"/>
+  <arg name="yaw" default="0.0" doc="Yaw angle of the initial orientation to spawn the model (in ENU)"/>
 
   <arg name="use_ned_frame" default="true"/>
 
@@ -34,9 +40,17 @@
                       inertial_reference_frame:=world" />
     </group>
 
-    <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
-    <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
-        args="-urdf $(arg init_pose) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+    <group if="$(arg use_geodetic)">
+      <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
+          args="-urdf $(arg init_pose) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+    </group>
+
+    <group unless="$(arg use_geodetic)">
+      <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
+          args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+    </group>
 
 
     <!-- A joint state publisher plugin already is started with the model, no need to use the default joint state publisher -->
