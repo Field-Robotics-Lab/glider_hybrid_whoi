@@ -3,10 +3,13 @@ Kinematics control plugin for WHOI hybrid gliders
 
 ## Requirements
 ```diff
+- If not using docker environment, use bathymetry_plugin_whoi branch of the dave repo
+# at dave repo
+git cehckout bathymetry_plugin_whoi
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
 sudo apt-get install ros-noetic-hector-gazebo-plugins
 - The initial position setter requires python version of gdal
-pip3 install python3-gdal
+sudo apt-get install python3-gdal
 - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
 git clone https://github.com/Field-Robotics-Lab/frl_msgs
 - nps_uw_sensors_gazebo repository is required

@@ -5,11 +5,11 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=896ccda30833949defda239e946220a1653d3465
+ARG version_dave=9a7dd78aaa1bac60c63e321926e6c36539128866
 ARG version_uuv_simulator=4936e739d48807527fdcd3ba3d19c147277003ce
 ARG version_uuv_manipulators=d324a6a6ac9f3b6c86427d7ed9795c09c14e659c
 ARG version_uw_sensors_gazebo=eda6787830bd2c7f31eacfe9f2aab961b879ab3e
-ARG ds_sim_commit=169f805fb2fff2e095643e6e1df5de223ef45698
+ARG ds_sim_commit=b67a07cd4209aad7887bb8a829c1e79a48915533
 ARG ds_msgs_commit=179631d46871b31fad28a21f81d865e3c73446d3
 ARG frl_msgs_commit=a41b1d3d192dacd32a7e0a717a9c1b0a30eaca64
 #------------------------------------------------------------------#
@@ -248,7 +248,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir pynmea2
+    pip install --no-cache-dir pynmea2 folium PyQtWebEngine pyqt5-tools
 
 #------------------------------------------------------------------#
 # source-deps-builder stage
