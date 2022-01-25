@@ -51,4 +51,11 @@
     <arg name="port" value="$(arg port)"/>
   </include>
 
+  <!-- GPS Viewer (with GMRT bathymetry from web server) -->
+  <include file="$(find gps_map_viewer)/launch/gps_map_viewer.launch">
+      <arg name="namespace" value="$(arg robot_name)"/>
+      <arg name="refresh_rate" value="1.0"/>
+      <arg name="save_html" value="True"/>
+  </include>
+
 </launch>
