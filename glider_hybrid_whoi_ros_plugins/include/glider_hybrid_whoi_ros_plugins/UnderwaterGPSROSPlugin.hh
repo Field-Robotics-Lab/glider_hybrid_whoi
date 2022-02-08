@@ -77,18 +77,18 @@ private:
   std::string fix_topic_;
   std::string velocity_topic_;
 
-  double update_rate_;
+  double update_rate_ = 0.25;
 
   double reference_latitude_;
   double reference_longitude_;
   double reference_heading_;
   double reference_altitude_;
   int espg_projection_;
-  double signal_delay_;
-  double signal_max_depth_;
+  double signal_delay_ = 10;
+  double signal_max_depth_ = 0;
   double signal_received_time_;
   double signal_confirm_time_;
-  bool onSurface_prev;
+  bool onSurface_prev = false;
 
   double radius_north_;
   double radius_east_;

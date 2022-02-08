@@ -130,8 +130,8 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   // if (_sdf->GetElement("referenceHeading")->GetValue()->Get(reference_heading_))
   //   reference_heading_ *= M_PI/180.0;
 
-  if (_sdf->HasElement("update_rate"))
-    _sdf->GetElement("update_rate")->GetValue()->Get(update_rate_);
+  if (_sdf->HasElement("updateRate"))
+    _sdf->GetElement("updateRate")->GetValue()->Get(update_rate_);
 
   if (_sdf->HasElement("espg_projection"))
     _sdf->GetElement("espg_projection")->GetValue()->Get(espg_projection_);
@@ -192,7 +192,7 @@ void GazeboRosGps::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
   Reset();
 
   // connect Update function
-  updateTimer.setUpdateRate(1.0/update_rate_);
+  updateTimer.setUpdateRate(update_rate_);
   updateTimer.Load(world, _sdf);
   updateConnection = updateTimer.Connect(boost::bind(&GazeboRosGps::Update, this));
 }
