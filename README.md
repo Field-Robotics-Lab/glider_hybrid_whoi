@@ -1,30 +1,34 @@
 # (Hybrid-) AUG Simulator
-- Summary Poster (2022-02-10)
+
+## Contents
+<!-- TOC generated with https://github.com/ekalinin/github-markdown-toc -->
+<!--
+ cat fls_model_standalone.md | ./gh-md-toc -
+-->
+* [Summary Poster](#summary-poster)
+* [Utility Guide](#utility-guide)
+* [How-to](#how-to)
+   * [Installation](#installation)
+   * [Quickstart](#Quickstart)
+   * [Interface with slocum glider driver](#Interface-with-slocum-glider-driver-simulator)
+   * [Features](#Features)
+      * [Bathymetry included](#Bathymetry-included)
+      * [Surface detection](#Surface-detection)
+      * [Multiple gliders support](#Multiple-gliderssupport)
+      * [Live Feed to Fledermaus](#Live-Feed-to-Fledermaus)
+      * [Glider control parameters](#Glider-control-parameters)
+      * [Hybrid Glider 6DOF dynamics](#Hybrid-Glider-6DOF-dynamics)
+
+## Summary Poster (2022-02-10)
+
 ![Poster](https://user-images.githubusercontent.com/7955120/153356178-ad6c20a5-9418-48f7-b287-292c8a000572.png)
 
-## Requirements
+- Parent repo : [Project DAVE](https://github.com/Field-Robotics-Lab/dave)
 
-```diff
-- If not using docker environment, use bathymetry_plugin_whoi branch of the dave repo fork
-# Use the bathymetry_plugin_whoi branch at the fork of the dave repo
-git clone https://github.com/woensug-choi/dave.git
-git checkout bathymetry_plugin_whoi
-- The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
-sudo apt-get install ros-noetic-hector-gazebo-plugins
-- The initial position setter requires python version of gdal
-sudo apt install python3-gdal=3.0.4+dfsg-1build3
-- GPS Viewer requires pyQt and folium modules
-pip3 install folium PyQtWebEngine pyqt5-tools
-- The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
-git clone https://github.com/Field-Robotics-Lab/frl_msgs
-- nps_uw_sensors_gazebo repository is required
-git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
-```
-
-## Utility guide (live document)
+## Utility guide
 
 * [Utility guide (google doc, live document)](https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing)
-s
+
 ## How-to
 
 ### Installation
@@ -37,8 +41,19 @@ s
             - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
             git clone https://github.com/woensug-choi/dave.git
             git checkout bathymetry_plugin_whoi
+            - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
+            sudo apt-get install ros-noetic-hector-gazebo-plugins
+            - The initial position setter requires python version of gdal
+            sudo apt install python3-gdal=3.0.4+dfsg-1build3
+            - GPS Viewer requires pyQt and folium modules
+            pip3 install folium PyQtWebEngine pyqt5-tools
+            - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
+            git clone https://github.com/Field-Robotics-Lab/frl_msgs
+            - nps_uw_sensors_gazebo repository is required
+            git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
             ```
          2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
+
     2. **Using Docker**
          1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
          2. Run the `build.bash` script located in the `docker` folder of this repository
@@ -58,7 +73,9 @@ s
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
 
-### Quickstart (For running simulator only)
+## Quickstart
+
+- This is for running the simulator only
 
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
@@ -134,7 +151,7 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
     ```
     and restart the WSL by `wsl --shutdown` at cmd.
 
-### Glider kinematics/dynamics parameters
+### Glider control parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
 
 #### Pitch control
@@ -172,3 +189,41 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | :heavy_check_mark:*  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:* | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 - Lat/Lon is acquired from the GPS sensor and Altitude from the DVL sensor. Which is also sent through nav_sat_fix
+
+### Hybrid Glider 6DOF dynamics
+```diff
+- It's yet a draft PR
+```
+- [EPIC-DAUG Glider dynamics Overleaf](https://www.overleaf.com/read/pqstymzccttj)
+
+#### Quickstart
+```diff
+- Change to 'dynamics_working' branch. `<use_dynamics>` handle is on by default.
+```
+````bash
+roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
+# At another terminal window
+rostopic pub /glider_hybrid_whoi/kinematics/UwGliderCommand frl_vehicle_msgs/UwGliderCommand "pitch_cmd_type: 1
+target_pitch_value: -0.0001
+motor_cmd_type: 2
+target_motor_cmd: 0.1
+rudder_control_mode: 2
+rudder_angle: 4
+target_rudder_angle: 0.5
+target_pumped_volume: -220.0"
+````
+![image](https://user-images.githubusercontent.com/7955120/135945104-810f4e2d-aa2e-4ade-aed8-0d7cb216085c.png)
+Here, you see the glider ascending and yawing at a constant angle. As it rotates, the roll is also affected as seen in the bottom left camera feed. You can also see that the rotation of the propeller graphically according to the thruster power command input.
+
+- For dynamics calculation,
+   - Pitch command type of battery position `frl_vehicle_msgs::UwGliderCommand::PITCH_CMD_BATT_POS` should be used
+   - Dynamics flag should be on https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/6d3a6cf6998e5cad4a4460e5b58c564262e5fbd2/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L162
+   - Dynamics properties should be defined at `.xacro` file  https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/6d3a6cf6998e5cad4a4460e5b58c564262e5fbd2/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L164-L186
+
+#### Limitations and To-dos
+- Rudder hydrodynamics coefficients
+   - Currently, Rudder hydrodynamics force is modeled with a simple copy&paste of the Hull hydrodynamics (Graver's theory). Area 1/10, Lift and Drag 1/10, Moment *10. Just to check the system stability. There is much to improve how to model this including how to include the effect of ocean current.
+- Heading Control
+   - Currently, controlling with target heading is not included since it requires a control algorithm for target yaw in the vehicle frame.
+- Elevation wing : Not included yet. It could be modeled similar to that of the rudder.
+
