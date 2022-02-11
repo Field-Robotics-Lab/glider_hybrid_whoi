@@ -1,7 +1,5 @@
 # (Hybrid-) AUG Simulator
-```diff
 - Summary Poster (2022-02-10)
-```
 ![Poster](https://user-images.githubusercontent.com/7955120/153356178-ad6c20a5-9418-48f7-b287-292c8a000572.png)
 
 ## Requirements
@@ -25,8 +23,8 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
 
 ## Utility guide (live document)
 
-* https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing
-
+* [Utility guide (google doc, live document)](https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing)
+s
 ## How-to
 
 ### Installation
@@ -36,7 +34,7 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
     1. **Directly on Host**
          1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
             ```diff
-            - When cloning the dave repo, bathymetry_plugin_whoi branch of the dave repo fork
+            - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
             git clone https://github.com/woensug-choi/dave.git
             git checkout bathymetry_plugin_whoi
             ```
@@ -59,7 +57,6 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
              source ~/glider_hybrid_whoi/install/setup.bash
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
-             ```
 
 ### Quickstart (For running simulator only)
 
@@ -81,8 +78,10 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
         rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
         ```
     5. Access log files
-      - Location of the log CSV file : `/tmp/KinematicsLog.csv`
-      - Location of the standalone GPS log HTML file : `/tmp/GPSViewer_log.html`
+
+        - Location of the log CSV file : `/tmp/KinematicsLog.csv`
+        - Location of the standalone GPS log HTML file : `/tmp/GPSViewer_log.html`
+
 
 ## Interface with slocum glider driver simulator
 
