@@ -37,21 +37,22 @@
     1. **Directly on Host**
         1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
 
-          ```diff
-          - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
-          git clone https://github.com/woensug-choi/dave.git
-          git checkout bathymetry_plugin_whoi
-          - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
-          sudo apt-get install ros-noetic-hector-gazebo-plugins
-          - The initial position setter requires python version of gdal
-          sudo apt install python3-gdal=3.0.4+dfsg-1build3
-          - GPS Viewer requires pyQt and folium modules
-          pip3 install folium PyQtWebEngine pyqt5-tools
-          - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
-          git clone https://github.com/Field-Robotics-Lab/frl_msgs
-          - nps_uw_sensors_gazebo repository is required
-          git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
-          ```
+            ```diff
+            - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
+            git clone https://github.com/woensug-choi/dave.git
+            git checkout bathymetry_plugin_whoi
+            - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
+            sudo apt-get install ros-noetic-hector-gazebo-plugins
+            - The initial position setter requires python version of gdal
+            sudo apt install python3-gdal=3.0.4+dfsg-1build3
+            - GPS Viewer requires pyQt and folium modules
+            pip3 install folium PyQtWebEngine pyqt5-tools
+            - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
+            git clone https://github.com/Field-Robotics-Lab/frl_msgs
+            - nps_uw_sensors_gazebo repository is required
+            git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
+            ```
+
         2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
 
     2. **Usin`g Docker**
@@ -86,27 +87,27 @@
 * Running the simulator (Run each commands in separate terminal window)
   1. Spawn underwater world with gazebo
 
-    ```bash
-    roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
-    # or
-    roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
-    # Bathymetry for Buzzbay is included in this repo.
-    # The glider may look as if they are teard apart and shiver. It's rendering error.
-    # All sensors should work as if thay are in place just fine.
-    # If it hits the surface, it will reset its orietation
-    # To dive back down from the sruface, you may need to pich down and push hard.
-    # The range is (lat,lon) = (41.50, -70.70) to (41.56, -70.65)
-    ```
+      ```bash
+      roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
+      # or
+      roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
+      # Bathymetry for Buzzbay is included in this repo.
+      # The glider may look as if they are teard apart and shiver. It's rendering error.
+      # All sensors should work as if thay are in place just fine.
+      # If it hits the surface, it will reset its orietation
+      # To dive back down from the sruface, you may need to pich down and push hard.
+      # The range is (lat,lon) = (41.50, -70.70) to (41.56, -70.65)
+      ```
   2. Control glider with ROS
 
-    ```
-    rosrun kinematics_ros_plugins test_directKinematics.py
-    ```
+      ```
+      rosrun kinematics_ros_plugins test_directKinematics.py
+      ```
   4. Glider status
 
-    ```
-    rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
-    ```
+      ```
+      rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
+      ```
   5. Access log files
 
     - Location of the log CSV file : `/tmp/KinematicsLog.csv`
@@ -152,9 +153,10 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 - Buzzbay bathymetry is included
   - Roughly 1500x1500 m tiles with 50 m overlap regions are included (almost 780 MB)
   - Click the `play` button on the Gazebo window and wait for the first bathymetry to be spawned. Next bathymetry tile will be spawned and the previous tile will be removed automatically according to the glider position.
-  ```bash
-  roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
-  ```
+
+    ```bash
+    roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
+    ```
 
 ### Surface detection
 - If the glider reach the surface, the pitch value is set to zero and the position is kept on surface unless it's heading back down.
@@ -183,6 +185,7 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
   - Uses custom NMEA msg format that can include not only lat/lon/depth but also roll/pitch/heading.
   - Networking with WSL is tricky since the Windows and the Ubuntu in WSL recognize `localhost` differently. This is hacked by using the host window machine's public ip.
     Maybe you have to add this to C:\Users/User/.wslconfig
+
     ```
     [wsl2]
     localhostForwarding=true
