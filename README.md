@@ -34,43 +34,47 @@
 
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
 * Then choose from one of the following two installation options:
-  1. **Directly on Host**
-    1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
-      ```diff
-      - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
-      git clone https://github.com/woensug-choi/dave.git
-      git checkout bathymetry_plugin_whoi
-      - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
-      sudo apt-get install ros-noetic-hector-gazebo-plugins
-      - The initial position setter requires python version of gdal
-      sudo apt install python3-gdal=3.0.4+dfsg-1build3
-      - GPS Viewer requires pyQt and folium modules
-      pip3 install folium PyQtWebEngine pyqt5-tools
-      - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
-      git clone https://github.com/Field-Robotics-Lab/frl_msgs
-      - nps_uw_sensors_gazebo repository is required
-      git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
-      ```
-    2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
+    1. **Directly on Host**
+        1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
 
-  2. **Using Docker**
-    1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
-    2. Run the `build.bash` script located in the `docker` folder of this repository
-        ```
-        ./build.bash
-        ```
-    3. Run the container with `run.bash` script
-        ```
-        ./run.bash
-        source ~/glider_hybrid_whoi/install/setup.bash
-        ```
-    * Opening additional terminals
-        ```
-        ./join.bash
-        source /opt/ros/noetic/setup.bash
-        source ~/glider_hybrid_whoi/install/setup.bash
-        ```
-  Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
+          ```diff
+          - When cloning the dave repo, bathymetry_plugin_whoi branch from the fork of the dave repo
+          git clone https://github.com/woensug-choi/dave.git
+          git checkout bathymetry_plugin_whoi
+          - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
+          sudo apt-get install ros-noetic-hector-gazebo-plugins
+          - The initial position setter requires python version of gdal
+          sudo apt install python3-gdal=3.0.4+dfsg-1build3
+          - GPS Viewer requires pyQt and folium modules
+          pip3 install folium PyQtWebEngine pyqt5-tools
+          - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
+          git clone https://github.com/Field-Robotics-Lab/frl_msgs
+          - nps_uw_sensors_gazebo repository is required
+          git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
+          ```
+        2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
+
+    2. **Usin`g Docker**
+        1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
+        2. Run the `build.bash` script located in the `docker` folder of this repository
+
+            ```
+            ./build.bash
+            ```
+        3. Run the container with `run.bash` script
+
+            ```
+            ./run.bash
+            source ~/glider_hybrid_whoi/install/setup.bash
+            ```
+        * Opening additional terminals
+
+            ```
+            ./join.bash
+            source /opt/ros/noetic/setup.bash
+            source ~/glider_hybrid_whoi/install/setup.bash
+            ```
+    Fore more including docker-compose: [Docker environment description](https://github.com/Field`-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
 
 ## Quickstart
 
@@ -81,6 +85,7 @@
 ### Bundled files
 * Running the simulator (Run each commands in separate terminal window)
   1. Spawn underwater world with gazebo
+
     ```bash
     roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current.launch
     # or
@@ -93,10 +98,12 @@
     # The range is (lat,lon) = (41.50, -70.70) to (41.56, -70.65)
     ```
   2. Control glider with ROS
+
     ```
     rosrun kinematics_ros_plugins test_directKinematics.py
     ```
   4. Glider status
+
     ```
     rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
     ```
@@ -109,6 +116,7 @@
 1. **Directly on Host**
   - There's a template at `local_glider_files_example/bear/simulation`
   - You may launch the launch/world/vehicle description inside it with
+
     ```bash
     roslaunch glider_hybrid_whoi/local_glider_files_example/bear/simulation/PuertoRico.launch
     # The glider may look as if they are teard apart and shiver. It's rendering error.
@@ -121,6 +129,7 @@
   - The host machine's parent directory of the `docker`, which is `glider_hybrid_whoi`, will be mounted at `/home/ros/local_glider_files`.
   - There's a template at `local_glider_files_example/bear/simulation`
   - You may launch the launch/world/vehicle description inside it with
+
     ```bash
     ./run-local.bash
     source ~/glider_hybrid_whoi/install/setup.bash
