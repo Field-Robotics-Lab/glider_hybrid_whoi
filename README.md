@@ -1,15 +1,22 @@
-# Kinematics plugin for WHOI hybrid gliders
-Kinematics control plugin for WHOI hybrid gliders
+# (Hybrid-) AUG Simulator
+```diff
+- Summary Poster (2022-02-10)
+```
+![Poster](https://user-images.githubusercontent.com/7955120/153356178-ad6c20a5-9418-48f7-b287-292c8a000572.png)
 
 ## Requirements
+
 ```diff
-- If not using docker environment, use bathymetry_plugin_whoi branch of the dave repo
-# at dave repo
-git cehckout bathymetry_plugin_whoi
+- If not using docker environment, use bathymetry_plugin_whoi branch of the dave repo fork
+# Use the bathymetry_plugin_whoi branch at the fork of the dave repo
+git clone https://github.com/woensug-choi/dave.git
+git checkout bathymetry_plugin_whoi
 - The IMU/GPS sensor included in this repo requires hector libraries. You may install with following command
 sudo apt-get install ros-noetic-hector-gazebo-plugins
 - The initial position setter requires python version of gdal
-sudo apt-get install python3-gdal
+sudo apt install python3-gdal=3.0.4+dfsg-1build3
+- GPS Viewer requires pyQt and folium modules
+pip3 install folium PyQtWebEngine pyqt5-tools
 - The kinematics/dynamics plugin uses UwGliderStatus/UwGliderCommand msg to interact with the vehicle
 git clone https://github.com/Field-Robotics-Lab/frl_msgs
 - nps_uw_sensors_gazebo repository is required
@@ -17,14 +24,22 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
 ```
 
 ## Utility guide (live document)
+
 * https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing
 
 ## How-to
+
 ### Installation
+
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
 * Then choose from one of the following two installation options:
     1. **Directly on Host**
          1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
+            ```diff
+            - When cloning the dave repo, bathymetry_plugin_whoi branch of the dave repo fork
+            git clone https://github.com/woensug-choi/dave.git
+            git checkout bathymetry_plugin_whoi
+            ```
          2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
     2. **Using Docker**
          1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
@@ -44,29 +59,9 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
              source ~/glider_hybrid_whoi/install/setup.bash
              ```
         Fore more including docker-compose: [Docker environment description](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/master/docker/README.MD)
-    3. **Using docker-compose**
-         1. Run the `build.bash` script located in the `docker` folder of this repository
-             ```
-             ./build.bash
-             ```
-         2. Run the container
-             ```
-             docker-compose up
-             ```
-         2. Send mission commands from another terminal
-             ```
-             docker-compose exec glider_extctl_sim /ros_entrypoint.sh rosrun slocum_glider_extctl_sim slocum_glider_sim_console
-             # Ctrl+C to land on mission command terminal
-             run initbuzz.mi
-             run backse01.mi
-             ```
-         3. Access log CSV file
-             ```
-             ./join.bash
-             tail -f /tmp/Kinematics KinematicsLog.csv
              ```
 
-### Quickstart
+### Quickstart (For running simulator only)
 
 * Running the simulator (Run each commands in separate terminal window)
     1. Spawn underwater world with gazebo
@@ -85,10 +80,14 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
         ```
         rostopic echo /glider_hybrid_whoi/kinematics/UwGliderStatus
         ```
-## Interface
+    5. Access log files
+      - Location of the log CSV file : `/tmp/KinematicsLog.csv`
+      - Location of the standalone GPS log HTML file : `/tmp/GPSViewer_log.html`
+
+## Interface with slocum glider driver simulator
+
 For view/edit : [Google Drawing Raw file link](https://docs.google.com/drawings/d/1pj5O0DZ_2o480-9z-qvqAat_yXFckzXrrgTLxbgDyxo/edit?usp=sharing)
 ![resources](https://docs.google.com/drawings/d/e/2PACX-1vTMQxfsQmqEMxr5fZ30UBqPzI6ULpPdf2XNiF2ak633ty7KP532fMXOgHIJEqI7Z-o-Ok6vdjtgwYdC/pub?w=960&h=720)
-
 
 The `slocum_glider_sim_driver` and `slocum_glider_sim_console` nodes are
 provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.com/sentinel-aug/ros/slocum_glider)
@@ -101,8 +100,6 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
   - Click the `play` button on the Gazebo window and wait for the first bathymetry to be spawned. Next bathymetry tile will be spawned and the previous tile will be removed automatically according to the glider position.
   ```bash
   roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current.launch
-  # if in docker environment
-  roslaunch glider_hybrid_whoi_gazebo BuzzBay_stratified_current_docker.launch
   ```
 
 ### Surface detection
@@ -111,6 +108,20 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 ### Multiple gliders support
 - https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/pull/31
 - Demo case : `roslaunch glider_hybrid_whoi_gazebo start_demo_kinematics_stratified_current_two_gliders.launch`
+
+### GPS Viewer
+```xml
+<!-- GPS Viewer -->
+<include file="$(find gps_map_viewer)/launch/gps_map_viewer.launch">
+    <arg name="namespace" value="$(arg robot_name)"/>
+    <arg name="refresh_rate" value="1.0"/>
+    <arg name="save_html" value="True"/>
+</include>
+```
+- `namespace` : name of the vehicle model
+- `refresh_rate` : refresh rate for GPS position marker update in the map
+- `save_html` : Save GPS log as seen on the viewer as HTML which will be saved at `/tmp/GPSViewer_log.html` which you can open with a browser
+- `default_zoom` : set initial zoom (range from 0 to 15, larger mean more zoom)
 
 ### Live Feed to Fledermaus
 - Live feeding to Fledermaus's Vessel Manager to visualize its location is now available using UDP connection with NMEA strings.
@@ -124,7 +135,7 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
     ```
     and restart the WSL by `wsl --shutdown` at cmd.
 
-### Glider dynamic parameters
+### Glider kinematics/dynamics parameters
 - Parametes for pitch control, buoyancy induced velocity with the flight model, and thruster power is defined at [glider_hybrid_whoi_base_kinematics.xacro](https://github.com/Field-Robotics-Lab/glider_hybrid_whoi/blob/10524388cce32865ae051e285dbe631ea89159e4/glider_hybrid_whoi_description/urdf/glider_hybrid_whoi_base_kinematics.xacro#L139)
 
 #### Pitch control
@@ -162,6 +173,3 @@ provided by [https://gitlab.com/sentinel-aug/ros/slocum_glider](https://gitlab.c
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | :heavy_check_mark:*  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark:* | :heavy_multiplication_x: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 - Lat/Lon is acquired from the GPS sensor and Altitude from the DVL sensor. Which is also sent through nav_sat_fix
-
-#### Code Structure Diagram
-![image](https://user-images.githubusercontent.com/7955120/101485884-2ba8d400-399f-11eb-90ab-6f1be48d3f18.png)

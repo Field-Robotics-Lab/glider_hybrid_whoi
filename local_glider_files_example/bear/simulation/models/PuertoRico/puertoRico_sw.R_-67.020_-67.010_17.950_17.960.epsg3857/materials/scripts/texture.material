@@ -1,0 +1,18 @@
+material Bathymetry/puertoRico_sw.R_-67.020_-67.010_17.950_17.960
+{
+    technique
+    {
+        pass
+        {
+            ambient 0.5 0.5 0.5 1.0
+            diffuse 0.5 0.5 0.5 1.0
+            specular 0.2 0.2 0.2 1.0 12.5
+
+            texture_unit
+            {
+                texture ../textures/puertoRico_sw.R_-67.020_-67.010_17.950_17.960.epsg3857.texture.png
+                scale 1 1
+            }
+        }
+    }
+}

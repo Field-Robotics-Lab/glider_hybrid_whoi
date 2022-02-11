@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="hector_gps_macro"
+    params="body_name">
+
+    <!-- https://answers.gazebosim.org//question/6220/gps-sensor-in-gazebo-19/a-->
+    <gazebo>
+      <plugin name="hector_gps_sim" filename="libuw_gps_ros_plugin.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.25</updateRate>
+        <bodyName>${body_name}</bodyName>
+        <topicName>hector_gps</topicName>
+        <velocityTopicName>hector_gps_velocity</velocityTopicName>
+        <drift>0.0 0.0 0.0</drift>
+        <gaussianNoise>0.0 0.0 0.0</gaussianNoise>
+        <velocityDrift>0 0 0</velocityDrift>
+        <velocityGaussianNoise>0.0 0.0 0.0</velocityGaussianNoise>
+        <!-- signal delay when reached on surface in seconds -->
+        <signal_delay>10</signal_delay>
+        <!-- max distance from surface to receive the signal. -->
+        <!-- if zero, only when the visual model is less than half submerged -->
+        <signal_max_depth>2</signal_max_depth>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:hector_gps_macro
+      body_name="${namespace}/base_link">
+  </xacro:hector_gps_macro>
+
+</robot>

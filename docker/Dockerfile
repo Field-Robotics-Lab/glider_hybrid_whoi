@@ -5,7 +5,7 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=9a7dd78aaa1bac60c63e321926e6c36539128866
+ARG version_dave=64ab207da01e0a71fd5102f8787984520c339814
 ARG version_uuv_simulator=4936e739d48807527fdcd3ba3d19c147277003ce
 ARG version_uuv_manipulators=d324a6a6ac9f3b6c86427d7ed9795c09c14e659c
 ARG version_uw_sensors_gazebo=eda6787830bd2c7f31eacfe9f2aab961b879ab3e
@@ -122,7 +122,7 @@ ARG version_dave
 ENV VERSION_DAVE=$version_dave
 ARG version_uw_sensors_gazebo
 ENV VERSION_UW_SENSORS_GAZEBO=$version_uw_sensors_gazebo
-RUN curl -fsSL https://github.com/Field-Robotics-Lab/dave/archive/$VERSION_DAVE.tar.gz | tar xz \
+RUN curl -fsSL https://github.com/woensug-choi/dave/archive/$VERSION_DAVE.tar.gz | tar xz \
     && curl -fsSL https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/$VERSION_UW_SENSORS_GAZEBO.tar.gz | tar xz
 
 ARG version_uuv_simulator

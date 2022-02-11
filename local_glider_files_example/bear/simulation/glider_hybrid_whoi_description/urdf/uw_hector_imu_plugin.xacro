@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!-- from https://answers.ros.org/question/328520/imu-plugin-has-strange-measurements-in-rviz/ -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="hector_imu_macro" params="parent *origin">
+
+        <material name="imu-orange">
+            <color rgba="0.8862745098 0.56862745098 0.09019607843 1"/>
+        </material>
+
+        <joint name="${parent}_to_hector_imu" type="fixed">
+            <parent link="${parent}"/>
+            <child link="hector_imu"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+
+        <link name="hector_imu">
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <geometry>
+                    <box size="0.057 0.041 0.024"/> <!--a simple box is used with the outer dimensions for simplicity-->
+                </geometry>
+                <material name="imu-orange"/>
+            </visual>
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0"/>
+                <geometry>
+                    <box size="0.057 0.041 0.024"/>
+                </geometry>
+            </collision>
+            <inertial>
+                <mass value="0.055"/>
+                <origin xyz="0 0 0"/>
+                <inertia ixx="1.60333333333e-05" ixy="0.0" ixz="0.0" iyy="2.80333333333e-05" iyz="0.0"
+                         izz="1.60333333333e-05"/>
+            </inertial>
+        </link>
+
+        <gazebo>
+            <plugin name="imu_controller" filename="libuw_imu_ros_plugin.so">
+                <alwaysOn>true</alwaysOn>
+                <updateRate>10</updateRate>
+                <bodyName>${parent}</bodyName>
+                <topicName>hector_imu</topicName>
+                <robotNamespace>${namespace}</robotNamespace>
+                <serviceName>hector_imu/is_calibrated</serviceName>
+                <gaussianNoise>0.00000001</gaussianNoise>
+                <xyzOffset>0</xyzOffset>
+                <xyzOffset>0</xyzOffset>
+                <xyzOffsets>0 0 0</xyzOffsets>
+                <rpyOffsets>0 0 0</rpyOffsets>
+                <frameId>world</frameId>
+            </plugin>
+        </gazebo>
+    </xacro:macro>
+
+    <xacro:hector_imu_macro parent="${namespace}/base_link">
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    </xacro:hector_imu_macro>
+
+</robot>
