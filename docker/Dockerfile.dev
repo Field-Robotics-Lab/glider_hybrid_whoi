@@ -208,6 +208,7 @@ RUN apt-get update \
     python3-rosinstall \
     python3-rosinstall-generator \
     python3-vcstool \
+    python3-gdal \
     ros-noetic-gazebo-plugins \
     ros-noetic-gazebo-ros \
     ros-noetic-gazebo-ros-control \
@@ -240,6 +241,9 @@ RUN apt-get update \
     ros-noetic-xacro \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pynmea2 folium PyQtWebEngine pyqt5-tools
 
 #------------------------------------------------------------------#
 # source-deps-builder stage
@@ -331,6 +335,9 @@ RUN apt-get update \
     && sh /tmp/install-script \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pynmea2 folium PyQtWebEngine pyqt5-tools
 
 # Carry forward the dependency versions
 ARG version_dave

@@ -344,6 +344,9 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pynmea2 folium PyQtWebEngine pyqt5-tools
+
 # Carry forward the dependency versions
 ARG version_dave
 ENV VERSION_DAVE=$version_dave
