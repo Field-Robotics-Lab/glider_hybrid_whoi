@@ -7,17 +7,16 @@
 -->
 * [Summary Poster](#summary-poster)
 * [Utility Guide](#utility-guide)
-* [How-to](#how-to)
-   * [Installation](#installation)
-   * [Quickstart](#Quickstart)
-   * [Interface with slocum glider driver](#Interface-with-slocum-glider-driver-simulator)
-   * [Features](#Features)
-      * [Bathymetry included](#Bathymetry-included)
-      * [Surface detection](#Surface-detection)
-      * [Multiple gliders support](#Multiple-gliderssupport)
-      * [Live Feed to Fledermaus](#Live-Feed-to-Fledermaus)
-      * [Glider control parameters](#Glider-control-parameters)
-      * [Hybrid Glider 6DOF dynamics](#Hybrid-Glider-6DOF-dynamics)
+* [Installation](#installation)
+* [Quickstart](#Quickstart)
+* [Interface with slocum glider driver](#Interface-with-slocum-glider-driver-simulator)
+* [Features](#Features)
+  * [Bathymetry included](#Bathymetry-included)
+  * [Surface detection](#Surface-detection)
+  * [Multiple gliders support](#Multiple-gliderssupport)
+  * [Live Feed to Fledermaus](#Live-Feed-to-Fledermaus)
+  * [Glider control parameters](#Glider-control-parameters)
+  * [Hybrid Glider 6DOF dynamics](#Hybrid-Glider-6DOF-dynamics)
 
 ## Summary Poster (2022-02-10)
 
@@ -29,9 +28,7 @@
 
 * [Utility guide (google doc, live document)](https://docs.google.com/document/d/1Rlh-2ZkqkKEEsECacgi9XIiPgPHdoRVjJmTLnLg1Bu4/edit?usp=sharing)
 
-## How-to
-
-### Installation
+## Installation
 
 * First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
 * Then choose from one of the following two installation options:
