@@ -313,6 +313,7 @@ void GazeboRosGps::Update()
     double tLon = sNorthing;
     double tLat = sEasting;
     poCT->Transform(1, &tLat, &tLon);
+    delete poCT;
 
   #if (GAZEBO_MAJOR_VERSION >= 8)
     fix_.latitude = tLat;
