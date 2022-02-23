@@ -606,6 +606,7 @@ void KinematicsROSPlugin::ConveyModelState()
   double tLon = sNorthing;
   double tLat = sEasting;
   poCT->Transform(1, &tLat, &tLon);
+  delete poCT;
 
   // Construct UwGliderStatus msg
   frl_vehicle_msgs::UwGliderStatus status_msg;
