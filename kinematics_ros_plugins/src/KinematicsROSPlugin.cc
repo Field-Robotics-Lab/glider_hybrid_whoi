@@ -336,8 +336,10 @@ void KinematicsROSPlugin::ConveyCommands(
 {
   // Convey commands to functions
   this->ConveyKinematicsCommands(_msg);
-
   this->controlMsgDetected = true;
+
+  // Eliminate Gazebo physics
+  this->model->ResetPhysicsStates();
 }
 
 /////////////////////////////////////////////////

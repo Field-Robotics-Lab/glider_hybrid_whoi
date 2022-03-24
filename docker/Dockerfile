@@ -5,7 +5,7 @@
 
 #------------------------------------------------------------------#
 # Dependency versions
-ARG version_dave=9a7dd78aaa1bac60c63e321926e6c36539128866
+ARG version_dave=076856502d2a71d2ecd07d080dff9968fd94da8d
 ARG version_uuv_simulator=4936e739d48807527fdcd3ba3d19c147277003ce
 ARG version_uuv_manipulators=d324a6a6ac9f3b6c86427d7ed9795c09c14e659c
 ARG version_uw_sensors_gazebo=eda6787830bd2c7f31eacfe9f2aab961b879ab3e
@@ -122,7 +122,7 @@ ARG version_dave
 ENV VERSION_DAVE=$version_dave
 ARG version_uw_sensors_gazebo
 ENV VERSION_UW_SENSORS_GAZEBO=$version_uw_sensors_gazebo
-RUN curl -fsSL https://github.com/Field-Robotics-Lab/dave/archive/$VERSION_DAVE.tar.gz | tar xz \
+RUN curl -fsSL https://github.com/woensug-choi/dave/archive/$VERSION_DAVE.tar.gz | tar xz \
     && curl -fsSL https://github.com/Field-Robotics-Lab/nps_uw_sensors_gazebo/archive/$VERSION_UW_SENSORS_GAZEBO.tar.gz | tar xz
 
 ARG version_uuv_simulator
@@ -343,6 +343,9 @@ RUN apt-get update \
     && sh /tmp/install-script \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pynmea2 folium PyQtWebEngine pyqt5-tools
 
 # Carry forward the dependency versions
 ARG version_dave

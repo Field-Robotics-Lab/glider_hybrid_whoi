@@ -27,7 +27,7 @@ def command(startTime):
             command.rudder_control_mode = 1
             command.target_heading = math.pi/2.0
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 100.0
+            command.target_motor_cmd = 10.0
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(8)
@@ -55,7 +55,7 @@ def command(startTime):
             command.rudder_control_mode = 1
             command.target_heading = math.pi/2
             command.motor_cmd_type = 1
-            command.target_motor_cmd = 50.0
+            command.target_motor_cmd = 10.0
             rospy.loginfo(command)
             pub.publish(command)
             time.sleep(5)
