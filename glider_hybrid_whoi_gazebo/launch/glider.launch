@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!-- Launch a glider into an already running Gazebo simulation -->
+
+<launch>
+
+  <!-- Vehicle's initial position -->
+  <arg name="robot_name" default="glider_hybrid_whoi"/>
+  <arg name="use_geodetic" default="true"/>
+  <arg name="initial_latitude" default="41.5522"/>
+  <arg name="initial_longitude" default="-70.6803"/>
+  <arg name="initial_depth" default="-1"/>
+
+  <!-- Fledermaus Vessel Manager connection -->
+  <arg name="host_ip" default="128.128.62.4"/>
+  <arg name="port" default="30362"/>
+
+  <!-- Spawn vehicle into the world -->
+  <include file="$(find glider_hybrid_whoi_description)/launch/upload_glider_hybrid_whoi_kinematics.launch">
+    <arg name="use_geodetic" value="$(arg use_geodetic)"/>
+    <arg name="robot_name" value="$(arg robot_name)"/>
+  </include>
+
+  <!-- Set initial position using latitude and longitude (EPSG:4326) -->
+  <include file="$(find set_init_latlon)/launch/set_init_latlon.launch">
+      <arg name="namespace" value="$(arg robot_name)"/>
+      <arg name="init_lat" value="$(arg initial_latitude)"/>
+      <arg name="init_lon" value="$(arg initial_longitude)"/>
+      <arg name="depth" value="$(arg initial_depth)"/>
+  </include>
+
+  <!-- Dead reckoning node -->
+  <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+
+  <!-- NMEA publisher node -->
+  <include file="$(find nmea_publisher)/launch/nmea_publisher.launch">
+    <arg name="host_ip" value="$(arg host_ip)"/>
+    <arg name="port" value="$(arg port)"/>
+  </include>
+
+  <!-- GPS Viewer (with GMRT bathymetry from web server) -->
+  <include file="$(find gps_map_viewer)/launch/gps_map_viewer.launch">
+      <arg name="namespace" value="$(arg robot_name)"/>
+      <arg name="refresh_rate" value="1.0"/>
+      <arg name="save_html" value="True"/>
+  </include>
+
+</launch>
