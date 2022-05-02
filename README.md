@@ -21,10 +21,10 @@ git clone git@github.com:Field-Robotics-Lab/nps_uw_sensors_gazebo.git
 
 ## How-to
 ### Installation
-* First check to make sure you meet the [System Requirements](https://github.com/Field-Robotics-Lab/dave/wiki/System-Requirements).
+* First check to make sure you meet the [System Requirements](https://field-robotics-lab.github.io/dave.doc/contents/installation/System-Requirements/).
 * Then choose from one of the following two installation options:
     1. **Directly on Host**
-         1. [Install environment and dependent repositories](https://github.com/Field-Robotics-Lab/dave/wiki/Install-Directly-on-Host) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
+         1. [Install environment and dependent repositories](https://field-robotics-lab.github.io/dave.doc/contents/installation/Install-Directly-on-Host/t) : Instructions to install ROS Noetic, Gazebo 11, UUV Simulator and DAVE directly on your host machine.
          2. Clone this repository in `~/uuv/src` folder and compile with `catkin_make` at `~/uuv_ws` directory.
     2. **Using Docker**
          1. Make sure you have Docker v19.03 or higher ([installation instructions](https://docs.docker.com/engine/install/ubuntu/)) and nvidia-container-toolkit ([installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit))
