@@ -20,22 +20,24 @@
     <arg name="robot_name" value="$(arg robot_name)"/>
   </include>
 
-  <!-- Set initial position using latitude and longitude (EPSG:4326) -->
-  <include file="$(find set_init_latlon)/launch/set_init_latlon.launch">
+  <group ns="$(arg robot_name)">
+    <!-- Set initial position using latitude and longitude (EPSG:4326) -->
+    <include file="$(find set_init_latlon)/launch/set_init_latlon.launch">
       <arg name="namespace" value="$(arg robot_name)"/>
       <arg name="init_lat" value="$(arg initial_latitude)"/>
       <arg name="init_lon" value="$(arg initial_longitude)"/>
       <arg name="depth" value="$(arg initial_depth)"/>
-  </include>
+    </include>
 
-  <!-- Dead reckoning node -->
-  <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
+    <!-- Dead reckoning node -->
+    <include file="$(find glider_deadreckoning)/launch/deadreckon.launch"/>
 
-  <!-- NMEA publisher node -->
-  <include file="$(find nmea_publisher)/launch/nmea_publisher.launch">
-    <arg name="host_ip" value="$(arg host_ip)"/>
-    <arg name="port" value="$(arg port)"/>
-  </include>
+    <!-- NMEA publisher node -->
+    <include file="$(find nmea_publisher)/launch/nmea_publisher.launch">
+      <arg name="host_ip" value="$(arg host_ip)"/>
+      <arg name="port" value="$(arg port)"/>
+    </include>
+  </group>
 
   <!-- GPS Viewer (with GMRT bathymetry from web server) -->
   <include file="$(find gps_map_viewer)/launch/gps_map_viewer.launch">

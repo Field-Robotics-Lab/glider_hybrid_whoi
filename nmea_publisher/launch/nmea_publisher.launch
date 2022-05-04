@@ -13,7 +13,7 @@
     <param name="host_ip" value="$(arg host_ip)"/>
     <param name="port" value="$(arg port)"/>
     <!-- Remap the inputs to application specific topics -->
-    <remap from="status" to="/glider_hybrid_whoi/kinematics/UwGliderStatus" />
+    <remap from="status" to="kinematics/UwGliderStatus" />
 
   </node>
 </launch>
