@@ -226,6 +226,93 @@ namespace kinematics_ros
     protected: double C_L;
 
     /// ============================================= ///
+    /// ===========   DYNAMICS (for pitch)   ======== ///
+    /// ============================================= ///
+    /// \brief A flag for dynamics calculations
+    private: bool dynamics;
+
+    /// \brief A flag for hardcoded input
+    private: bool hardCodeInput;
+
+    /// \brief Buoyancy pump position
+    protected: double pumpPos;
+
+    /// \brief Sliding mass position
+    protected: double massPos;
+
+    /// \brief total_mass
+    protected: double m;
+
+    /// \brief Center of gravity
+    protected: ignition::math::Vector3d cog;
+
+    /// \brief Center of buoyancy in the body frame
+    protected: ignition::math::Vector3d cob;
+
+    /// \brief ballast_radius
+    protected: double r_w;
+
+    /// \brief hull_length
+    protected: double l_h;
+
+    /// \brief hull_radius
+    protected: double r_h;
+
+    /// \brief hull_mass
+    protected: double m_h;
+
+    /// \brief shifter_mass
+    protected: double m_s;
+
+    /// \brief initial_mass_position
+    protected: double x_s_o;
+
+    /// \brief initial_ballast_position
+    protected: double x_w_o;
+
+    /// \brief max_mass_position
+    protected: double x_s_o_max;
+
+    /// \brief max_ballast_volume
+    protected: double vol_w_max;
+
+    /// \brief Added-mass matrix
+    protected: Eigen::Matrix6d Ma;
+
+    /// \brief Added-mass associated Coriolis matrix
+    protected: Eigen::Matrix6d Ca;
+
+    /// \brief Damping matrix
+    protected: Eigen::Matrix6d D;
+
+    /// \brief Linear damping matrix
+    protected: Eigen::Matrix6d DLin;
+
+    /// \brief Last timestamp (in seconds)
+    protected: double lastTime;
+
+    /// \brief Dynamics post/vel variables
+    protected: Eigen::Vector6d eta, eta_last, eta_dot;
+    protected: Eigen::Vector6d nu, nu_last, nu_dot;
+
+    /// \brief Get parameters (read matrix form defenitions)
+    protected: void GetParam(std::string _tag, std::vector<double>& _output);
+
+    /// \brief Filtered linear & angular acceleration vector in link frame.
+    /// This is used to prevent the model to become unstable given that Gazebo
+    /// only calls the update function at the beginning or at the end of a
+    /// iteration of the physics engine
+    protected: Eigen::Vector6d filteredAcc;
+
+    /// \brief Convey commands to calculate dynamics
+    protected: virtual void ConveyDynamicsCommands
+        (const frl_vehicle_msgs::UwGliderCommand::ConstPtr &_msg);
+
+    /// \brief Calculate dynamics when commands conveyed and every updates
+    protected: virtual void CalculateDynamics
+        (double _massPos, double _pumpVol, double _thrustPower);
+
+    /// ============================================= ///
     /// ===========-=== Visual Effects ======-======= ///
     /// ============================================= ///
 
@@ -368,6 +455,23 @@ inline ignition::math::Matrix3d Mat3dToGazebo(const Eigen::Matrix3d &_x)
   return ignition::math::Matrix3d(_x(0, 0), _x(0, 1), _x(0, 2),
      _x(1, 0), _x(1, 1), _x(1, 2),
      _x(2, 0), _x(2, 1), _x(2, 2));
+}
+
+inline Eigen::Matrix6d Jacobian(const double &phi,
+                                const double &theta,
+                                const double &psi)
+{
+    Eigen::Matrix6d out;
+    out << cos(psi)*cos(theta),
+    -sin(psi)*cos(phi)+cos(psi)*sin(theta)*sin(phi),
+    sin(psi)*sin(phi)+cos(psi)*cos(phi)*sin(theta), 0, 0, 0,
+    sin(psi)*cos(theta), cos(psi)*cos(phi)+sin(psi)*sin(theta)*sin(phi),
+    -cos(psi)*sin(phi)+sin(psi)*sin(theta)*cos(phi), 0, 0, 0,
+    -sin(theta), cos(theta)*sin(phi), cos(theta)*cos(phi), 0, 0, 0,
+    0, 0, 0, 1, sin(phi)*tan(theta), cos(phi)*tan(theta),
+    0, 0, 0, 0, cos(phi), -sin(phi),
+    0, 0, 0, 0, sin(phi)/cos(theta), cos(phi)/cos(theta);
+    return out;
 }
 }
 
